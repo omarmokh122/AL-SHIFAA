@@ -2,9 +2,8 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api";
 
-// ☁️ Cloudinary Config
-const CLOUDINARY_CLOUD_NAME = "dz6qisv9t";
-const CLOUDINARY_UPLOAD_PRESET = "alshifaa_unsigned";
+import api from "../api";
+import { compressAndResizeImage } from "../utils/image";
 
 const ROLES = ["مسعف", "ممرض", "طبيب", "سائق إسعاف", "إداري", "متطوع"];
 
@@ -47,34 +46,16 @@ export default function MedicalProfile() {
         if (!file) return;
 
         setIsUploading(true);
-        const data = new FormData();
-        data.append("file", file);
-        data.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
         try {
-            // Immediate local preview
-            const localUrl = URL.createObjectURL(file);
-            setFormData(prev => ({ ...prev, image_url: localUrl }));
+            // New Resizing & Compression logic (No Cloudinary needed)
+            const base64 = await compressAndResizeImage(file);
+            console.log("Image resized to Base64 (length):", base64.length);
 
-            const res = await fetch(
-                `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-                { method: "POST", body: data }
-            );
-            const fileData = await res.json();
-            console.log("Cloudinary Upload Result:", fileData);
-
-            if (fileData.secure_url) {
-                setFormData(prev => ({ ...prev, image_url: fileData.secure_url }));
-                alert("✅ تم رفع الصورة بنجاح");
-            } else {
-                const errMsg = fileData.error?.message || "فشل الرفع";
-                alert(`❌ فشل رفع الصورة: ${errMsg}`);
-                // Revert to original if upload failed
-                setFormData(prev => ({ ...prev, image_url: m[13] || "" }));
-            }
+            setFormData(prev => ({ ...prev, image_url: base64 }));
+            alert("✅ تم تجهيز الصورة بنجاح (معالجة محلية)");
         } catch (err) {
-            console.error("Upload Error:", err);
-            alert("❌ خطأ أثناء الاتصال بـ Cloudinary");
+            console.error("Image Processing Error:", err);
+            alert("❌ خطأ أثناء معالجة الصورة");
         } finally {
             setIsUploading(false);
         }

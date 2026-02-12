@@ -5,9 +5,7 @@ import { useNavigate } from "react-router-dom";
 const DEFAULT_IMG =
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
-// ☁️ Cloudinary Config (Placeholders - Fill these in)
-const CLOUDINARY_CLOUD_NAME = "dz6qisv9t"; // Example: "dwp6pxxxx"
-const CLOUDINARY_UPLOAD_PRESET = "alshifaa_unsigned"; // Example: "unsigned_preset"
+import { compressAndResizeImage } from "../utils/image";
 
 /* ===== DROPDOWN OPTIONS ===== */
 const ROLES = [
@@ -68,33 +66,17 @@ export default function MedicalTeam() {
         if (!file) return;
 
         setIsUploading(true);
-        const data = new FormData();
-        data.append("file", file);
-        data.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
         try {
-            const localUrl = URL.createObjectURL(file);
-            setImagePreview(localUrl);
+            // New Resizing & Compression logic (No Cloudinary needed)
+            const base64 = await compressAndResizeImage(file);
+            console.log("Image resized to Base64 (length):", base64.length);
 
-            const res = await fetch(
-                `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-                { method: "POST", body: data }
-            );
-            const fileData = await res.json();
-            console.log("Cloudinary Upload Result:", fileData);
-
-            if (fileData.secure_url) {
-                setForm(prev => ({ ...prev, image_url: fileData.secure_url }));
-                setImagePreview(fileData.secure_url);
-                alert("✅ تم رفع الصورة بنجاح");
-            } else {
-                const errMsg = fileData.error?.message || "فشل الرفع";
-                alert(`❌ فشل رفع الصورة: ${errMsg}`);
-                setImagePreview("");
-            }
+            setForm(prev => ({ ...prev, image_url: base64 }));
+            setImagePreview(base64);
+            alert("✅ تم تجهيز الصورة بنجاح (معالجة محلية)");
         } catch (err) {
-            console.error("Upload Error:", err);
-            alert("❌ خطأ أثناء الرفع");
+            console.error("Image Processing Error:", err);
+            alert("❌ خطأ أثناء معالجة الصورة");
         } finally {
             setIsUploading(false);
         }

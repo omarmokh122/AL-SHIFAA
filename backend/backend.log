@@ -55,3 +55,33 @@ Fetched Medical Team Row Count: 41
 2026-02-12T22:36:07.760Z - GET /medical-team
 Fetched Medical Team Row Count: 41
 Fetched Medical Team Row Count: 41
+2026-02-12T22:40:19.155Z - GET /cases
+2026-02-12T22:40:19.159Z - GET /financial
+2026-02-12T22:40:19.161Z - GET /assets
+2026-02-12T22:40:19.169Z - GET /medical-team
+2026-02-12T22:40:19.171Z - GET /donations
+Fetched Medical Team Row Count: 41
+2026-02-12T22:40:21.039Z - GET /cases
+2026-02-12T22:40:21.040Z - GET /cases
+2026-02-12T22:40:22.283Z - GET /assets
+2026-02-12T22:40:22.284Z - GET /assets
+2026-02-12T22:40:22.917Z - GET /medical-team
+2026-02-12T22:40:22.918Z - GET /medical-team
+Fetched Medical Team Row Count: 41
+Fetched Medical Team Row Count: 41
+2026-02-12T22:44:43.190Z - GET /financial
+2026-02-12T22:44:43.194Z - GET /assets
+2026-02-12T22:44:43.196Z - GET /medical-team
+2026-02-12T22:44:43.205Z - GET /donations
+2026-02-12T22:44:43.206Z - GET /cases
+Fetched Medical Team Row Count: 41
+2026-02-12T22:44:44.861Z - GET /assets
+2026-02-12T22:44:44.862Z - GET /assets
+2026-02-12T22:44:45.500Z - GET /medical-team
+2026-02-12T22:44:45.501Z - GET /medical-team
+Fetched Medical Team Row Count: 41
+Fetched Medical Team Row Count: 41
+2026-02-12T22:44:54.498Z - PUT /medical-team/1
+Updating Medical Member ID: 1 at row 2
+Updated Row Data length: 14
+Image URL being saved: blob:http://localhost:5173/50e62ed4-72dc-4bdf-a0e8-13d68082ae0b

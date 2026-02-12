@@ -42,7 +42,7 @@ export default function MonthlyFinancialReport() {
             return matchMonth && matchYear && matchBranch;
         });
 
-        setFiltered(result);
+        setFiltered(result.reverse());
         setSelectedInvoice(null);
         setFullscreen(false);
     }

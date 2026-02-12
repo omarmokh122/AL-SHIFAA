@@ -1,8 +1,25 @@
-[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
 ✅ index.js loaded
 🚀 Backend running on http://localhost:5000
+2026-02-12T22:28:50.410Z - GET /
+2026-02-12T22:28:51.015Z - GET /favicon.ico
+2026-02-12T22:29:06.587Z - GET /cases
+2026-02-12T22:30:31.037Z - GET /medical-team
+Fetched Medical Team Row Count: 41
+2026-02-12T22:30:42.546Z - PUT /medical-team/1
+Updating Medical Member ID: 1 at row 2
+Updated Row Data length: 14
+Image URL being saved: 
+2026-02-12T22:30:45.934Z - GET /medical-team
+2026-02-12T22:30:45.936Z - GET /medical-team
 Fetched Medical Team Row Count: 41
 Fetched Medical Team Row Count: 41
+2026-02-12T22:30:50.210Z - GET /medical-team
+2026-02-12T22:30:50.213Z - GET /medical-team
 Fetched Medical Team Row Count: 41
 Fetched Medical Team Row Count: 41
-PUT /medical-team error: sheetRowNumber is not defined
+2026-02-12T22:30:53.907Z - GET /donations
+2026-02-12T22:30:54.745Z - GET /financial
+2026-02-12T22:30:55.602Z - GET /assets
+2026-02-12T22:30:56.443Z - GET /medical-team
+Fetched Medical Team Row Count: 41

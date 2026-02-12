@@ -171,6 +171,8 @@ export async function updateMedicalTeamMember(id, updatedRow) {
 
     if (rowIndex === -1) throw new Error("Member not found");
 
+    const sheetRowNumber = rowIndex + 1; // 1-indexed
+
     console.log(`Updating Medical Member ID: ${id} at row ${sheetRowNumber}`);
     console.log("Updated Row Data length:", updatedRow.length);
     console.log("Image URL being saved:", updatedRow[13]);

@@ -22,7 +22,7 @@ export default function MedicalProfile() {
             {/* ===== PROFILE HEADER ===== */}
             <div style={profileHeader}>
                 <img
-                    src={m[12] || DEFAULT_IMG}
+                    src={m[13] || DEFAULT_IMG}
                     alt="profile"
                     style={avatar}
                     onError={(e) => (e.target.src = DEFAULT_IMG)}
@@ -36,15 +36,15 @@ export default function MedicalProfile() {
 
             {/* ===== DETAILS ===== */}
             <div style={detailsGrid}>
-                <Detail title="فئة الدم" value={m[3]} />
-                <Detail title="تاريخ الميلاد" value={m[4]} />
-                <Detail title="الوضع الاجتماعي" value={m[5]} />
-                <Detail title="عدد الأولاد" value={m[6]} />
-                <Detail title="المستوى التعليمي" value={m[7]} />
-                <Detail title="استلام بدلة" value={m[8]} />
-                <Detail title="رقم الهاتف" value={m[9]} />
-                <Detail title="استلام بطاقة" value={m[10]} />
-                <Detail title="رقم البطاقة" value={m[11]} />
+                <Detail title="فئة الدم" value={m[4]} />
+                <Detail title="تاريخ الميلاد" value={m[5]} />
+                <Detail title="الوضع الاجتماعي" value={m[6]} />
+                <Detail title="عدد الأولاد" value={m[7]} />
+                <Detail title="المستوى التعليمي" value={m[8]} />
+                <Detail title="استلام بدلة" value={m[9]} />
+                <Detail title="رقم الهاتف" value={m[10]} />
+                <Detail title="استلام بطاقة" value={m[11]} />
+                <Detail title="رقم البطاقة" value={m[12]} />
             </div>
         </div>
     );

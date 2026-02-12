@@ -26,49 +26,51 @@ const SPREADSHEET_ID =
 // =====================
 export async function getCases() {
     try {
-        // 1. Fetch from standard Cases sheet
+        // 1. Fetch from standard Cases sheet (Manual Entries)
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: "Cases!A2:I",
         });
         const standardCases = res.data.values || [];
 
-        // 2. Fetch from Cases_Raw_Data (Direct Form Responses)
+        // 2. Fetch from Cases_Raw_Data (Direct Google Form Responses)
+        // Order: [Timestamp, التاريخ, الفرع, الجنس, نوع_الحالة, الفريق, ملاحظات]
         const rawRes = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: "Cases_Raw_Data!A2:H",
         });
         const rawEntries = rawRes.data.values || [];
 
-        // 3. Map Raw Entries to standard format
-        // Raw usually: [Timestamp, التاريخ, الفرع, الجنس, نوع_الحالة, الفريق, ملاحظات]
-        // Standard: [ID, التاريخ, الفرع, الجنس, نوع_الحالة, الوصف, الفريق, ملاحظات, CreatedAt]
+        // 3. Map Raw Entries to the standard format used by the App
+        // Standard Columns Expected by Frontend:
+        // [0: ID/Timestamp, 1: التاريخ, 2: الفرع, 3: الجنس, 4: نوع_الحالة, 5: الوصف, 6: الفريق, 7: ملاحظات, 8: CreatedAt]
         const mappedRaw = rawEntries.map(r => [
-            r[0],      // ID (Timestamp)
-            r[1],      // التاريخ
-            r[2],      // الفرع
-            r[3],      // الجنس
-            r[4],      // نوع_الحالة
-            "",        // الوصف (Forms don't have this field yet)
-            r[5],      // الفريق
-            r[6] || "",// ملاحظات
-            r[0]       // CreatedAt
+            r[0],       // ID (Timestamp)
+            r[1],       // التاريخ
+            r[2],       // الفرع
+            r[3],       // الجنس
+            r[4],       // نوع_الحالة
+            "",         // الوصف (Form doesn't have this field)
+            r[5],       // الفريق
+            r[6] || "", // ملاحظات
+            r[0],       // CreatedAt
         ]);
 
-        // Merge and avoid duplicates by checking the ID (column 0)
+        // 4. Merge samples. Note: We use a Set to avoid duplicates if data was already synced by a script.
         const allCases = [...standardCases];
         const existingIds = new Set(standardCases.map(c => String(c[0])));
 
+        // Add raw entries if they don't already exist in the 'Cases' sheet
         mappedRaw.forEach(r => {
             if (!existingIds.has(String(r[0]))) {
                 allCases.push(r);
             }
         });
 
-        return allCases;
+        // Sort by date (descending) so newest are always first
+        return allCases.sort((a, b) => new Date(b[1]) - new Date(a[1]));
     } catch (error) {
         console.error("Error in getCases:", error.message);
-        // Fallback to simpler fetch if merge fails
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: "Cases!A2:I",

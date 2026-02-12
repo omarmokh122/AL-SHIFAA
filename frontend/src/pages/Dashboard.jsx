@@ -60,10 +60,19 @@ export default function Dashboard() {
   const filteredCases = filterByDateAndBranch(sortedCases, 1, 2);
   const filteredDonations = filterByDateAndBranch(sortedDonations, 1, 2);
 
-  const totalCashDonations = filteredDonations.reduce((sum, r) => {
-    if (r[4] === "مادي") return sum + Number(r[6] || 0);
-    return sum;
-  }, 0);
+  let totalLBP = 0;
+  let totalUSD = 0;
+  let totalCashCount = 0;
+
+  filteredDonations.forEach(r => {
+    if (r[4] === "نقدي") {
+      totalCashCount++;
+      const val = Number(r[6] || 0);
+      const cur = (r[7] || "").toUpperCase();
+      if (cur === "USD" || cur === "$") totalUSD += val;
+      else totalLBP += val;
+    }
+  });
 
   const filteredAssets = assets.filter(a => {
     if (user.role === "super") {
@@ -145,11 +154,12 @@ export default function Dashboard() {
       {/* ===== SUMMARY CARDS ===== */}
       <div style={cardsGrid} className="dashboard-grid">
         <Card title="عدد الحالات الطبية" value={filteredCases.length} color="#C22129" />
+        <Card title="عدد التبرعات النقدية" value={totalCashCount} color="#2e7d32" />
         <Card
           title="إجمالي التبرعات النقدية"
           value={showUSD
-            ? `$${Math.round(totalCashDonations / 90000).toLocaleString()}`
-            : `${totalCashDonations.toLocaleString()} ل.ل`
+            ? `$${(totalUSD + (totalLBP / 90000)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+            : `${(totalLBP + (totalUSD * 90000)).toLocaleString()} ل.ل`
           }
           color="#2e7d32"
           onClick={() => setShowUSD(!showUSD)}

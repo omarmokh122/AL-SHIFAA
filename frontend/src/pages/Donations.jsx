@@ -25,12 +25,24 @@ export default function Donations() {
     });
 
     /* ===== CALCULATIONS ===== */
-    let totalCash = 0;
+    let totalCashCount = 0;
+    let totalUSD = 0;
+    let totalLBP = 0;
     let totalInKind = 0;
 
     visible.forEach((r) => {
-        if (r[4] === "مادي") totalCash += Number(r[6] || 0);
-        if (r[4] === "عيني") totalInKind += Number(r[9] || 0);
+        if (r[4] === "نقدي") {
+            totalCashCount++;
+            const val = Number(r[6] || 0);
+            const cur = (r[7] || "").toUpperCase();
+            if (cur === "USD" || cur === "$") totalUSD += val;
+            else totalLBP += val;
+        }
+        if (r[4] === "عيني") {
+            // Extract number from string like "120 حقيبة"
+            const val = parseFloat(String(r[9] || "0").replace(/[^0-9.]/g, ""));
+            totalInKind += isNaN(val) ? 0 : val;
+        }
     });
 
     return (
@@ -82,9 +94,10 @@ export default function Donations() {
 
             {/* ===== SUMMARY CARDS ===== */}
             <div style={cardsGrid} className="dashboard-grid">
-                <Card title="عدد التبرعات" value={visible.length} />
-                <Card title="إجمالي التبرعات النقدية" value={totalCash} />
-                <Card title="إجمالي التبرعات العينية (كمية)" value={totalInKind} />
+                <Card title="إجمالي عدد التبرعات" value={visible.length} />
+                <Card title="عدد التبرعات النقدية" value={totalCashCount} />
+                <Card title="إجمالي المبالغ" value={`${totalUSD.toLocaleString()}$ + ${totalLBP.toLocaleString()} ل.ل`} />
+                <Card title="إجمالي الكميات العينية" value={totalInKind} />
             </div>
 
             {/* ===== TABLE ===== */}

@@ -42,12 +42,23 @@ export default function MonthlyDonationsReport() {
     }
 
     /* ===== CALCULATIONS ===== */
-    let cash = 0;
+    let cashCount = 0;
+    let usdSum = 0;
+    let lbpSum = 0;
     let inKind = 0;
 
     filtered.forEach((r) => {
-        if (r[4] === "مادي") cash += Number(r[6] || 0);
-        if (r[4] === "عيني") inKind += Number(r[9] || 0);
+        if (r[4] === "نقدي") {
+            cashCount++;
+            const val = Number(r[6] || 0);
+            const cur = (r[7] || "").toUpperCase();
+            if (cur === "USD" || cur === "$") usdSum += val;
+            else lbpSum += val;
+        }
+        if (r[4] === "عيني") {
+            const val = parseFloat(String(r[9] || "0").replace(/[^0-9.]/g, ""));
+            inKind += isNaN(val) ? 0 : val;
+        }
     });
 
     const exportExcel = () => {
@@ -120,8 +131,9 @@ export default function MonthlyDonationsReport() {
 
             {filtered.length > 0 && (
                 <div style={cardsGrid}>
-                    <Card title="عدد التبرعات" value={filtered.length} />
-                    <Card title="إجمالي نقدي" value={cash} />
+                    <Card title="عدد التبرعات الكلي" value={filtered.length} />
+                    <Card title="عدد التبرعات النقدية" value={cashCount} />
+                    <Card title="إجمالي المبالغ" value={`${usdSum.toLocaleString()}$ + ${lbpSum.toLocaleString()} ل.ل`} />
                     <Card title="إجمالي عيني (كمية)" value={inKind} />
                 </div>
             )}

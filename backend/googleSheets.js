@@ -25,11 +25,56 @@ const SPREADSHEET_ID =
 // CASES
 // =====================
 export async function getCases() {
-    const res = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: "Cases!A2:I",
-    });
-    return res.data.values || [];
+    try {
+        // 1. Fetch from standard Cases sheet
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Cases!A2:I",
+        });
+        const standardCases = res.data.values || [];
+
+        // 2. Fetch from Cases_Raw_Data (Direct Form Responses)
+        const rawRes = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Cases_Raw_Data!A2:H",
+        });
+        const rawEntries = rawRes.data.values || [];
+
+        // 3. Map Raw Entries to standard format
+        // Raw usually: [Timestamp, التاريخ, الفرع, الجنس, نوع_الحالة, الفريق, ملاحظات]
+        // Standard: [ID, التاريخ, الفرع, الجنس, نوع_الحالة, الوصف, الفريق, ملاحظات, CreatedAt]
+        const mappedRaw = rawEntries.map(r => [
+            r[0],      // ID (Timestamp)
+            r[1],      // التاريخ
+            r[2],      // الفرع
+            r[3],      // الجنس
+            r[4],      // نوع_الحالة
+            "",        // الوصف (Forms don't have this field yet)
+            r[5],      // الفريق
+            r[6] || "",// ملاحظات
+            r[0]       // CreatedAt
+        ]);
+
+        // Merge and avoid duplicates by checking the ID (column 0)
+        const allCases = [...standardCases];
+        const existingIds = new Set(standardCases.map(c => String(c[0])));
+
+        mappedRaw.forEach(r => {
+            if (!existingIds.has(String(r[0]))) {
+                allCases.push(r);
+            }
+        });
+
+        return allCases;
+    } catch (error) {
+        console.error("Error in getCases:", error.message);
+        // Fallback to simpler fetch if merge fails
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Cases!A2:I",
+        });
+        return res.data.values || [];
+    }
 }
 
 export async function addCase(row) {

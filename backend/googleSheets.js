@@ -140,7 +140,13 @@ export async function getMedicalTeam() {
         range: "Medical_Team!A2:N",
     });
 
-    return response.data.values || [];
+    const data = (response.data.values || []).map(row => {
+        const padded = [...row];
+        while (padded.length < 14) padded.push("");
+        return padded;
+    });
+    console.log("Fetched Medical Team Row Count:", data.length);
+    return data;
 }
 
 export async function addMedicalTeamMember(row) {
@@ -165,7 +171,9 @@ export async function updateMedicalTeamMember(id, updatedRow) {
 
     if (rowIndex === -1) throw new Error("Member not found");
 
-    const sheetRowNumber = rowIndex + 1; // 1-indexed
+    console.log(`Updating Medical Member ID: ${id} at row ${sheetRowNumber}`);
+    console.log("Updated Row Data length:", updatedRow.length);
+    console.log("Image URL being saved:", updatedRow[13]);
 
     // 2. Update the specific row
     await sheets.spreadsheets.values.update({

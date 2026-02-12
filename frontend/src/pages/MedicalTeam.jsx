@@ -26,6 +26,7 @@ const MARITAL_STATUS = ["أعزب", "متزوج", "مطلق", "أرمل"];
 const YES_NO = ["نعم", "لا"];
 
 export default function MedicalTeam() {
+    console.log("API BaseURL:", api.defaults.baseURL);
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user"));
     const [team, setTeam] = useState([]);
@@ -77,6 +78,7 @@ export default function MedicalTeam() {
                 { method: "POST", body: data }
             );
             const fileData = await res.json();
+            console.log("Cloudinary Response:", fileData);
             if (fileData.secure_url) {
                 setForm({ ...form, image_url: fileData.secure_url });
                 setImagePreview(fileData.secure_url);

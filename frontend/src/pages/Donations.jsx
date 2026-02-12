@@ -60,7 +60,7 @@ export default function Donations() {
 
             {/* ===== BRANCH FILTER (FOR SUPER) ===== */}
             {user.role === "super" && (
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: '20px' }} className="form-grid-mobile">
                     <select
                         value={branchFilter}
                         onChange={(e) => setBranchFilter(e.target.value)}
@@ -81,7 +81,7 @@ export default function Donations() {
             )}
 
             {/* ===== SUMMARY CARDS ===== */}
-            <div style={cardsGrid}>
+            <div style={cardsGrid} className="dashboard-grid">
                 <Card title="عدد التبرعات" value={visible.length} />
                 <Card title="إجمالي التبرعات النقدية" value={totalCash} />
                 <Card title="إجمالي التبرعات العينية (كمية)" value={totalInKind} />
@@ -91,7 +91,7 @@ export default function Donations() {
             <section style={section}>
                 <h4 style={sectionTitle}>تفاصيل التبرعات</h4>
 
-                <div style={{ overflowX: "auto" }}>
+                <div className="table-container">
                     <table style={table}>
                         <thead>
                             <tr>

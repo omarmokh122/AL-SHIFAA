@@ -167,7 +167,7 @@ export default function Assets() {
 
                     {assetType && (
                         <form onSubmit={submitAsset}>
-                            <div style={formGrid}>
+                            <div style={formGrid} className="form-grid-mobile">
                                 {user.role === "super" ? (
                                     <select name="الفرع" value={form.الفرع} onChange={handleChange} required style={inputStyle}>
                                         <option value="">اختر الفرع</option>
@@ -234,7 +234,7 @@ export default function Assets() {
                 <h4 style={sectionTitle}>سجل الأصول</h4>
 
                 {/* Search & Filter */}
-                <div style={filterBar}>
+                <div style={filterBar} className="form-grid-mobile">
                     <input
                         type="text"
                         placeholder="بحث في الاسم، رقم السيارة، أو الملاحظات..."
@@ -254,7 +254,7 @@ export default function Assets() {
                     </select>
                 </div>
 
-                <div style={{ overflowX: "auto" }}>
+                <div className="table-container">
                     <table style={table}>
                         <thead>
                             <tr>
@@ -376,7 +376,7 @@ const formBox = {
 
 const formGrid = {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
+    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
     gap: "12px",
     marginTop: "10px",
 };
@@ -397,6 +397,7 @@ const submitBtn = {
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
+    gridColumn: "1 / -1",
 };
 
 const select = {

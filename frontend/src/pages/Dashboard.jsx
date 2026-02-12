@@ -113,7 +113,7 @@ export default function Dashboard() {
       </p>
 
       {/* ===== FILTERS ===== */}
-      <div style={filterBox}>
+      <div style={filterBox} className="form-grid-mobile">
         <select style={selectStyle} value={month} onChange={e => setMonth(e.target.value)}>
           <option value="">الشهر</option>
           {[...Array(12)].map((_, i) => (
@@ -142,9 +142,13 @@ export default function Dashboard() {
       </div>
 
       {/* ===== SUMMARY CARDS ===== */}
-      <div style={cardsGrid}>
+      <div style={cardsGrid} className="dashboard-grid">
         <Card title="عدد الحالات الطبية" value={filteredCases.length} color="#C22129" />
-        <Card title="إجمالي التبرعات النقدية" value={`${totalCashDonations.toLocaleString()} ل.س`} color="#2e7d32" />
+        <Card
+          title="إجمالي التبرعات النقدية"
+          value={`${totalCashDonations.toLocaleString()} ل.ل ($${Math.round(totalCashDonations / 90000).toLocaleString()})`}
+          color="#2e7d32"
+        />
         <Card title="عدد الأصول" value={filteredAssets.length} color="#1976d2" />
         <Card title="عدد الفريق الطبي" value={filteredTeam.length} color="#ed6c02" />
       </div>

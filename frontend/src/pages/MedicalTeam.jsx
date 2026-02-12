@@ -66,7 +66,7 @@ export default function MedicalTeam() {
             </p>
 
             {/* ===== ADD MEMBER FORM ===== */}
-            <div style={formBox}>
+            <div style={formBox} className="dashboard-grid">
                 <h3>إضافة عضو جديد</h3>
 
                 <form
@@ -81,6 +81,7 @@ export default function MedicalTeam() {
                         }
                     }}
                     style={formGrid}
+                    className="form-grid-mobile"
                 >
                     <input
                         name="الاسم_الثلاثي"
@@ -190,7 +191,7 @@ export default function MedicalTeam() {
             </div>
 
             {/* ===== SEARCH & FILTER ===== */}
-            <div style={filterBar}>
+            <div style={filterBar} className="form-grid-mobile">
                 <input
                     type="text"
                     placeholder="بحث في الاسم أو رقم الهاتف..."
@@ -339,15 +340,17 @@ const formBox = {
 
 const formGrid = {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
+    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
     gap: "10px",
 };
 
 const submitBtn = {
-    gridColumn: "span 3",
-    padding: "10px",
+    padding: "12px",
     background: "#C22129",
     color: "#fff",
     border: "none",
-    borderRadius: "6px",
+    borderRadius: "12px",
+    cursor: "pointer",
+    fontWeight: "bold",
+    gridColumn: "1 / -1",
 };

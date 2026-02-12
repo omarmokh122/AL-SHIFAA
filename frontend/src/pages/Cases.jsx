@@ -223,7 +223,7 @@ export default function Cases() {
             {/* ===== SEARCH & FILTER ===== */}
             <section style={section}>
                 <h4 style={sectionTitle}>البحث والتصفية</h4>
-                <div style={filterBar}>
+                <div style={filterBar} className="form-grid-mobile">
                     <input
                         type="text"
                         placeholder="بحث في الفريق أو الملاحظات..."
@@ -255,7 +255,7 @@ export default function Cases() {
                 {loading ? (
                     <p>جاري التحميل...</p>
                 ) : (
-                    <div style={{ overflowX: "auto" }}>
+                    <div className="table-container">
                         <table style={table}>
                             <thead>
                                 <tr>
@@ -391,7 +391,7 @@ const formBox = {
 
 const formGrid = {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
+    gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
     gap: "14px",
 };
 
@@ -426,13 +426,13 @@ const filterSelect = {
 };
 
 const submitBtn = {
-    gridColumn: "span 3",
     padding: "12px",
     background: "#C22129",
     color: "#fff",
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
+    gridColumn: "1 / -1",
 };
 
 const table = {

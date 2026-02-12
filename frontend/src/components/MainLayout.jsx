@@ -13,7 +13,7 @@ export default function MainLayout() {
   // Close menu on navigation
   useEffect(() => {
     setIsMenuOpen(false);
-  }, [location]);
+  }, [location.pathname]); // Explicitly depend on pathname
 
   // Handle Resize
   useEffect(() => {

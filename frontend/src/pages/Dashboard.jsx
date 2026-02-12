@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [assets, setAssets] = useState([]);
   const [team, setTeam] = useState([]);
   const [donations, setDonations] = useState([]);
+  const [showUSD, setShowUSD] = useState(false);
 
   /* ================= FETCH ALL ================= */
   useEffect(() => {
@@ -174,13 +175,14 @@ export default function Dashboard() {
 }
 
 /* ================= COMPONENT ================= */
-function Card({ title, value, color }) {
+function Card({ title, value, color, onClick }) {
   return (
-    <div style={card}>
+    <div style={{ ...card, cursor: onClick ? "pointer" : "default" }} onClick={onClick}>
       <div style={{ fontSize: "14px", color: "#666", marginBottom: "8px" }}>{title}</div>
       <div style={{ fontSize: "24px", fontWeight: "bold", color: color }}>
         {value}
       </div>
+      {onClick && <div style={{ fontSize: "10px", color: "#999", marginTop: "4px" }}>اضغط للتحويل</div>}
     </div>
   );
 }

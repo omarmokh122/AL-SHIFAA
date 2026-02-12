@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api";
 
-import api from "../api";
 import { compressAndResizeImage } from "../utils/image";
 
 const ROLES = ["مسعف", "ممرض", "طبيب", "سائق إسعاف", "إداري", "متطوع"];

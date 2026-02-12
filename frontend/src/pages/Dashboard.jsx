@@ -147,8 +147,12 @@ export default function Dashboard() {
         <Card title="عدد الحالات الطبية" value={filteredCases.length} color="#C22129" />
         <Card
           title="إجمالي التبرعات النقدية"
-          value={`${totalCashDonations.toLocaleString()} ل.ل ($${Math.round(totalCashDonations / 90000).toLocaleString()})`}
+          value={showUSD
+            ? `$${Math.round(totalCashDonations / 90000).toLocaleString()}`
+            : `${totalCashDonations.toLocaleString()} ل.ل`
+          }
           color="#2e7d32"
+          onClick={() => setShowUSD(!showUSD)}
         />
         <Card title="عدد الأصول" value={filteredAssets.length} color="#1976d2" />
         <Card title="عدد الفريق الطبي" value={filteredTeam.length} color="#ed6c02" />

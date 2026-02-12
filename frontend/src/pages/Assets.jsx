@@ -54,7 +54,7 @@ export default function Assets() {
     const [selectedAmbulance, setSelectedAmbulance] = useState("");
 
     const [form, setForm] = useState({
-        الفرع: user.branch,
+        الفرع: user.branch || "",
         نوع_الأصل: "",
         الفئة: "",
         اسم_الأصل: "",
@@ -182,6 +182,7 @@ export default function Assets() {
                                     value={form.اسم_الأصل}
                                     onChange={handleChange}
                                     required
+                                    style={inputStyle}
                                 >
                                     <option value="">اسم الأصل</option>
                                     {assetNameOptions.map((opt) => (
@@ -189,18 +190,20 @@ export default function Assets() {
                                     ))}
                                 </select>
 
-                                <input name="الفئة" placeholder="الفئة" onChange={handleChange} />
-                                <input name="الوصف" placeholder="الوصف" onChange={handleChange} />
-                                <input name="الكمية" type="number" placeholder="الكمية" onChange={handleChange} />
-                                <input name="الحالة" placeholder="الحالة" onChange={handleChange} />
+                                <input name="الفئة" placeholder="الفئة" value={form.الفئة} onChange={handleChange} style={inputStyle} />
+                                <input name="الوصف" placeholder="الوصف" value={form.الوصف} onChange={handleChange} style={inputStyle} />
+                                <input name="الكمية" type="number" placeholder="الكمية" value={form.الكمية} onChange={handleChange} style={inputStyle} />
+                                <input name="الحالة" placeholder="الحالة" value={form.الحالة} onChange={handleChange} style={inputStyle} />
 
                                 {(assetType === "سيارة إسعاف" ||
                                     assetType === "محتويات سيارة إسعاف") && (
                                         <input
                                             name="رقم_السيارة"
                                             placeholder="رقم سيارة الإسعاف"
+                                            value={form.رقم_السيارة}
                                             onChange={handleChange}
                                             required
+                                            style={inputStyle}
                                         />
                                     )}
 
@@ -208,12 +211,14 @@ export default function Assets() {
                                     <input
                                         name="سنة_الصنع"
                                         placeholder="سنة الصنع"
+                                        value={form.سنة_الصنع}
                                         onChange={handleChange}
+                                        style={inputStyle}
                                     />
                                 )}
 
-                                <input name="الموقع" placeholder="الموقع" onChange={handleChange} />
-                                <input name="ملاحظات" placeholder="ملاحظات" onChange={handleChange} />
+                                <input name="الموقع" placeholder="الموقع" value={form.الموقع} onChange={handleChange} style={inputStyle} />
+                                <input name="ملاحظات" placeholder="ملاحظات" value={form.ملاحظات} onChange={handleChange} style={inputStyle} />
                             </div>
 
                             <button type="submit" style={submitBtn}>
@@ -374,6 +379,14 @@ const formGrid = {
     gridTemplateColumns: "repeat(3, 1fr)",
     gap: "12px",
     marginTop: "10px",
+};
+
+const inputStyle = {
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    fontSize: "14px",
+    outline: "none",
 };
 
 const submitBtn = {

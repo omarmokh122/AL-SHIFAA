@@ -37,46 +37,51 @@ export async function getCases() {
         const standardCases = res.data.values || [];
 
         // 2. Fetch from Cases_Raw_Data (Direct Form Responses)
+        // Headers: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع_الحالة, ملاحظات]
         const rawRes = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
             range: "Cases_Raw_Data!A2:H",
         });
         const rawEntries = rawRes.data.values || [];
 
-        // 3. Map Raw Entries to standard 9-column format
-        // Raw: [Timestamp, التاريخ, الفرع, الجنس, نوع_الحالة, الفريق, ملاحظات]
-        const mappedRaw = rawEntries.map(r => [
-            r[0],      // case_id (Timestamp)
-            r[1],      // التاريخ
-            r[2],      // الفرع
-            r[3],      // الجنس
-            r[4],      // نوع_الحالة
-            "",        // الوصف
-            r[5],      // الفريق
-            r[6] || "",// ملاحظات
-            r[0]       // created_at
-        ]);
+        // 3. Identify Missing Rows
+        const existingIds = new Set(standardCases.map(c => String(c[0])));
+        const missingRowsToMove = [];
+        const repairedRows = [...standardCases];
 
-        // 4. Merge and Deduplicate by ID (first column)
-        const allCasesMap = new Map();
-
-        // Add standard cases first
-        standardCases.forEach(c => {
-            if (c[0]) allCasesMap.set(String(c[0]), c);
-        });
-
-        // Add raw cases if they don't exist (prevents duplicates if sync happened)
-        mappedRaw.forEach(r => {
+        rawEntries.forEach(r => {
             const id = String(r[0]);
-            if (id && !allCasesMap.has(id)) {
-                allCasesMap.set(id, r);
+            if (id && !existingIds.has(id)) {
+                // Map Raw to Standard: [ID, Date, Branch, Gender, Type, Desc, Team, Notes, CreatedAt]
+                const mappedRow = [
+                    r[0],      // ID (Timestamp)
+                    r[1],      // التاريخ
+                    r[4],      // الفرع
+                    r[5],      // الجنس
+                    r[6],      // نوع الحالة
+                    "",        // الوصف
+                    "",        // الفريق
+                    r[7] || "",// ملاحظات
+                    r[0]       // CreatedAt
+                ];
+                missingRowsToMove.push(mappedRow);
+                repairedRows.push(mappedRow);
             }
         });
 
-        const merged = Array.from(allCasesMap.values());
+        // 4. Self-Healing: If missing rows found, append them to 'Cases' sheet automatically
+        if (missingRowsToMove.length > 0) {
+            console.log(`Auto-Sync: Moving ${missingRowsToMove.length} rows to Cases sheet.`);
+            await sheets.spreadsheets.values.append({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "Cases!A:I",
+                valueInputOption: "USER_ENTERED",
+                requestBody: { values: missingRowsToMove },
+            });
+        }
 
         // 5. Sort by date (descending)
-        return merged.sort((a, b) => new Date(b[1]) - new Date(a[1]) || (b[0] > a[0] ? 1 : -1));
+        return repairedRows.sort((a, b) => new Date(b[1]) - new Date(a[1]) || (b[0] > a[0] ? 1 : -1));
     } catch (error) {
         console.error("Error in getCases:", error.message);
         return [];
@@ -84,7 +89,7 @@ export async function getCases() {
 }
 
 export async function addCase(row) {
-    // Write to Cases sheet as the primary storage
+    // Write directly to Cases (the self-healing will check Raw if needed later)
     await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
         range: "Cases!A:I",

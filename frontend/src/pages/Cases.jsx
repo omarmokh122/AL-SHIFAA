@@ -72,11 +72,18 @@ export default function Cases() {
 
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState("");
+    const [branchFilter, setBranchFilter] = useState("");
 
     /* ===== Filtering Logic ===== */
     const sortedCases = [...cases].reverse();
     const visibleCases = sortedCases.filter((c) => {
-        const matchBranch = user?.role === "super" ? true : (c[2] || "").includes(user.branch);
+        let matchBranch = true;
+        if (user.role === "super") {
+            matchBranch = branchFilter ? (c[2] || "").includes(branchFilter) : true;
+        } else {
+            matchBranch = (c[2] || "").includes(user.branch);
+        }
+
         const matchType = typeFilter ? c[4] === typeFilter : true;
         const searchStr = `${c[5]} ${c[6]}`.toLowerCase();
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());
@@ -224,6 +231,17 @@ export default function Cases() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={searchBox}
                     />
+                    {user.role === "super" && (
+                        <select
+                            value={branchFilter}
+                            onChange={(e) => setBranchFilter(e.target.value)}
+                            style={{ ...filterSelect, borderColor: '#C22129', fontWeight: 'bold' }}
+                        >
+                            <option value="">كل الفروع</option>
+                            <option value="البقاع الأوسط">البقاع الأوسط</option>
+                            <option value="بعلبك">بعلبك</option>
+                        </select>
+                    )}
                     <select
                         value={typeFilter}
                         onChange={(e) => setTypeFilter(e.target.value)}

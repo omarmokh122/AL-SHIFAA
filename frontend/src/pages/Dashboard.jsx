@@ -16,6 +16,7 @@ export default function Dashboard() {
 
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("");
 
   const [cases, setCases] = useState([]);
   const [financial, setFinancial] = useState([]);
@@ -38,8 +39,14 @@ export default function Dashboard() {
       const date = new Date(r[dateIndex]);
       const matchMonth = month ? date.getMonth() + 1 === Number(month) : true;
       const matchYear = year ? date.getFullYear() === Number(year) : true;
-      // Robust branch filtering (handles "1.البقاع" etc)
-      const matchBranch = user.role === "super" ? true : (r[branchIndex] || "").includes(user.branch);
+
+      let matchBranch = true;
+      if (user.role === "super") {
+        matchBranch = selectedBranch ? (r[branchIndex] || "").includes(selectedBranch) : true;
+      } else {
+        matchBranch = (r[branchIndex] || "").includes(user.branch);
+      }
+
       return matchMonth && matchYear && matchBranch;
     });
   }
@@ -57,11 +64,19 @@ export default function Dashboard() {
     return sum;
   }, 0);
 
-  const filteredAssets =
-    user.role === "super" ? assets : assets.filter(a => (a[1] || "").includes(user.branch));
+  const filteredAssets = assets.filter(a => {
+    if (user.role === "super") {
+      return selectedBranch ? (a[1] || "").includes(selectedBranch) : true;
+    }
+    return (a[1] || "").includes(user.branch);
+  });
 
-  const filteredTeam =
-    user.role === "super" ? team : team.filter(t => (t[1] || "").includes(user.branch));
+  const filteredTeam = team.filter(t => {
+    if (user.role === "super") {
+      return selectedBranch ? (t[2] || "").includes(selectedBranch) : true; // Branch is at index 2 now
+    }
+    return (t[2] || "").includes(user.branch);
+  });
 
   /* ================= DATA FOR CHART ================= */
   const monthsNames = [
@@ -73,7 +88,14 @@ export default function Dashboard() {
     const count = cases.filter(c => {
       const d = new Date(c[1]);
       const matchYear = year ? d.getFullYear() === Number(year) : true;
-      const matchBranch = user.role === "super" ? true : (c[2] || "").includes(user.branch);
+
+      let matchBranch = true;
+      if (user.role === "super") {
+        matchBranch = selectedBranch ? (c[2] || "").includes(selectedBranch) : true;
+      } else {
+        matchBranch = (c[2] || "").includes(user.branch);
+      }
+
       return d.getMonth() === index && matchYear && matchBranch;
     }).length;
     return { name, cases: count };
@@ -105,6 +127,18 @@ export default function Dashboard() {
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
+
+        {user.role === "super" && (
+          <select
+            style={{ ...selectStyle, borderColor: '#C22129', fontWeight: 'bold' }}
+            value={selectedBranch}
+            onChange={e => setSelectedBranch(e.target.value)}
+          >
+            <option value="">كل الفروع</option>
+            <option value="البقاع الأوسط">البقاع الأوسط</option>
+            <option value="بعلبك">بعلبك</option>
+          </select>
+        )}
       </div>
 
       {/* ===== SUMMARY CARDS ===== */}

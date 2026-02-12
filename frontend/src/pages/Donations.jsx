@@ -6,6 +6,7 @@ export default function Donations() {
     const user = JSON.parse(localStorage.getItem("user"));
     const navigate = useNavigate();
     const [data, setData] = useState([]);
+    const [branchFilter, setBranchFilter] = useState("");
 
     useEffect(() => {
         api
@@ -16,10 +17,12 @@ export default function Donations() {
 
     /* ===== FILTER BY BRANCH ===== */
     const sortedData = [...data].reverse();
-    const visible =
-        user.role === "super"
-            ? sortedData
-            : sortedData.filter((r) => (r[2] || "").includes(user.branch));
+    const visible = sortedData.filter((r) => {
+        if (user.role === "super") {
+            return branchFilter ? (r[2] || "").includes(branchFilter) : true;
+        }
+        return (r[2] || "").includes(user.branch);
+    });
 
     /* ===== CALCULATIONS ===== */
     let totalCash = 0;
@@ -54,6 +57,28 @@ export default function Donations() {
                     تقرير التبرعات الشهري
                 </button>
             </div>
+
+            {/* ===== BRANCH FILTER (FOR SUPER) ===== */}
+            {user.role === "super" && (
+                <div style={{ marginBottom: '20px' }}>
+                    <select
+                        value={branchFilter}
+                        onChange={(e) => setBranchFilter(e.target.value)}
+                        style={{
+                            padding: '10px',
+                            borderRadius: '8px',
+                            border: '1px solid #C22129',
+                            outline: 'none',
+                            fontWeight: 'bold',
+                            minWidth: '200px'
+                        }}
+                    >
+                        <option value="">كل الفروع</option>
+                        <option value="البقاع الأوسط">البقاع الأوسط</option>
+                        <option value="بعلبك">بعلبك</option>
+                    </select>
+                </div>
+            )}
 
             {/* ===== SUMMARY CARDS ===== */}
             <div style={cardsGrid}>

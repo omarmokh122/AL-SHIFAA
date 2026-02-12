@@ -28,10 +28,17 @@ export default function MedicalTeam() {
     const [form, setForm] = useState({ الفرع: user.branch || "" });
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
+    const [branchFilter, setBranchFilter] = useState("");
 
     const filteredTeam = team.filter((m) => {
         const matchRole = roleFilter ? m[3] === roleFilter : true;
-        const matchBranch = user.role === "super" ? true : (m[2] || "").includes(user.branch);
+
+        let matchBranch = true;
+        if (user.role === "super") {
+            matchBranch = branchFilter ? (m[2] || "").includes(branchFilter) : true;
+        } else {
+            matchBranch = (m[2] || "").includes(user.branch);
+        }
         const searchStr = `${m[1]} ${m[10]}`.toLowerCase(); // Name and Phone
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());
         return matchRole && matchBranch && matchSearch;
@@ -197,8 +204,21 @@ export default function MedicalTeam() {
                     style={filterSelect}
                 >
                     <option value="">كل الصفات</option>
-                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                    {ROLES.map(r => (
+                        <option key={r} value={r}>{r}</option>
+                    ))}
                 </select>
+                {user.role === "super" && (
+                    <select
+                        value={branchFilter}
+                        onChange={(e) => setBranchFilter(e.target.value)}
+                        style={{ ...filterSelect, borderColor: '#C22129', fontWeight: 'bold' }}
+                    >
+                        <option value="">كل الفروع</option>
+                        <option value="البقاع الأوسط">البقاع الأوسط</option>
+                        <option value="بعلبك">بعلبك</option>
+                    </select>
+                )}
             </div>
 
             {/* ===== TEAM GRID ===== */}
@@ -228,7 +248,7 @@ export default function MedicalTeam() {
                     ))
                 )}
             </div>
-        </div>
+        </div >
     );
 }
 

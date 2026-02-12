@@ -1,0 +1,422 @@
+import { useEffect, useState } from "react";
+import api from "../api";
+import { useNavigate } from "react-router-dom";
+
+/* ===== Constants ===== */
+const CASE_TYPES = [
+    "حالات طارئة",
+    "كسور",
+    "حروق",
+    "جروح",
+    "حالات قلبية",
+    "جهاز تنفسي",
+    "حالات عصبية",
+    "حالات طبية عامة",
+];
+
+export default function Cases() {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const navigate = useNavigate();
+
+    const [cases, setCases] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const [form, setForm] = useState({
+        التاريخ: "",
+        الفرع: user?.branch || "",
+        الجنس: "",
+        نوع_الحالة: "",
+        الفريق: "",
+        ملاحظات: "",
+    });
+
+    /* ===== Fetch Cases ===== */
+    async function fetchCases() {
+        try {
+            const res = await api.get("/cases");
+            setCases(res.data.data || []);
+        } catch (err) {
+            console.error(err);
+            alert("خطأ في جلب الحالات");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchCases();
+    }, []);
+
+    /* ===== Form Handlers ===== */
+    function handleChange(e) {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    async function submitCase(e) {
+        e.preventDefault();
+        try {
+            await api.post("/cases", form);
+            fetchCases();
+            setForm({
+                ...form,
+                الجنس: "",
+                نوع_الحالة: "",
+                الفريق: "",
+                ملاحظات: "",
+            });
+        } catch (err) {
+            console.error(err);
+            alert("خطأ أثناء إضافة الحالة");
+        }
+    }
+
+    const [searchTerm, setSearchTerm] = useState("");
+    const [typeFilter, setTypeFilter] = useState("");
+
+    /* ===== Filtering Logic ===== */
+    const visibleCases = cases.filter((c) => {
+        const matchBranch = user?.role === "super" ? true : c[2] === user.branch;
+        const matchType = typeFilter ? c[4] === typeFilter : true;
+        const searchStr = `${c[5]} ${c[6]}`.toLowerCase();
+        const matchSearch = searchStr.includes(searchTerm.toLowerCase());
+        return matchBranch && matchType && matchSearch;
+    });
+
+    /* ===== Stats ===== */
+    const male = visibleCases.filter((c) => c[3] === "ذكر").length;
+    const female = visibleCases.filter((c) => c[3] === "أنثى").length;
+
+    const typeStats = {};
+    visibleCases.forEach((c) => {
+        typeStats[c[4]] = (typeStats[c[4]] || 0) + 1;
+    });
+
+    /* ===== UI ===== */
+    return (
+        <div dir="rtl" style={container}>
+
+            {/* ===== TITLE & DESCRIPTION ===== */}
+            <h2 style={title}>إدارة الحالات الطبية</h2>
+            <p style={description}>
+                يتيح هذا القسم تسجيل ومتابعة جميع الحالات الطبية التي يتم التعامل
+                معها من قبل فرق الإسعاف، مع إمكانية الاطلاع على توزيع الحالات
+                حسب النوع والجنس، وإنشاء تقارير شهرية تساعد الإدارة على تحليل
+                حجم ونوع التدخلات الطبية.
+            </p>
+
+            {/* ===== HEADER ACTIONS ===== */}
+            <div style={header}>
+                <h3 style={{ margin: 0 }}>قائمة الحالات</h3>
+
+                <button
+                    onClick={() => navigate("/reports/monthly-cases")}
+                    style={reportBtn}
+                >
+                    تقرير الحالات الشهري
+                </button>
+            </div>
+
+            {/* ===== STAT CARDS ===== */}
+            <div style={statsGrid}>
+                <StatCard title="إجمالي الحالات (المفلترة)" value={visibleCases.length} />
+                <StatCard title="ذكور" value={male} />
+                <StatCard title="إناث" value={female} />
+            </div>
+
+            {/* ===== CASE TYPES ===== */}
+            <section style={section}>
+                <h4 style={sectionTitle}>توزيع أنواع الحالات (المفلترة)</h4>
+                <div style={typeGrid}>
+                    {Object.keys(typeStats).length === 0 ? (
+                        <p>لا توجد بيانات</p>
+                    ) : (
+                        Object.entries(typeStats).map(([k, v]) => (
+                            <div key={k} style={typeCard}>
+                                <div>{k}</div>
+                                <div style={typeValue}>{v}</div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </section>
+
+            {/* ===== ADD CASE ===== */}
+            <section style={section}>
+                <h4 style={sectionTitle}>إضافة حالة جديدة</h4>
+                <div style={formBox}>
+                    <form onSubmit={submitCase} style={formGrid}>
+                        <input
+                            type="date"
+                            name="التاريخ"
+                            value={form.التاريخ}
+                            onChange={handleChange}
+                            required
+                            style={inputStyle}
+                        />
+
+                        {user.role === "super" ? (
+                            <select name="الفرع" value={form.الفرع} onChange={handleChange} required style={inputStyle}>
+                                <option value="">اختر الفرع</option>
+                                <option value="البقاع الأوسط">البقاع الأوسط</option>
+                                <option value="بعلبك">بعلبك</option>
+                            </select>
+                        ) : (
+                            <input name="الفرع" value={user.branch} readOnly style={{ ...inputStyle, background: '#f5f5f5' }} />
+                        )}
+
+                        <select
+                            name="الجنس"
+                            value={form.الجنس}
+                            onChange={handleChange}
+                            required
+                            style={inputStyle}
+                        >
+                            <option value="">الجنس</option>
+                            <option value="ذكر">ذكر</option>
+                            <option value="أنثى">أنثى</option>
+                        </select>
+
+                        <select
+                            name="نوع_الحالة"
+                            value={form.نوع_الحالة}
+                            onChange={handleChange}
+                            required
+                            style={inputStyle}
+                        >
+                            <option value="">نوع الحالة</option>
+                            {CASE_TYPES.map((t) => (
+                                <option key={t}>{t}</option>
+                            ))}
+                        </select>
+
+                        <input
+                            name="الفريق"
+                            placeholder="الفريق"
+                            value={form.الفريق}
+                            onChange={handleChange}
+                            style={inputStyle}
+                        />
+
+                        <input
+                            name="ملاحظات"
+                            placeholder="ملاحظات"
+                            value={form.ملاحظات}
+                            onChange={handleChange}
+                            style={inputStyle}
+                        />
+
+                        <button type="submit" style={submitBtn}>
+                            حفظ الحالة
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            {/* ===== SEARCH & FILTER ===== */}
+            <section style={section}>
+                <h4 style={sectionTitle}>البحث والتصفية</h4>
+                <div style={filterBar}>
+                    <input
+                        type="text"
+                        placeholder="بحث في الفريق أو الملاحظات..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={searchBox}
+                    />
+                    <select
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value)}
+                        style={filterSelect}
+                    >
+                        <option value="">كل الأنواع</option>
+                        {CASE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                </div>
+
+                {loading ? (
+                    <p>جاري التحميل...</p>
+                ) : (
+                    <div style={{ overflowX: "auto" }}>
+                        <table style={table}>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>التاريخ</th>
+                                    <th>الفرع</th>
+                                    <th>الجنس</th>
+                                    <th>نوع الحالة</th>
+                                    <th>الفريق</th>
+                                    <th>ملاحظات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {visibleCases.length === 0 ? (
+                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
+                                ) : (
+                                    visibleCases.map((c, i) => (
+                                        <tr key={i}>
+                                            <td>{i + 1}</td>
+                                            <td>{c[1]}</td>
+                                            <td>{c[2]}</td>
+                                            <td>{c[3]}</td>
+                                            <td>{c[4]}</td>
+                                            <td>{c[5]}</td>
+                                            <td>{c[6]}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
+        </div>
+    );
+}
+
+/* ===== Small Components ===== */
+function StatCard({ title, value }) {
+    return (
+        <div style={statCard}>
+            <div style={{ fontSize: "14px", color: "#555" }}>{title}</div>
+            <div style={{ fontSize: "26px", fontWeight: "bold", color: "#C22129" }}>
+                {value}
+            </div>
+        </div>
+    );
+}
+
+/* ===== Styles ===== */
+const container = {
+    padding: "24px",
+    width: "100%",
+};
+
+const title = {
+    marginBottom: "6px",
+};
+
+const description = {
+    maxWidth: "900px",
+    color: "#555",
+    lineHeight: "1.7",
+    marginBottom: "24px",
+};
+
+const header = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "18px",
+};
+
+const reportBtn = {
+    background: "#424443",
+    color: "#fff",
+    border: "none",
+    padding: "8px 16px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+};
+
+const statsGrid = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: "14px",
+    marginBottom: "28px",
+};
+
+const statCard = {
+    background: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: "10px",
+    padding: "16px",
+    textAlign: "center",
+};
+
+const section = {
+    marginBottom: "32px",
+};
+
+const sectionTitle = {
+    marginBottom: "12px",
+};
+
+const typeGrid = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+    gap: "12px",
+};
+
+const typeCard = {
+    background: "#f9f9f9",
+    border: "1px solid #ddd",
+    borderRadius: "8px",
+    padding: "12px",
+    textAlign: "center",
+};
+
+const typeValue = {
+    fontWeight: "bold",
+    fontSize: "18px",
+    marginTop: "6px",
+};
+
+const formBox = {
+    background: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: "10px",
+    padding: "18px",
+};
+
+const formGrid = {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: "14px",
+};
+
+const inputStyle = {
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    fontSize: "14px",
+    outline: "none",
+};
+
+const filterBar = {
+    display: "flex",
+    gap: "12px",
+    marginBottom: "18px",
+};
+
+const searchBox = {
+    flex: 2,
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    outline: "none",
+};
+
+const filterSelect = {
+    flex: 1,
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    outline: "none",
+};
+
+const submitBtn = {
+    gridColumn: "span 3",
+    padding: "12px",
+    background: "#C22129",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+};
+
+const table = {
+    width: "100%",
+    borderCollapse: "collapse",
+};

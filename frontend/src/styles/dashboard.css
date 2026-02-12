@@ -1,0 +1,72 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  direction: rtl;
+}
+
+.layout {
+  display: flex;
+}
+
+.sidebar {
+  width: 220px;
+  background: #c22129;
+  color: white;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h2 {
+  text-align: center;
+  padding: 20px;
+}
+
+.sidebar nav a {
+  color: white;
+  text-decoration: none;
+  padding: 12px 20px;
+  display: block;
+}
+
+.sidebar nav a.active {
+  background: rgba(255,255,255,0.2);
+}
+
+.logout {
+  margin: auto 20px 20px;
+  padding: 10px;
+  border: none;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  cursor: pointer;
+}
+
+.main {
+  flex: 1;
+  background: #f7f7f7;
+}
+
+.header {
+  background: white;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content {
+  padding: 30px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}

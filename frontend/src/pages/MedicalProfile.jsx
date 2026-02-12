@@ -19,6 +19,7 @@ export default function MedicalProfile() {
 
     const [isEditing, setIsEditing] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({
         الاسم_الثلاثي: m ? m[1] : "",
         الفرع: m ? m[2] : "",
@@ -68,13 +69,17 @@ export default function MedicalProfile() {
     }
 
     async function handleSave() {
+        if (isSaving) return;
+        setIsSaving(true);
         try {
             await api.put(`/medical-team/${m[0]}`, formData);
             alert("✅ تم حفظ التعديلات بنجاح");
             setIsEditing(false);
-            window.location.reload(); // Refresh to show new data
+            navigate("/medical-team"); // Go back to list to see updates
         } catch (err) {
             alert("❌ فشل حفظ التعديلات");
+        } finally {
+            setIsSaving(false);
         }
     }
 
@@ -89,13 +94,15 @@ export default function MedicalProfile() {
                 {(user.role === "admin" || user.role === "super") && (
                     <button
                         onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                        disabled={isSaving}
                         style={{
                             ...backBtn,
                             background: isEditing ? "#2e7d32" : "#424443",
-                            marginRight: "10px"
+                            marginRight: "10px",
+                            opacity: isSaving ? 0.7 : 1
                         }}
                     >
-                        {isEditing ? "💾 حفظ التعديلات" : "✏️ تعديل الملف"}
+                        {isSaving ? "⏳ جاري الحفظ..." : (isEditing ? "💾 حفظ التعديلات" : "✏️ تعديل الملف")}
                     </button>
                 )}
                 {isEditing && (

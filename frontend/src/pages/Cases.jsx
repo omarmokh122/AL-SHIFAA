@@ -74,8 +74,9 @@ export default function Cases() {
     const [typeFilter, setTypeFilter] = useState("");
 
     /* ===== Filtering Logic ===== */
-    const visibleCases = cases.filter((c) => {
-        const matchBranch = user?.role === "super" ? true : c[2] === user.branch;
+    const sortedCases = [...cases].reverse();
+    const visibleCases = sortedCases.filter((c) => {
+        const matchBranch = user?.role === "super" ? true : (c[2] || "").includes(user.branch);
         const matchType = typeFilter ? c[4] === typeFilter : true;
         const searchStr = `${c[5]} ${c[6]}`.toLowerCase();
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());

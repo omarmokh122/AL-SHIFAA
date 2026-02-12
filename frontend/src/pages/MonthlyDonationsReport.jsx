@@ -33,7 +33,7 @@ export default function MonthlyDonationsReport() {
             const matchMonth = date.getMonth() + 1 === Number(month);
             const matchYear = date.getFullYear() === Number(year);
             const matchBranch =
-                user.role === "super" ? true : r[2] === user.branch;
+                user.role === "super" ? true : (r[2] || "").includes(user.branch);
 
             return matchMonth && matchYear && matchBranch;
         });

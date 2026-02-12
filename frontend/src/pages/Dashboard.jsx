@@ -38,14 +38,19 @@ export default function Dashboard() {
       const date = new Date(r[dateIndex]);
       const matchMonth = month ? date.getMonth() + 1 === Number(month) : true;
       const matchYear = year ? date.getFullYear() === Number(year) : true;
-      const matchBranch = user.role === "super" ? true : r[branchIndex] === user.branch;
+      // Robust branch filtering (handles "1.البقاع" etc)
+      const matchBranch = user.role === "super" ? true : (r[branchIndex] || "").includes(user.branch);
       return matchMonth && matchYear && matchBranch;
     });
   }
 
   /* ================= CALCULATIONS ================= */
-  const filteredCases = filterByDateAndBranch(cases, 1, 2);
-  const filteredDonations = filterByDateAndBranch(donations, 1, 2);
+  // Reverse arrays to show newest data first (since Google Sheets appends to bottom)
+  const sortedCases = [...cases].reverse();
+  const sortedDonations = [...donations].reverse();
+
+  const filteredCases = filterByDateAndBranch(sortedCases, 1, 2);
+  const filteredDonations = filterByDateAndBranch(sortedDonations, 1, 2);
 
   const totalCashDonations = filteredDonations.reduce((sum, r) => {
     if (r[4] === "مادي") return sum + Number(r[6] || 0);
@@ -53,10 +58,10 @@ export default function Dashboard() {
   }, 0);
 
   const filteredAssets =
-    user.role === "super" ? assets : assets.filter(a => a[1] === user.branch);
+    user.role === "super" ? assets : assets.filter(a => (a[1] || "").includes(user.branch));
 
   const filteredTeam =
-    user.role === "super" ? team : team.filter(t => t[1] === user.branch);
+    user.role === "super" ? team : team.filter(t => (t[1] || "").includes(user.branch));
 
   /* ================= DATA FOR CHART ================= */
   const monthsNames = [
@@ -68,7 +73,7 @@ export default function Dashboard() {
     const count = cases.filter(c => {
       const d = new Date(c[1]);
       const matchYear = year ? d.getFullYear() === Number(year) : true;
-      const matchBranch = user.role === "super" ? true : c[2] === user.branch;
+      const matchBranch = user.role === "super" ? true : (c[2] || "").includes(user.branch);
       return d.getMonth() === index && matchYear && matchBranch;
     }).length;
     return { name, cases: count };

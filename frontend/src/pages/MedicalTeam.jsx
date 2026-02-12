@@ -31,7 +31,7 @@ export default function MedicalTeam() {
 
     const filteredTeam = team.filter((m) => {
         const matchRole = roleFilter ? m[3] === roleFilter : true;
-        const matchBranch = user.role === "super" ? true : m[1] === user.branch;
+        const matchBranch = user.role === "super" ? true : (m[1] || "").includes(user.branch);
         const searchStr = `${m[2]} ${m[10]}`.toLowerCase(); // Name and Phone
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());
         return matchRole && matchBranch && matchSearch;

@@ -15,10 +15,11 @@ export default function Donations() {
     }, []);
 
     /* ===== FILTER BY BRANCH ===== */
+    const sortedData = [...data].reverse();
     const visible =
         user.role === "super"
-            ? data
-            : data.filter((r) => r[2] === user.branch);
+            ? sortedData
+            : sortedData.filter((r) => (r[2] || "").includes(user.branch));
 
     /* ===== CALCULATIONS ===== */
     let totalCash = 0;

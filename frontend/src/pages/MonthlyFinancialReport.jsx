@@ -37,7 +37,7 @@ export default function MonthlyFinancialReport() {
             const matchYear = date.getFullYear() === Number(year);
 
             const matchBranch =
-                user.role === "super" ? true : row[17] === user.branch;
+                user.role === "super" ? true : (row[17] || "").includes(user.branch);
 
             return matchMonth && matchYear && matchBranch;
         });

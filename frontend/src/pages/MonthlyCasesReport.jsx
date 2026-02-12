@@ -55,7 +55,7 @@ export default function MonthlyCasesReport() {
             return (
                 d.getMonth() + 1 === Number(month) &&
                 d.getFullYear() === Number(year) &&
-                (user.role === "super" || c[2] === user.branch)
+                (user.role === "super" || (c[2] || "").includes(user.branch))
             );
         });
 
@@ -91,7 +91,7 @@ export default function MonthlyCasesReport() {
             return (
                 d.getMonth() + 1 === Number(month) &&
                 d.getFullYear() === Number(year) &&
-                (user.role === "super" || c[2] === user.branch)
+                (user.role === "super" || (c[2] || "").includes(user.branch))
             );
         });
         applyTypeFilter(base, v);

@@ -52,17 +52,29 @@ export default function MedicalProfile() {
         data.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
         try {
+            // Immediate local preview
+            const localUrl = URL.createObjectURL(file);
+            setFormData(prev => ({ ...prev, image_url: localUrl }));
+
             const res = await fetch(
                 `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
                 { method: "POST", body: data }
             );
             const fileData = await res.json();
+            console.log("Cloudinary Upload Result:", fileData);
+
             if (fileData.secure_url) {
-                setFormData({ ...formData, image_url: fileData.secure_url });
+                setFormData(prev => ({ ...prev, image_url: fileData.secure_url }));
                 alert("✅ تم رفع الصورة بنجاح");
+            } else {
+                const errMsg = fileData.error?.message || "فشل الرفع";
+                alert(`❌ فشل رفع الصورة: ${errMsg}`);
+                // Revert to original if upload failed
+                setFormData(prev => ({ ...prev, image_url: m[13] || "" }));
             }
         } catch (err) {
-            alert("❌ خطأ أثناء الرفع");
+            console.error("Upload Error:", err);
+            alert("❌ خطأ أثناء الاتصال بـ Cloudinary");
         } finally {
             setIsUploading(false);
         }

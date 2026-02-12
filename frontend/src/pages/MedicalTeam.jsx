@@ -73,18 +73,24 @@ export default function MedicalTeam() {
         data.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
         try {
+            const localUrl = URL.createObjectURL(file);
+            setImagePreview(localUrl);
+
             const res = await fetch(
                 `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
                 { method: "POST", body: data }
             );
             const fileData = await res.json();
-            console.log("Cloudinary Response:", fileData);
+            console.log("Cloudinary Upload Result:", fileData);
+
             if (fileData.secure_url) {
-                setForm({ ...form, image_url: fileData.secure_url });
+                setForm(prev => ({ ...prev, image_url: fileData.secure_url }));
                 setImagePreview(fileData.secure_url);
                 alert("✅ تم رفع الصورة بنجاح");
             } else {
-                alert("❌ فشل رفع الصورة، تأكد من إعدادات Cloudinary");
+                const errMsg = fileData.error?.message || "فشل الرفع";
+                alert(`❌ فشل رفع الصورة: ${errMsg}`);
+                setImagePreview("");
             }
         } catch (err) {
             console.error("Upload Error:", err);

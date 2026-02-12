@@ -137,7 +137,7 @@ export async function addAsset(row) {
 export async function getMedicalTeam() {
     const response = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Medical_Team!A2:M",
+        range: "Medical_Team!A2:N",
     });
 
     return response.data.values || [];
@@ -146,7 +146,7 @@ export async function getMedicalTeam() {
 export async function addMedicalTeamMember(row) {
     await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Medical_Team!A:M",
+        range: "Medical_Team!A:N",
         valueInputOption: "USER_ENTERED",
         requestBody: {
             values: [row],

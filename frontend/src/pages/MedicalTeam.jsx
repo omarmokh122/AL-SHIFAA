@@ -5,6 +5,10 @@ import { useNavigate } from "react-router-dom";
 const DEFAULT_IMG =
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
+// ☁️ Cloudinary Config (Placeholders - Fill these in)
+const CLOUDINARY_CLOUD_NAME = "dz6qisv9t"; // Example: "dwp6pxxxx"
+const CLOUDINARY_UPLOAD_PRESET = "alshifaa_unsigned"; // Example: "unsigned_preset"
+
 /* ===== DROPDOWN OPTIONS ===== */
 const ROLES = [
     "مسعف",
@@ -29,6 +33,8 @@ export default function MedicalTeam() {
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
     const [branchFilter, setBranchFilter] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
+    const [imagePreview, setImagePreview] = useState("");
 
     const filteredTeam = team.filter((m) => {
         const matchRole = roleFilter ? m[3] === roleFilter : true;
@@ -54,6 +60,36 @@ export default function MedicalTeam() {
 
     function handleChange(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
+    }
+
+    async function handleFileChange(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const data = new FormData();
+        data.append("file", file);
+        data.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+        try {
+            const res = await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+                { method: "POST", body: data }
+            );
+            const fileData = await res.json();
+            if (fileData.secure_url) {
+                setForm({ ...form, image_url: fileData.secure_url });
+                setImagePreview(fileData.secure_url);
+                alert("✅ تم رفع الصورة بنجاح");
+            } else {
+                alert("❌ فشل رفع الصورة، تأكد من إعدادات Cloudinary");
+            }
+        } catch (err) {
+            console.error("Upload Error:", err);
+            alert("❌ خطأ أثناء الرفع");
+        } finally {
+            setIsUploading(false);
+        }
     }
 
     return (
@@ -177,12 +213,20 @@ export default function MedicalTeam() {
                         style={inputStyle}
                     />
 
-                    <input
-                        name="image_url"
-                        placeholder="Image URL"
-                        onChange={handleChange}
-                        style={inputStyle}
-                    />
+                    <div style={{ ...inputStyle, background: "#f9f9f9", border: "1px dashed #C22129", position: "relative" }}>
+                        <label style={{ cursor: "pointer", display: "block" }}>
+                            {isUploading ? "⏳ جاري الرفع..." : "📸 اختر صورة العضو"}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                style={{ display: "none" }}
+                            />
+                        </label>
+                        {imagePreview && (
+                            <img src={imagePreview} alt="preview" style={{ position: "absolute", left: "5px", top: "5px", height: "30px", borderRadius: "4px" }} />
+                        )}
+                    </div>
 
                     <button type="submit" style={submitBtn}>
                         إضافة

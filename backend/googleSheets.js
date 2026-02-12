@@ -153,3 +153,27 @@ export async function addMedicalTeamMember(row) {
         },
     });
 }
+export async function updateMedicalTeamMember(id, updatedRow) {
+    // 1. Get all IDs to find the row index
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Medical_Team!A:A",
+    });
+
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex((r) => r[0] == id); // Index 0 is the ID
+
+    if (rowIndex === -1) throw new Error("Member not found");
+
+    const sheetRowNumber = rowIndex + 1; // 1-indexed
+
+    // 2. Update the specific row
+    await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `Medical_Team!A${sheetRowNumber}:N${sheetRowNumber}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+            values: [updatedRow],
+        },
+    });
+}

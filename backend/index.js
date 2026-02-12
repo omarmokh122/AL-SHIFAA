@@ -14,6 +14,7 @@ import {
   addAsset,
   getMedicalTeam,
   addMedicalTeamMember,
+  updateMedicalTeamMember,
 } from "./googleSheets.js";
 
 console.log("✅ index.js loaded");
@@ -93,6 +94,52 @@ app.post("/medical-team", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("POST /medical-team error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+app.put("/medical-team/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      الاسم_الثلاثي,
+      الفرع,
+      الصفة,
+      فئة_الدم,
+      تاريخ_الميلاد,
+      الوضع_الاجتماعي,
+      عدد_الأولاد,
+      المستوى_التعليمي,
+      بدلة,
+      رقم_الهاتف,
+      بطاقة,
+      رقم_البطاقة,
+      image_url,
+    } = req.body;
+
+    const row = [
+      id,                      // الرقم (0)
+      الاسم_الثلاثي,            // الاسم الثلاثي (1)
+      الفرع,                    // الفرع (2)
+      الصفة,                   // الصفة (3)
+      فئة_الدم,
+      تاريخ_الميلاد,
+      الوضع_الاجتماعي,
+      عدد_الأولاد,
+      المستوى_التعليمي,
+      بدلة,
+      رقم_الهاتف,
+      بطاقة,
+      رقم_البطاقة,
+      image_url,
+    ];
+
+    await updateMedicalTeamMember(id, row);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("PUT /medical-team error:", error.message);
     res.status(500).json({
       success: false,
       error: error.message,

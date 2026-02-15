@@ -71,12 +71,19 @@ export default function Donations() {
     });
 
     /* ===== CALCULATIONS ===== */
+    const parseAmount = (val) => {
+        if (!val) return 0;
+        // Remove commas and convert to number
+        const num = parseFloat(String(val).replace(/,/g, ""));
+        return isNaN(num) ? 0 : num;
+    };
+
     // Total Incoming (Cash)
     let totalIncomingUSD = 0;
     let totalIncomingLBP = 0;
     incomingData.forEach(r => {
         if (r[4] === "نقدي") {
-            const val = Number(r[6] || 0);
+            const val = parseAmount(r[6]); // Amount is at index 6
             const cur = (r[7] || "").toUpperCase();
             if (cur === "USD" || cur === "$") totalIncomingUSD += val;
             else totalIncomingLBP += val;
@@ -87,7 +94,7 @@ export default function Donations() {
     let totalOutgoingUSD = 0;
     let totalOutgoingLBP = 0;
     outgoingData.forEach(r => {
-        const val = Number(r[6] || 0);
+        const val = parseAmount(r[6]);
         const cur = (r[7] || "").toUpperCase();
         if (cur === "USD" || cur === "$") totalOutgoingUSD += val;
         else totalOutgoingLBP += val;

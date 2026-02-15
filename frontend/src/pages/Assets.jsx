@@ -224,7 +224,6 @@ export default function Assets() {
                         <option value="مركز">أصول المركز</option>
                         <option value="سيارة إسعاف">سيارة إسعاف</option>
                         <option value="محتويات سيارة إسعاف">محتويات سيارة إسعاف</option>
-                        <option value="اعاره للاصول المعاره">اعاره للاصول المعاره</option>
                     </select>
 
                     {assetType && (
@@ -324,7 +323,6 @@ export default function Assets() {
                         <option value="مركز">أصول المركز</option>
                         <option value="سيارة إسعاف">سيارات إسعاف</option>
                         <option value="محتويات سيارة إسعاف">محتويات سيارة إسعاف</option>
-                        <option value="اعاره للاصول المعاره">الأصول المعارة</option>
                     </select>
                 </div>
 
@@ -387,7 +385,7 @@ export default function Assets() {
                     onClick={() => window.location.href = "/borrowed-assets"}
                     style={navigateButton}
                 >
-                    📦 إدارة الأصول المعارة - {borrowedAssets.length} عنصر معار
+                    الأصول المعارة
                 </button>
             </section>
 

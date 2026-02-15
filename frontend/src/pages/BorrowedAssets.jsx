@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import api from "../api";
 
-const BORROWABLE_ITEMS = ["أدوات طبية", "جهاز أوكسجين", "كرسي متحرك", "عكازات", "أخرى"];
+const BORROWABLE_ITEMS = ["أدوات طبية", "جهاز أوكسجين", "كرسي متحرك", "عكازات"];
+
+const ITEM_ICONS = {
+    "أدوات طبية": "🏥",
+    "جهاز أوكسجين": "🫁",
+    "كرسي متحرك": "♿",
+    "عكازات": "🦯"
+};
 
 export default function BorrowedAssets() {
     const storedUser = localStorage.getItem("user");
@@ -24,8 +31,7 @@ export default function BorrowedAssets() {
             "أدوات طبية": 50,
             "جهاز أوكسجين": 10,
             "كرسي متحرك": 15,
-            "عكازات": 30,
-            "أخرى": 20
+            "عكازات": 30
         };
     };
 
@@ -206,7 +212,7 @@ export default function BorrowedAssets() {
                 <div style={cardsContainer} className="form-grid-mobile">
                     {inventory.map((item) => (
                         <div key={item.name} style={inventoryCard}>
-                            <div style={cardIcon}>📦</div>
+                            <div style={cardIcon}>{ITEM_ICONS[item.name] || "📦"}</div>
                             <div style={cardTitle}>{item.name}</div>
 
                             {editingInventory ? (

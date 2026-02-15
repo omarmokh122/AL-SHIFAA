@@ -12,6 +12,7 @@ import MonthlyCasesReport from "./pages/MonthlyCasesReport";
 import MonthlyDonationsReport from "./pages/MonthlyDonationsReport";
 import MonthlyFinancialReport from "./pages/MonthlyFinancialReport";
 import MedicalProfile from "./pages/MedicalProfile";
+import BorrowedAssets from "./pages/BorrowedAssets";
 
 
 /* ===== Layout & Guards ===== */
@@ -51,6 +52,7 @@ function App() {
           />
           <Route path="financial" element={<Financial />} />
           <Route path="assets" element={<Assets />} />
+          <Route path="borrowed-assets" element={<BorrowedAssets />} />
           <Route path="medical-team" element={<MedicalTeam />} />
           <Route path="medical-profile" element={<MedicalProfile />} />
           <Route path="donations" element={<Donations />} />

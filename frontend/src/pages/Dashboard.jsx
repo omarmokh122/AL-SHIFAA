@@ -60,15 +60,22 @@ export default function Dashboard() {
   const filteredCases = filterByDateAndBranch(sortedCases, 1, 2);
   const filteredDonations = filterByDateAndBranch(sortedDonations, 1, 2);
 
+  const parseAmount = (val) => {
+    if (!val) return 0;
+    const num = parseFloat(String(val).replace(/,/g, ""));
+    return isNaN(num) ? 0 : num;
+  };
+
   let totalLBP = 0;
   let totalUSD = 0;
   let totalCashCount = 0;
 
   filteredDonations.forEach(r => {
+    // r[4] is Type (نقدي means Cash)
     if (r[4] === "نقدي") {
       totalCashCount++;
-      const val = Number(r[6] || 0);
-      const cur = (r[7] || "").toUpperCase();
+      const val = parseAmount(r[6]); // Amount at index 6
+      const cur = (r[7] || "").toUpperCase(); // Currency at index 7
       if (cur === "USD" || cur === "$") totalUSD += val;
       else totalLBP += val;
     }

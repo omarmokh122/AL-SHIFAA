@@ -86,10 +86,21 @@ export default function Donations() {
     // Total Incoming (Cash)
     let totalIncomingUSD = 0;
     let totalIncomingLBP = 0;
+
+    console.log("Debugging Donations Stats:");
+    console.log("Total Incoming Records:", incomingData.length);
+    if (incomingData.length > 0) {
+        console.log("Sample Row:", incomingData[0]);
+    }
+
     incomingData.forEach(r => {
         if (r[4] === "نقدي") {
             const val = parseAmount(r[6]);
             const cur = (r[7] || "").toUpperCase();
+
+            // Log if we find a value to verify
+            // console.log(`Row ID ${r[0]}: Val=${val}, Cur=${cur}`);
+
             if (cur === "USD" || cur === "$") totalIncomingUSD += val;
             else totalIncomingLBP += val;
         }

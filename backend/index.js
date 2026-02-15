@@ -181,10 +181,34 @@ app.get("/donations", async (req, res) => {
     // Let's add a small marker if needed, but for now exact same structure is expected.
     const allData = [...received, ...spent];
 
+    // 🔹 NORMALIZATION: Handle mixed data formats
+    // Old Format: [..., Type, "", Method, Amount, ...] (Empty col at 5)
+    // New Format: [..., Type, Method, Amount, ...] (No empty col)
+    // We detect Old Format if index 6 is NOT a number (e.g. Method string or empty) AND index 7 IS a number (Amount).
+    // If detected, we remove index 5 to align with New Format.
+
+    const normalizedData = allData.map(row => {
+      // Ensure row has enough columns to be potentially old format
+      if (!row || row.length < 8) return row;
+
+      const val6 = parseFloat(String(row[6] || "").replace(/,/g, ""));
+      const val7 = parseFloat(String(row[7] || "").replace(/,/g, ""));
+
+      // Check if row[6] is NaN (likely text Method) and row[7] is Number (Amount)
+      // detailed check: row[6] might be empty string -> NaN. row[7] is amount.
+      if (isNaN(val6) && !isNaN(val7)) {
+        // Likely Old Format with shift. Remove index 5.
+        const newRow = [...row];
+        newRow.splice(5, 1); // Remove the empty placeholder
+        return newRow;
+      }
+      return row;
+    });
+
     res.json({
       success: true,
-      count: allData.length,
-      data: allData,
+      count: normalizedData.length,
+      data: normalizedData,
     });
   } catch (error) {
     console.error("GET /donations error:", error.message);

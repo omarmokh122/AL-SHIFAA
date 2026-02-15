@@ -94,15 +94,6 @@ export default function Donations() {
         }
     });
 
-    console.log("Debug Stats:", {
-        incomingCount: incomingData.length,
-        outgoingCount: outgoingData.length,
-        totalIncomingUSD,
-        totalIncomingLBP,
-        totalOutgoingUSD,
-        totalOutgoingLBP
-    });
-
     // Total Outgoing (Usage)
     let totalOutgoingUSD = 0;
     let totalOutgoingLBP = 0;

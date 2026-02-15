@@ -173,6 +173,10 @@ export default function Assets() {
         return matchBranch && matchType && matchSearch;
     });
 
+    // Separate borrowed assets from main assets
+    const borrowedAssets = visible.filter((a) => a[2] === "اعاره للاصول المعاره");
+    const regularAssets = visible.filter((a) => a[2] !== "اعاره للاصول المعاره");
+
     const ambulances = visible.filter((a) => a[2] === "سيارة إسعاف");
 
     const ambulanceInventory = visible.filter(
@@ -341,7 +345,7 @@ export default function Assets() {
                             </tr>
                         </thead>
                         <tbody>
-                            {visible.map((a, i) => (
+                            {regularAssets.map((a, i) => (
                                 <tr key={i}>
                                     <td>{i + 1}</td>
                                     <td>{a[1]}</td>
@@ -372,6 +376,71 @@ export default function Assets() {
                                     </td>
                                 </tr>
                             ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* ===== BORROWED ASSETS TABLE ===== */}
+            <section style={section}>
+                <h4 style={sectionTitle}>الأصول المعارة (Borrowed Assets)</h4>
+
+                <div className="table-container">
+                    <table style={table}>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الفرع</th>
+                                <th>اسم الأصل</th>
+                                <th>لمن (المستلم)</th>
+                                <th>الموقع (أين)</th>
+                                <th>التاريخ</th>
+                                <th>الكمية</th>
+                                <th>الحالة</th>
+                                <th>ملاحظات</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {borrowedAssets.length === 0 ? (
+                                <tr>
+                                    <td colSpan="10" style={{ textAlign: "center" }}>
+                                        لا توجد أصول معارة
+                                    </td>
+                                </tr>
+                            ) : (
+                                borrowedAssets.map((a, i) => (
+                                    <tr key={i}>
+                                        <td>{i + 1}</td>
+                                        <td>{a[1]}</td>
+                                        <td>{a[4]}</td>
+                                        <td>{a[5]}</td>
+                                        <td>{a[10]}</td>
+                                        <td>{a[3]}</td>
+                                        <td>{a[6]}</td>
+                                        <td>{a[7]}</td>
+                                        <td>{a[13]}</td>
+                                        <td>
+                                            <div style={{ display: "flex", gap: "6px" }}>
+                                                <button
+                                                    onClick={() => updateQuantity(a)}
+                                                    style={{ ...actionBtn, background: "#28a745" }}
+                                                    title="تعديل الكمية"
+                                                >
+                                                    🔢
+                                                </button>
+                                                <button
+                                                    onClick={() => deleteAsset(a[0])}
+                                                    style={{ ...actionBtn, background: "#dc3545" }}
+                                                    title="حذف"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

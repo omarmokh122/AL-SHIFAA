@@ -126,15 +126,20 @@ export default function Donations() {
         e.preventDefault();
 
         // Prepare payload based on tab
+        // Prepare payload based on tab
         const payload = {
             ...form,
-            الفرع: user.role === "super" ? form.الفرع : user.branch,
-            النوع: activeTab === "outgoing" ? "صرف" : form.النوع,
-            الاسم: activeTab === "outgoing" ? "مصاريف من التبرعات" : form.الاسم,
-            الطريقة: activeTab === "outgoing" ? "نقدي" : form.الطريقة, // Ensure 'Method' is set
-            تبرع_عيني: form.تبرع_عيني || "-", // Default values to avoid server validation errors
+            الفرع: user.role === "super" ? (form.الفرع || "") : (user.branch || ""),
+            النوع: activeTab === "outgoing" ? "صرف" : (form.النوع || "نقدي"),
+            الاسم: activeTab === "outgoing" ? "مصاريف من التبرعات" : (form.الاسم || "-"),
+            الطريقة: activeTab === "outgoing" ? "نقدي" : (form.الطريقة || "-"),
+            المبلغ: form.المبلغ || "0",
+            العملة: form.العملة || "USD",
+            تبرع_عيني: form.تبرع_عيني || "-",
             الكمية: form.الكمية || "0",
+            كيفية_الصرف: activeTab === "outgoing" ? (form.كيفية_الصرف || "-") : "-",
             جهة_الاستلام: form.جهة_الاستلام || "-",
+            ملاحظات: form.ملاحظات || ""
         };
 
         try {

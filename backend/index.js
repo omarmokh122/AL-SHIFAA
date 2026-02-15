@@ -190,7 +190,7 @@ app.get("/donations", async (req, res) => {
     console.error("GET /donations error:", error.message);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: `Error fetching data. Check backend logs: ${error.message}`,
     });
   }
 });

@@ -96,12 +96,18 @@ export default function Donations() {
     // Net Balance
     // Total Available (Balance)
     // User wants everything in $. 
-    // Assuming 1 USD = 90,000 LBP for conversion if needed, or just summing USD.
+    // Assuming 1 USD = 89,500 LBP for conversion if needed, or just summing USD.
     // Let's sum USD and convert LBP to USD for a "Total in $" view.
     const RATE = 89500;
 
     const totalAvailableUSD = (totalIncomingUSD + (totalIncomingLBP / RATE)) - (totalOutgoingUSD + (totalOutgoingLBP / RATE));
     const totalUsedUSD = totalOutgoingUSD + (totalOutgoingLBP / RATE);
+
+    // Safety check for NaN
+    const safeAvailable = isNaN(totalAvailableUSD) ? 0 : totalAvailableUSD;
+    const safeUsed = isNaN(totalUsedUSD) ? 0 : totalUsedUSD;
+    const safeCashUSD = isNaN(balanceUSD) ? 0 : balanceUSD;
+    const safeCashLBP = isNaN(balanceLBP) ? 0 : balanceLBP;
 
     /* ===== HANDLERS ===== */
     function handleChange(e) {
@@ -170,14 +176,14 @@ export default function Donations() {
             <div style={cardsGrid} className="dashboard-grid">
                 <Card
                     title="الرصيد المتاح (Total Available Breakdown)"
-                    value={`${totalAvailableUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
-                    subValue={`(Cash Breakdown: ${balanceUSD.toLocaleString()} $ + ${balanceLBP.toLocaleString()} LBP)`}
-                    color={totalAvailableUSD >= 0 ? "#28a745" : "#dc3545"}
+                    value={`${safeAvailable.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
+                    subValue={`(Cash Breakdown: ${safeCashUSD.toLocaleString()} $ + ${safeCashLBP.toLocaleString()} LBP)`}
+                    color={safeAvailable >= 0 ? "#28a745" : "#dc3545"}
                     icon="💰"
                 />
                 <Card
                     title="تم استخدامه (Total Used)"
-                    value={`${totalUsedUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
+                    value={`${safeUsed.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
                     color="#ffc107"
                     icon="📤"
                 />

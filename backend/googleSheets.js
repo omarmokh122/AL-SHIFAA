@@ -109,6 +109,15 @@ export async function getDonations() {
     return res.data.values || [];
 }
 
+export async function addDonation(row) {
+    await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Donations!A:O",
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [row] },
+    });
+}
+
 // =====================
 // ASSETS
 // =====================

@@ -183,14 +183,14 @@ export default function Donations() {
             {/* Stats Cards (Simplified) */}
             <div style={cardsGrid} className="dashboard-grid">
                 <Card
-                    title="الرصيد المتاح (Total Available Breakdown)"
+                    title="الرصيد المتاح (تقديري بالدولار)"
                     value={`${safeAvailable.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
-                    subValue={`(Cash Breakdown: ${safeCashUSD.toLocaleString()} $ + ${safeCashLBP.toLocaleString()} LBP)`}
+                    subValue={`(تفاصيل النقد: ${safeCashUSD.toLocaleString()} $ + ${safeCashLBP.toLocaleString()} ل.ل)`}
                     color={safeAvailable >= 0 ? "#28a745" : "#dc3545"}
                     icon="💰"
                 />
                 <Card
-                    title="تم استخدامه (Total Used)"
+                    title="إجمالي المصروفات (بالدولار)"
                     value={`${safeUsed.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
                     color="#ffc107"
                     icon="📤"

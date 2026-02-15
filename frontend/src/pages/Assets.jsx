@@ -54,6 +54,7 @@ export default function Assets() {
     const [assets, setAssets] = useState([]);
     const [assetType, setAssetType] = useState("");
     const [selectedAmbulance, setSelectedAmbulance] = useState("");
+    const [showBorrowedAssets, setShowBorrowedAssets] = useState(false);
 
     const [form, setForm] = useState({
         الفرع: user.branch || "",
@@ -176,6 +177,14 @@ export default function Assets() {
     // Separate borrowed assets from main assets
     const borrowedAssets = visible.filter((a) => a[2] === "اعاره للاصول المعاره");
     const regularAssets = visible.filter((a) => a[2] !== "اعاره للاصول المعاره");
+
+    // Calculate borrowed assets counts by type
+    const borrowedCounts = borrowedAssets.reduce((acc, asset) => {
+        const assetName = asset[4]; // اسم_الأصل
+        const quantity = parseInt(asset[6]) || 0; // الكمية
+        acc[assetName] = (acc[assetName] || 0) + quantity;
+        return acc;
+    }, {});
 
     const ambulances = visible.filter((a) => a[2] === "سيارة إسعاف");
 
@@ -381,69 +390,89 @@ export default function Assets() {
                 </div>
             </section>
 
-            {/* ===== BORROWED ASSETS TABLE ===== */}
+            {/* ===== BORROWED ASSETS SECTION ===== */}
             <section style={section}>
-                <h4 style={sectionTitle}>الأصول المعارة (Borrowed Assets)</h4>
+                <button
+                    onClick={() => setShowBorrowedAssets(!showBorrowedAssets)}
+                    style={toggleButton}
+                >
+                    {showBorrowedAssets ? '▼' : '▶'} الأصول المعارة (Borrowed Assets) - {borrowedAssets.length} عنصر
+                </button>
 
-                <div className="table-container">
-                    <table style={table}>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>الفرع</th>
-                                <th>اسم الأصل</th>
-                                <th>لمن (المستلم)</th>
-                                <th>الموقع (أين)</th>
-                                <th>التاريخ</th>
-                                <th>الكمية</th>
-                                <th>الحالة</th>
-                                <th>ملاحظات</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {borrowedAssets.length === 0 ? (
-                                <tr>
-                                    <td colSpan="10" style={{ textAlign: "center" }}>
-                                        لا توجد أصول معارة
-                                    </td>
-                                </tr>
-                            ) : (
-                                borrowedAssets.map((a, i) => (
-                                    <tr key={i}>
-                                        <td>{i + 1}</td>
-                                        <td>{a[1]}</td>
-                                        <td>{a[4]}</td>
-                                        <td>{a[5]}</td>
-                                        <td>{a[10]}</td>
-                                        <td>{a[3]}</td>
-                                        <td>{a[6]}</td>
-                                        <td>{a[7]}</td>
-                                        <td>{a[13]}</td>
-                                        <td>
-                                            <div style={{ display: "flex", gap: "6px" }}>
-                                                <button
-                                                    onClick={() => updateQuantity(a)}
-                                                    style={{ ...actionBtn, background: "#28a745" }}
-                                                    title="تعديل الكمية"
-                                                >
-                                                    🔢
-                                                </button>
-                                                <button
-                                                    onClick={() => deleteAsset(a[0])}
-                                                    style={{ ...actionBtn, background: "#dc3545" }}
-                                                    title="حذف"
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                {showBorrowedAssets && (
+                    <>
+                        {/* Summary Cards */}
+                        <div style={cardsContainer} className="form-grid-mobile">
+                            {Object.entries(borrowedCounts).map(([assetName, count]) => (
+                                <div key={assetName} style={summaryCard}>
+                                    <div style={cardTitle}>{assetName}</div>
+                                    <div style={cardCount}>{count}</div>
+                                    <div style={cardLabel}>إجمالي المعار</div>
+                                </div>
+                            ))}
+                            {Object.keys(borrowedCounts).length === 0 && (
+                                <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
+                                    لا توجد أصول معارة
+                                </div>
                             )}
-                        </tbody>
-                    </table>
-                </div>
+                        </div>
+
+                        {/* Borrowed Assets Table */}
+                        {borrowedAssets.length > 0 && (
+                            <div className="table-container" style={{ marginTop: '20px' }}>
+                                <table style={table}>
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>الفرع</th>
+                                            <th>اسم الأصل</th>
+                                            <th>لمن (المستلم)</th>
+                                            <th>الموقع (أين)</th>
+                                            <th>التاريخ</th>
+                                            <th>الكمية</th>
+                                            <th>الحالة</th>
+                                            <th>ملاحظات</th>
+                                            <th>إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {borrowedAssets.map((a, i) => (
+                                            <tr key={i}>
+                                                <td>{i + 1}</td>
+                                                <td>{a[1]}</td>
+                                                <td>{a[4]}</td>
+                                                <td>{a[5]}</td>
+                                                <td>{a[10]}</td>
+                                                <td>{a[3]}</td>
+                                                <td>{a[6]}</td>
+                                                <td>{a[7]}</td>
+                                                <td>{a[13]}</td>
+                                                <td>
+                                                    <div style={{ display: "flex", gap: "6px" }}>
+                                                        <button
+                                                            onClick={() => updateQuantity(a)}
+                                                            style={{ ...actionBtn, background: "#28a745" }}
+                                                            title="تعديل الكمية"
+                                                        >
+                                                            🔢
+                                                        </button>
+                                                        <button
+                                                            onClick={() => deleteAsset(a[0])}
+                                                            style={{ ...actionBtn, background: "#dc3545" }}
+                                                            title="حذف"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </>
+                )}
             </section>
 
             {/* ===== AMBULANCE INVENTORY ===== */}
@@ -604,4 +633,54 @@ const actionBtn = {
     cursor: "pointer",
     color: "#fff",
     fontSize: "14px",
+};
+
+const toggleButton = {
+    width: "100%",
+    padding: "16px",
+    background: "#C22129",
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: "bold",
+    textAlign: "right",
+    marginBottom: "20px",
+    transition: "background 0.3s",
+};
+
+const cardsContainer = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+    gap: "16px",
+    marginTop: "20px",
+};
+
+const summaryCard = {
+    background: "#fff",
+    border: "2px solid #C22129",
+    borderRadius: "10px",
+    padding: "20px",
+    textAlign: "center",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+};
+
+const cardTitle = {
+    fontSize: "14px",
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: "10px",
+};
+
+const cardCount = {
+    fontSize: "32px",
+    fontWeight: "bold",
+    color: "#C22129",
+    marginBottom: "5px",
+};
+
+const cardLabel = {
+    fontSize: "12px",
+    color: "#666",
 };

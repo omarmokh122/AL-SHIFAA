@@ -118,6 +118,114 @@ export async function addDonationReceived(row) {
     });
 }
 
+export async function getDonationsSpent() {
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Donations_Spent!A2:O",
+    });
+    return res.data.values || [];
+}
+
+export async function addDonationSpent(row) {
+    await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Donations_Spent!A:O",
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [row] },
+    });
+}
+
+// =====================
+// GENERIC DONATION UPDATE/DELETE
+// =====================
+async function getSheetIdAndRangeByType(type) {
+    // Return Sheet Name and Range based on type
+    if (type === "صرف") {
+        return { sheetName: "Donations_Spent", range: "Donations_Spent!A2:O" };
+    }
+    return { sheetName: "Donations_Received", range: "Donations_Received!A2:O" };
+}
+
+export async function updateDonation(id, newData, type) {
+    const { sheetName, range } = await getSheetIdAndRangeByType(type);
+
+    // 1. Get all data
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: range,
+    });
+
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex(r => r[0] === String(id)); // Assuming ID is at index 0
+
+    if (rowIndex === -1) throw new Error("Donation not found");
+
+    // 2. Update specific row (A is column 0, O is column 14)
+    // Row in sheet is (rowIndex + 2) because we started at A2 (index 0 corresponds to A2)
+    const sheetRowNumber = rowIndex + 2;
+    const updateRange = `${sheetName}!A${sheetRowNumber}`;
+    // We update the whole row starting from A
+
+    await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: updateRange,
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [newData] },
+    });
+}
+
+export async function deleteDonation(id, type) {
+    const { sheetName, range } = await getSheetIdAndRangeByType(type);
+
+    // 1. Get all data to find index
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: range,
+    });
+
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex(r => r[0] === String(id));
+
+    if (rowIndex === -1) throw new Error("Donation not found");
+
+
+    // Fetch sheet metadata to find sheetId
+    const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
+    const sheet = meta.data.sheets.find((s) => s.properties.title === sheetName);
+    if (!sheet) throw new Error("Sheet not found");
+    const sheetId = sheet.properties.sheetId;
+
+    // Row index for batchUpdate is 0-based from the very first row.
+    // Our data starts at A2.
+    // rowIndex 0 (from valyes.get A2:O) -> corresponds to Sheet Row 2 -> Index 1.
+    const sheetRowIndex = rowIndex + 1;
+
+    await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        requestBody: {
+            requests: [{
+                deleteDimension: {
+                    range: {
+                        sheetId: sheetId,
+                        dimension: "ROWS",
+                        startIndex: sheetRowIndex,
+                        endIndex: sheetRowIndex + 1
+                    }
+                }
+            }]
+        }
+    });
+}
+
+export async function addDonationReceived(row) {
+    await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Donations_Received!A:O",
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [row] },
+    });
+}
+
 // =====================
 // DONATIONS (SPENT - EXPENSES)
 // =====================

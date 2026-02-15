@@ -15,26 +15,31 @@ export default function Donations() {
     // UI State
     const [activeTab, setActiveTab] = useState("incoming"); // "incoming" or "outgoing"
     const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState(null);
 
     // Form State
-    const [form, setForm] = useState({
-        التاريخ: new Date().toISOString().split('T')[0],
-        الفرع: user.branch || "",
-        الاسم: "", // Donor or Recipient
-        النوع: "نقدي", // Cash, Kind, or Usage (handled by logic)
-        الطريقة: "", // Method
-        المبلغ: "",
-        العملة: "USD",
-        تبرع_عيني: "",
-        الكمية: "",
-        كيفية_الصرف: "", // Usage Purpose
-        جهة_الاستلام: "",
-        ملاحظات: ""
-    });
+    const [form, setForm] = useState(initialFormState(user));
 
     useEffect(() => {
         fetchDonations();
     }, []);
+
+    function initialFormState(u) {
+        return {
+            التاريخ: new Date().toISOString().split('T')[0],
+            الفرع: u.branch || "",
+            الاسم: "", // Donor or Recipient
+            النوع: "نقدي", // Cash, Kind, or Usage (handled by logic)
+            الطريقة: "", // Method
+            المبلغ: "",
+            العملة: "USD",
+            تبرع_عيني: "",
+            الكمية: "",
+            كيفية_الصرف: "", // Usage Purpose
+            جهة_الاستلام: "",
+            ملاحظات: ""
+        };
+    }
 
     function fetchDonations() {
         api.get("/donations")
@@ -78,17 +83,13 @@ export default function Donations() {
         return isNaN(num) ? 0 : num;
     };
 
-    // Data Structure Alignment (15 columns from Backend):
-    // [ID, Date, Branch, Name, Type, "", Method, Amount, Currency, KindType, Quantity, Usage, Recipient, Notes, CreatedAt]
-    // 0    1     2       3     4     5   6       7       8         9         10        11     12         13     14
-
     // Total Incoming (Cash)
     let totalIncomingUSD = 0;
     let totalIncomingLBP = 0;
     incomingData.forEach(r => {
         if (r[4] === "نقدي") {
-            const val = parseAmount(r[7]);
-            const cur = (r[8] || "").toUpperCase();
+            const val = parseAmount(r[6]);
+            const cur = (r[7] || "").toUpperCase();
             if (cur === "USD" || cur === "$") totalIncomingUSD += val;
             else totalIncomingLBP += val;
         }
@@ -98,8 +99,8 @@ export default function Donations() {
     let totalOutgoingUSD = 0;
     let totalOutgoingLBP = 0;
     outgoingData.forEach(r => {
-        const val = parseAmount(r[7]);
-        const cur = (r[8] || "").toUpperCase();
+        const val = parseAmount(r[6]);
+        const cur = (r[7] || "").toUpperCase();
         if (cur === "USD" || cur === "$") totalOutgoingUSD += val;
         else totalOutgoingLBP += val;
     });
@@ -141,30 +142,24 @@ export default function Donations() {
             الكمية: form.الكمية || "0",
             كيفية_الصرف: activeTab === "outgoing" ? (form.كيفية_الصرف || "-") : "-",
             جهة_الاستلام: form.جهة_الاستلام || "-",
-            ملاحظات: form.ملاحظات || ""
+            ملاحظات: form.ملاحظات || "",
+            CreatedAt: form.CreatedAt // Preserve CreatedAt if editing
         };
 
-        // Debug Log
         console.log("Submitting Donation Payload:", payload);
 
         try {
-            await api.post("/donations", payload);
-            alert(activeTab === "incoming" ? "تم تسجيل التبرع بنجاح" : "تم تسجيل المصروف بنجاح");
-            setForm({
-                التاريخ: new Date().toISOString().split('T')[0],
-                الفرع: user.branch || "",
-                الاسم: "",
-                النوع: "نقدي",
-                الطريقة: "",
-                المبلغ: "",
-                العملة: "USD",
-                تبرع_عيني: "",
-                الكمية: "",
-                كيفية_الصرف: "",
-                جهة_الاستلام: "",
-                ملاحظات: ""
-            });
+            if (editingId) {
+                await api.put(`/donations/${editingId}`, payload);
+                alert("تم تحديث البيانات بنجاح");
+            } else {
+                await api.post("/donations", payload);
+                alert(activeTab === "incoming" ? "تم تسجيل التبرع بنجاح" : "تم تسجيل المصروف بنجاح");
+            }
+
+            setForm(initialFormState(user));
             setShowForm(false);
+            setEditingId(null);
             fetchDonations();
         } catch (err) {
             console.error("Submission Error Details:", err);
@@ -174,6 +169,52 @@ export default function Donations() {
             } else {
                 alert(`حدث خطأ أثناء الحفظ: ${err.message}`);
             }
+        }
+    }
+
+    function handleEdit(row) {
+        // Map row array to form object
+        // Row: [ID, Date, Branch, Name, Type, Method, Amount, Currency, KindType, Quantity, Usage, Recipient, Notes, CreatedAt, LastModified]
+        // Idx:  0    1     2       3     4     5       6       7         8         9         10     11         12     13         14
+        setEditingId(row[0]);
+        setForm({
+            التاريخ: row[1] || "",
+            الفرع: row[2] || "",
+            الاسم: row[3] || "",
+            النوع: row[4] || "نقدي",
+            الطريقة: row[5] || "",
+            المبلغ: row[6] || "",
+            العملة: row[7] || "USD",
+            تبرع_عيني: row[8] || "",
+            الكمية: row[9] || "",
+            كيفية_الصرف: row[10] || "",
+            جهة_الاستلام: row[11] || "",
+            ملاحظات: row[12] || "",
+            CreatedAt: row[13]
+        });
+
+        // Ensure we are on the correct form mode (though activeTab controls list, form adapts)
+        // If type is "صرف", switch to outgoing tab logic implicitly or force it?
+        // Actually best to stay on current tab if user clicked edit there, but ensure form fields show up.
+        // Our form conditional rendering depends on `activeTab`. 
+        // If editing an "outgoing" item, we must be in "outgoing" tab or force it.
+        // It is safer to assume user is editing from the list they are viewing.
+
+        setShowForm(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function handleDelete(id, type) {
+        if (!window.confirm("هل أنت متأكد من حذف هذا السجل؟")) return;
+
+        try {
+            // Need to pass type to backend to know which sheet to delete from
+            await api.delete(`/donations/${id}?type=${type}`);
+            alert("تم الحذف بنجاح");
+            fetchDonations();
+        } catch (err) {
+            console.error("Delete Error:", err);
+            alert("حدث خطأ أثناء الحذف");
         }
     }
 
@@ -216,13 +257,13 @@ export default function Donations() {
             <div style={tabContainer}>
                 <button
                     style={activeTab === "incoming" ? activeTabStyle : tabStyle}
-                    onClick={() => { setActiveTab("incoming"); setShowForm(false); }}
+                    onClick={() => { setActiveTab("incoming"); setShowForm(false); setEditingId(null); }}
                 >
                     📥 سجل الواردات (التبرعات)
                 </button>
                 <button
                     style={activeTab === "outgoing" ? activeTabStyle : tabStyle}
-                    onClick={() => { setActiveTab("outgoing"); setShowForm(false); }}
+                    onClick={() => { setActiveTab("outgoing"); setShowForm(false); setEditingId(null); }}
                 >
                     📤 سجل الصادر (استخدام التبرعات)
                 </button>
@@ -230,7 +271,7 @@ export default function Donations() {
 
             {/* Actions & Filters */}
             <div style={actionBar}>
-                <button onClick={() => setShowForm(!showForm)} style={btnAdd}>
+                <button onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(initialFormState(user)); }} style={btnAdd}>
                     {showForm ? "إغلاق النموذج" : (activeTab === "incoming" ? "+ تسجيل تبرع جديد" : "+ تسجيل مصروف جديد")}
                 </button>
 
@@ -261,11 +302,11 @@ export default function Donations() {
                 </div>
             </div>
 
-            {/* Add Form */}
+            {/* Add/Edit Form */}
             {showForm && (
                 <div style={formBox}>
                     <h4 style={{ marginBottom: "15px", borderBottom: "1px solid #eee", paddingBottom: "10px" }}>
-                        {activeTab === "incoming" ? "تسجيل تبرع جديد" : "تسجيل استخدام تبرعات (مصروف)"}
+                        {editingId ? "تعديل البيانات" : (activeTab === "incoming" ? "تسجيل تبرع جديد" : "تسجيل استخدام تبرعات (مصروف)")}
                     </h4>
                     <form onSubmit={handleSubmit} style={formGrid}>
                         <input type="date" name="التاريخ" value={form.التاريخ} onChange={handleChange} required style={inputStyle} />
@@ -313,7 +354,7 @@ export default function Donations() {
 
                         <input name="ملاحظات" placeholder="ملاحظات إضافية" value={form.ملاحظات} onChange={handleChange} style={{ ...inputStyle, gridColumn: "1 / -1" }} />
 
-                        <button type="submit" style={submitBtn}>حفظ</button>
+                        <button type="submit" style={submitBtn}>{editingId ? "تحديث" : "حفظ"}</button>
                     </form>
                 </div>
             )}
@@ -334,6 +375,7 @@ export default function Donations() {
                                 <th>عيني</th>
                                 <th>الكمية</th>
                                 <th>ملاحظات</th>
+                                <th>إجراءات</th>
                             </tr>
                         ) : (
                             <tr>
@@ -344,12 +386,13 @@ export default function Donations() {
                                 <th>المبلغ المصروف</th>
                                 <th>العملة</th>
                                 <th>ملاحظات</th>
+                                <th>إجراءات</th>
                             </tr>
                         )}
                     </thead>
                     <tbody>
                         {visible.length === 0 ? (
-                            <tr><td colSpan="10" style={{ textAlign: "center", padding: "20px" }}>لا توجد بيانات</td></tr>
+                            <tr><td colSpan="11" style={{ textAlign: "center", padding: "20px" }}>لا توجد بيانات</td></tr>
                         ) : (
                             visible.map((r, i) => (
                                 <tr key={i}>
@@ -360,20 +403,38 @@ export default function Donations() {
                                         <>
                                             <td>{r[3]}</td>
                                             <td>{r[4]}</td>
+                                            <td>{r[6]}</td>
                                             <td>{r[7]}</td>
                                             <td>{r[8]}</td>
                                             <td>{r[9]}</td>
-                                            <td>{r[10]}</td>
-                                            <td>{r[13]}</td>
+                                            <td>{r[12]}</td>
                                         </>
                                     ) : (
                                         <>
-                                            <td>{r[11]}</td> {/* How Spent / Spending Channel */}
-                                            <td style={{ color: "#dc3545", fontWeight: "bold" }}>{r[7]}</td>
-                                            <td>{r[8]}</td>
-                                            <td>{r[13]}</td>
+                                            <td>{r[10]}</td>
+                                            <td style={{ color: "#dc3545", fontWeight: "bold" }}>{r[6]}</td>
+                                            <td>{r[7]}</td>
+                                            <td>{r[12]}</td>
                                         </>
                                     )}
+                                    <td>
+                                        <div style={{ display: 'flex', gap: '5px' }}>
+                                            <button
+                                                onClick={() => handleEdit(r)}
+                                                title="تعديل"
+                                                style={{ ...btnAction, color: "#007bff", fontSize: "1.2em" }}
+                                            >
+                                                ✏️
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(r[0], r[4])}
+                                                title="حذف"
+                                                style={{ ...btnAction, color: "#dc3545", fontSize: "1.2em" }}
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))
                         )}
@@ -414,3 +475,4 @@ const formGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minm
 const submitBtn = { background: "#28a745", color: "#fff", border: "none", padding: "10px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", gridColumn: "1 / -1" };
 const tableBox = { background: "#fff", padding: "10px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)", overflowX: "auto" };
 const table = { width: "100%", borderCollapse: "collapse", minWidth: "600px" };
+const btnAction = { background: "none", border: "none", cursor: "pointer", fontSize: "16px", marginLeft: "10px" };

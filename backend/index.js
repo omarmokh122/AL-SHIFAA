@@ -246,6 +246,63 @@ app.post("/donations", async (req, res) => {
   }
 });
 
+// 🔹 DELETE /donations/:id?type=...
+app.delete("/donations/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query; // "صرف" or "نقدي"/"عيني" (anything else is received)
+
+    // We need to know which sheet to delete from.
+    // The frontend must send the type or we search both (slower).
+    // Let's require type for now as it's cleaner.
+
+    await deleteDonation(id, type);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("DELETE /donations error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 🔹 PUT /donations/:id
+app.put("/donations/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    // We expect the full row object/body similar to POST, 
+    // but we need to format it into the array row structure.
+
+    const {
+      التاريخ, الفرع, الاسم, النوع, الطريقة, المبلغ, العملة,
+      تبرع_عيني, الكمية, كيفية_الصرف, جهة_الاستلام, ملاحظات, CreatedAt
+    } = req.body;
+
+    const row = [
+      id, // Keep original ID
+      التاريخ,
+      الفرع,
+      الاسم,
+      النوع,
+      "",
+      الطريقة || "",
+      المبلغ || 0,
+      العملة || "USD",
+      تبرع_عيني || "",
+      الكمية || 0,
+      كيفية_الصرف || "",
+      جهة_الاستلام || "",
+      ملاحظات || "",
+      CreatedAt || new Date().toISOString()
+    ];
+
+    await updateDonation(id, row, النوع);
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error("PUT /donations error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // =====================
 // CASES ROUTES
 // =====================

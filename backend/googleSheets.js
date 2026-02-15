@@ -129,6 +129,61 @@ export async function addAsset(row) {
     });
 }
 
+export async function updateAsset(id, updatedRow) {
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Assets!A:A",
+    });
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex((r) => r[0] == id);
+    if (rowIndex === -1) throw new Error("Asset not found");
+    const sheetRowNumber = rowIndex + 1;
+    await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `Assets!A${sheetRowNumber}:N${sheetRowNumber}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [updatedRow] },
+    });
+}
+
+export async function deleteAsset(id) {
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Assets!A:A",
+    });
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex((r) => r[0] == id);
+    if (rowIndex === -1) throw new Error("Asset not found");
+    const sheetRowNumber = rowIndex + 1;
+
+    // To delete a row in Google Sheets API v4, we use batchUpdate with deleteDimension
+    // However, a simpler way often used in these scripts is to clear the row or use batchUpdate
+    // Let's use batchUpdate to actually release the space
+    const sheetRes = await sheets.spreadsheets.get({
+        spreadsheetId: SPREADSHEET_ID,
+    });
+    const assetSheet = sheetRes.data.sheets.find(s => s.properties.title === "Assets");
+    const sheetId = assetSheet.properties.sheetId;
+
+    await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        requestBody: {
+            requests: [
+                {
+                    deleteDimension: {
+                        range: {
+                            sheetId: sheetId,
+                            dimension: "ROWS",
+                            startIndex: rowIndex,
+                            endIndex: rowIndex + 1,
+                        },
+                    },
+                },
+            ],
+        },
+    });
+}
+
 // =======================================================
 // MEDICAL TEAM
 // Sheet: Medical_Team

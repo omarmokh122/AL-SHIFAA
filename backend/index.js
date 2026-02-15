@@ -12,6 +12,8 @@ import {
   getFinancialData,
   getAssets,
   addAsset,
+  updateAsset,
+  deleteAsset,
   getMedicalTeam,
   addMedicalTeamMember,
   updateMedicalTeamMember,
@@ -316,6 +318,66 @@ app.post("/assets", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("POST /assets error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+app.put("/assets/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      الفرع,
+      نوع_الأصل,
+      الفئة,
+      اسم_الأصل,
+      الوصف,
+      الكمية,
+      الحالة,
+      رقم_السيارة,
+      سنة_الصنع,
+      الموقع,
+      تاريخ_الإضافة,
+      ملاحظات,
+    } = req.body;
+
+    const row = [
+      id,
+      الفرع,
+      نوع_الأصل,
+      الفئة || "",
+      اسم_الأصل,
+      الوصف || "",
+      الكمية || 0,
+      الحالة || "",
+      رقم_السيارة || "",
+      سنة_الصنع || "",
+      الموقع || "",
+      تاريخ_الإضافة,
+      new Date().toISOString(),   // updated_at
+      ملاحظات || "",
+    ];
+
+    await updateAsset(id, row);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("PUT /assets error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+app.delete("/assets/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await deleteAsset(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("DELETE /assets error:", error.message);
     res.status(500).json({
       success: false,
       error: error.message,

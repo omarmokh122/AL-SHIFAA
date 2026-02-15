@@ -41,6 +41,8 @@ const AMBULANCE_CONTENTS = [
     "أخرى",
 ];
 
+const BORROWED_ASSETS = ["أدوات طبية", "جهاز أوكسجين", "كرسي متحرك", "عكازات", "أخرى"];
+
 export default function Assets() {
     const storedUser = localStorage.getItem("user");
 
@@ -99,9 +101,62 @@ export default function Assets() {
                 نوع_الأصل: assetType,
             });
             alert("تمت إضافة الأصل بنجاح");
+            setForm({
+                الفرع: user.branch || "",
+                نوع_الأصل: "",
+                الفئة: "",
+                اسم_الأصل: "",
+                الوصف: "",
+                الكمية: "",
+                الحالة: "",
+                رقم_السيارة: "",
+                سنة_الصنع: "",
+                الموقع: "",
+                ملاحظات: "",
+            });
             fetchAssets();
         } catch {
             alert("خطأ أثناء إضافة الأصل");
+        }
+    }
+
+    async function updateQuantity(asset) {
+        const newQty = prompt("أدخل الكمية الجديدة:", asset[6]);
+        if (newQty === null || newQty === asset[6]) return;
+
+        try {
+            await api.put(`/assets/${asset[0]}`, {
+                الفرع: asset[1],
+                نوع_الأصل: asset[2],
+                الفئة: asset[3],
+                اسم_الأصل: asset[4],
+                الوصف: asset[5],
+                الكمية: newQty,
+                الحالة: asset[7],
+                رقم_السيارة: asset[8],
+                سنة_الصنع: asset[9],
+                الموقع: asset[10],
+                تاريخ_الإضافة: asset[11],
+                ملاحظات: asset[13],
+            });
+            alert("تم تحديث الكمية بنجاح");
+            fetchAssets();
+        } catch (err) {
+            console.error(err);
+            alert("خطأ أثناء تحديث الكمية");
+        }
+    }
+
+    async function deleteAsset(id) {
+        if (!window.confirm("هل أنت متأكد من حذف هذا الأصل؟")) return;
+
+        try {
+            await api.delete(`/assets/${id}`);
+            alert("تم حذف الأصل بنجاح");
+            fetchAssets();
+        } catch (err) {
+            console.error(err);
+            alert("خطأ أثناء حذف الأصل");
         }
     }
 
@@ -132,6 +187,8 @@ export default function Assets() {
     if (assetType === "سيارة إسعاف") assetNameOptions = AMBULANCE_ASSETS;
     if (assetType === "محتويات سيارة إسعاف")
         assetNameOptions = AMBULANCE_CONTENTS;
+    if (assetType === "اعاره للاصول المعاره")
+        assetNameOptions = BORROWED_ASSETS;
 
     return (
         <div dir="rtl" style={container}>
@@ -163,6 +220,7 @@ export default function Assets() {
                         <option value="مركز">أصول المركز</option>
                         <option value="سيارة إسعاف">سيارة إسعاف</option>
                         <option value="محتويات سيارة إسعاف">محتويات سيارة إسعاف</option>
+                        <option value="اعاره للاصول المعاره">اعاره للاصول المعاره</option>
                     </select>
 
                     {assetType && (
@@ -190,8 +248,20 @@ export default function Assets() {
                                     ))}
                                 </select>
 
-                                <input name="الفئة" placeholder="الفئة" value={form.الفئة} onChange={handleChange} style={inputStyle} />
-                                <input name="الوصف" placeholder="الوصف" value={form.الوصف} onChange={handleChange} style={inputStyle} />
+                                {assetType === "اعاره للاصول المعاره" ? (
+                                    <>
+                                        <input name="الموقع" placeholder="الموقع (أين)" value={form.الموقع} onChange={handleChange} style={inputStyle} required />
+                                        <input name="الوصف" placeholder="لمن (المستلم)" value={form.الوصف} onChange={handleChange} style={inputStyle} required />
+                                        <input name="الفئة" type="date" placeholder="التاريخ" value={form.الفئة} onChange={handleChange} style={inputStyle} required />
+                                    </>
+                                ) : (
+                                    <>
+                                        <input name="الفئة" placeholder="الفئة" value={form.الفئة} onChange={handleChange} style={inputStyle} />
+                                        <input name="الوصف" placeholder="الوصف" value={form.الوصف} onChange={handleChange} style={inputStyle} />
+                                        <input name="الموقع" placeholder="الموقع" value={form.الموقع} onChange={handleChange} style={inputStyle} />
+                                    </>
+                                )}
+
                                 <input name="الكمية" type="number" placeholder="الكمية" value={form.الكمية} onChange={handleChange} style={inputStyle} />
                                 <input name="الحالة" placeholder="الحالة" value={form.الحالة} onChange={handleChange} style={inputStyle} />
 
@@ -217,7 +287,6 @@ export default function Assets() {
                                     />
                                 )}
 
-                                <input name="الموقع" placeholder="الموقع" value={form.الموقع} onChange={handleChange} style={inputStyle} />
                                 <input name="ملاحظات" placeholder="ملاحظات" value={form.ملاحظات} onChange={handleChange} style={inputStyle} />
                             </div>
 
@@ -251,6 +320,7 @@ export default function Assets() {
                         <option value="مركز">أصول المركز</option>
                         <option value="سيارة إسعاف">سيارات إسعاف</option>
                         <option value="محتويات سيارة إسعاف">محتويات سيارة إسعاف</option>
+                        <option value="اعاره للاصول المعاره">الأصول المعارة</option>
                     </select>
                 </div>
 
@@ -267,6 +337,7 @@ export default function Assets() {
                                 <th>رقم السيارة</th>
                                 <th>الموقع</th>
                                 <th>ملاحظات</th>
+                                <th>إجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -281,6 +352,24 @@ export default function Assets() {
                                     <td>{a[8]}</td>
                                     <td>{a[10]}</td>
                                     <td>{a[13]}</td>
+                                    <td>
+                                        <div style={{ display: "flex", gap: "6px" }}>
+                                            <button
+                                                onClick={() => updateQuantity(a)}
+                                                style={{ ...actionBtn, background: "#28a745" }}
+                                                title="تعديل الكمية"
+                                            >
+                                                🔢
+                                            </button>
+                                            <button
+                                                onClick={() => deleteAsset(a[0])}
+                                                style={{ ...actionBtn, background: "#dc3545" }}
+                                                title="حذف"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -437,4 +526,13 @@ const filterSelect = {
     border: "1px solid #ddd",
     borderRadius: "6px",
     outline: "none",
+};
+
+const actionBtn = {
+    border: "none",
+    borderRadius: "4px",
+    padding: "4px 8px",
+    cursor: "pointer",
+    color: "#fff",
+    fontSize: "14px",
 };

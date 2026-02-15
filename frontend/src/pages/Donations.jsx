@@ -94,8 +94,14 @@ export default function Donations() {
     });
 
     // Net Balance
-    const balanceUSD = totalIncomingUSD - totalOutgoingUSD;
-    const balanceLBP = totalIncomingLBP - totalOutgoingLBP;
+    // Total Available (Balance)
+    // User wants everything in $. 
+    // Assuming 1 USD = 90,000 LBP for conversion if needed, or just summing USD.
+    // Let's sum USD and convert LBP to USD for a "Total in $" view.
+    const RATE = 89500;
+
+    const totalAvailableUSD = (totalIncomingUSD + (totalIncomingLBP / RATE)) - (totalOutgoingUSD + (totalOutgoingLBP / RATE));
+    const totalUsedUSD = totalOutgoingUSD + (totalOutgoingLBP / RATE);
 
     /* ===== HANDLERS ===== */
     function handleChange(e) {
@@ -110,7 +116,11 @@ export default function Donations() {
             ...form,
             الفرع: user.role === "super" ? form.الفرع : user.branch,
             النوع: activeTab === "outgoing" ? "صرف" : form.النوع,
-            الاسم: activeTab === "outgoing" ? "مصاريف من التبرعات" : form.الاسم, // Standardize donor name for usage
+            الاسم: activeTab === "outgoing" ? "مصاريف من التبرعات" : form.الاسم,
+            الطريقة: activeTab === "outgoing" ? "نقدي" : form.الطريقة, // Ensure 'Method' is set
+            تبرع_عيني: form.تبرع_عيني || "-", // Default values to avoid server validation errors
+            الكمية: form.الكمية || "0",
+            جهة_الاستلام: form.جهة_الاستلام || "-",
         };
 
         try {
@@ -156,29 +166,18 @@ export default function Donations() {
                 </button>
             </div>
 
-            {/* Stats Cards (Always Visible) */}
+            {/* Stats Cards (Simplified) */}
             <div style={cardsGrid} className="dashboard-grid">
                 <Card
-                    title="الرصيد المتبقي (USD)"
-                    value={`${balanceUSD.toLocaleString()} $`}
-                    color={balanceUSD >= 0 ? "#28a745" : "#dc3545"}
+                    title="الرصيد المتاح (Total Available Breakdown)"
+                    value={`${totalAvailableUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
+                    subValue={`(Cash Breakdown: ${balanceUSD.toLocaleString()} $ + ${balanceLBP.toLocaleString()} LBP)`}
+                    color={totalAvailableUSD >= 0 ? "#28a745" : "#dc3545"}
                     icon="💰"
                 />
                 <Card
-                    title="الرصيد المتبقي (LBP)"
-                    value={`${balanceLBP.toLocaleString()} ل.ل`}
-                    color={balanceLBP >= 0 ? "#28a745" : "#dc3545"}
-                    icon="💵"
-                />
-                <Card
-                    title="إجمالي الواردات (USD)"
-                    value={`${totalIncomingUSD.toLocaleString()} $`}
-                    color="#17a2b8"
-                    icon="📥"
-                />
-                <Card
-                    title="إجمالي المصروفات (USD)"
-                    value={`${totalOutgoingUSD.toLocaleString()} $`}
+                    title="تم استخدامه (Total Used)"
+                    value={`${totalUsedUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
                     color="#ffc107"
                     icon="📤"
                 />
@@ -357,12 +356,13 @@ export default function Donations() {
 }
 
 /*Components*/
-function Card({ title, value, color, icon }) {
+function Card({ title, value, subValue, color, icon }) {
     return (
         <div style={{ ...card, borderBottom: `4px solid ${color}` }}>
             <div style={{ fontSize: "24px", marginBottom: "10px" }}>{icon}</div>
             <div style={{ fontSize: "13px", color: "#666" }}>{title}</div>
-            <div style={{ fontSize: "20px", fontWeight: "bold", color: "#333" }}>{value}</div>
+            <div style={{ fontSize: "22px", fontWeight: "bold", color: "#333" }}>{value}</div>
+            {subValue && <div style={{ fontSize: "11px", color: "#888", marginTop: "4px" }}>{subValue}</div>}
         </div>
     );
 }

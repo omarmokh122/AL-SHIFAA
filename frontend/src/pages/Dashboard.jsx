@@ -158,8 +158,8 @@ export default function Dashboard() {
         <Card
           title="إجمالي التبرعات النقدية"
           value={showUSD
-            ? `$${(totalUSD + (totalLBP / 90000)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-            : `${(totalLBP + (totalUSD * 90000)).toLocaleString()} ل.ل`
+            ? `$${(totalUSD + (totalLBP / 89500)).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+            : `${(totalLBP + (totalUSD * 89500)).toLocaleString()} ل.ل`
           }
           color="#2e7d32"
           onClick={() => setShowUSD(!showUSD)}

@@ -6,8 +6,10 @@ dotenv.config();
 
 // Google Sheets
 import {
-  getDonations,
-  addDonation,
+  getDonationsReceived,
+  addDonationReceived,
+  getDonationsSpent,
+  addDonationSpent,
   getCases,
   addCase,
   getFinancialData,
@@ -159,13 +161,30 @@ app.put("/medical-team/:id", async (req, res) => {
 // =====================
 // DONATIONS ROUTE
 // =====================
+// =====================
+// DONATIONS ROUTE
+// =====================
 app.get("/donations", async (req, res) => {
   try {
-    const data = await getDonations();
+    const received = await getDonationsReceived();
+    const spent = await getDonationsSpent();
+
+    // To avoid breaking frontend which expects one array, we can combine them.
+    // However, to distinguish, we can flag them or ensure 'Type' is correct.
+    // getDonationsReceived rows likely don't have 'Type' column populated with "Received" unless form does it.
+    // Frontend form sends "نقدي" or "عيني" for received, and "صرف" for spent.
+    // So combining them is safe if the rows contain the type.
+    // The rows from sheets are just arrays of values.
+    // A concern: if sheets became empty, how do we know which column is which?
+    // We assume strict column mapping.
+
+    // Let's add a small marker if needed, but for now exact same structure is expected.
+    const allData = [...received, ...spent];
+
     res.json({
       success: true,
-      count: data.length,
-      data,
+      count: allData.length,
+      data: allData,
     });
   } catch (error) {
     console.error("GET /donations error:", error.message);
@@ -199,44 +218,24 @@ app.post("/donations", async (req, res) => {
       الفرع,
       الاسم,
       النوع,
-      "",                   // Placeholders for sheet structure if needed? 
-      // Let's check getDonations mapping in Frontend...
-      // Frontend expects: 
-      // 0: ID
-      // 1: Date
-      // 2: Branch
-      // 3: Name
-      // 4: Type (Cash/Kind/Usage)
-      // 5: ? (Maybe unused in frontend table map?)
-      // 6: Amount
-      // 7: Currency
-      // 8: Kind Type
-      // 9: Quantity
-      // 10: Usage (How Spent)
-      // 11: ?
-      // 12: Notes
-
-      // Let's assume a simple append.
-      // However, sheet structure must match.
-      // Existing Sheet might hav specific column order.
-      // I'll assume standard appending for now based on other functions.
-      // But wait, `getCases` maps specifically. `getDonations` just does `res.data.values`.
-      // Frontend index.js for Donations table maps:
-      // r[1] Date, r[2] Branch, r[3] Name, r[4] Type, r[6] Amount, r[7] Currency...
-      // So row structure should be:
-      // [ID, Date, Branch, Name, Type, Method(5?), Amount, Currency, KindType, Quantity, Usage, Recipient(11?), Notes]
-      الطريقة || "",       // 5: Method
+      "",
+      الطريقة || "",
       المبلغ || 0,
       العملة || "USD",
       تبرع_عيني || "",
       الكمية || 0,
-      كيفية_الصرف || "",    // 10
-      جهة_الاستلام || "",   // 11
-      ملاحظات || "",        // 12
+      كيفية_الصرف || "",
+      جهة_الاستلام || "",
+      ملاحظات || "",
       new Date().toISOString() // CreatedAt
     ];
 
-    await addDonation(row);
+    if (النوع === "صرف") {
+      await addDonationSpent(row);
+    } else {
+      await addDonationReceived(row);
+    }
+
     res.json({ success: true });
   } catch (error) {
     console.error("POST /donations error:", error.message);

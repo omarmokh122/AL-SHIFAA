@@ -99,20 +99,40 @@ export async function getFinancialData() {
 }
 
 // =====================
-// DONATIONS
+// DONATIONS (RECEIVED)
 // =====================
-export async function getDonations() {
+export async function getDonationsReceived() {
     const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Donations!A2:O",
+        range: "Donations_Received!A2:O",
     });
     return res.data.values || [];
 }
 
-export async function addDonation(row) {
+export async function addDonationReceived(row) {
     await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Donations!A:O",
+        range: "Donations_Received!A:O",
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [row] },
+    });
+}
+
+// =====================
+// DONATIONS (SPENT - EXPENSES)
+// =====================
+export async function getDonationsSpent() {
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Donations_Spent!A2:O",
+    });
+    return res.data.values || [];
+}
+
+export async function addDonationSpent(row) {
+    await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Donations_Spent!A:O",
         valueInputOption: "USER_ENTERED",
         requestBody: { values: [row] },
     });

@@ -226,10 +226,10 @@ export default function BorrowedAssets() {
         <div dir="rtl" style={container}>
             {/* Header */}
             <div style={header}>
+                <h2 style={title}>الأصول المعارة</h2>
                 <button onClick={() => navigate("/assets")} style={backBtn}>
                     ← رجوع للأصول
                 </button>
-                <h2 style={title}>الأصول المعارة (Borrowed Assets)</h2>
             </div>
 
             <p style={description}>
@@ -431,8 +431,8 @@ const container = {
 
 const header = {
     display: "flex",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: "16px",
     marginBottom: "12px",
 };
 

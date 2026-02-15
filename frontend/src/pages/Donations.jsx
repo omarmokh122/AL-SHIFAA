@@ -98,6 +98,14 @@ export default function Donations() {
     // User wants everything in $. 
     // Assuming 1 USD = 89,500 LBP for conversion if needed, or just summing USD.
     // Let's sum USD and convert LBP to USD for a "Total in $" view.
+    // Net Balance
+    const balanceUSD = totalIncomingUSD - totalOutgoingUSD;
+    const balanceLBP = totalIncomingLBP - totalOutgoingLBP;
+
+    // Total Available (Balance)
+    // User wants everything in $. 
+    // Assuming 1 USD = 89,500 LBP for conversion if needed, or just summing USD.
+    // Let's sum USD and convert LBP to USD for a "Total in $" view.
     const RATE = 89500;
 
     const totalAvailableUSD = (totalIncomingUSD + (totalIncomingLBP / RATE)) - (totalOutgoingUSD + (totalOutgoingLBP / RATE));

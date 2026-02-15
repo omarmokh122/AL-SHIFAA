@@ -78,13 +78,17 @@ export default function Donations() {
         return isNaN(num) ? 0 : num;
     };
 
+    // Data Structure Alignment (15 columns from Backend):
+    // [ID, Date, Branch, Name, Type, "", Method, Amount, Currency, KindType, Quantity, Usage, Recipient, Notes, CreatedAt]
+    // 0    1     2       3     4     5   6       7       8         9         10        11     12         13     14
+
     // Total Incoming (Cash)
     let totalIncomingUSD = 0;
     let totalIncomingLBP = 0;
     incomingData.forEach(r => {
         if (r[4] === "نقدي") {
-            const val = parseAmount(r[6]); // Amount is at index 6
-            const cur = (r[7] || "").toUpperCase();
+            const val = parseAmount(r[7]);
+            const cur = (r[8] || "").toUpperCase();
             if (cur === "USD" || cur === "$") totalIncomingUSD += val;
             else totalIncomingLBP += val;
         }
@@ -94,25 +98,17 @@ export default function Donations() {
     let totalOutgoingUSD = 0;
     let totalOutgoingLBP = 0;
     outgoingData.forEach(r => {
-        const val = parseAmount(r[6]);
-        const cur = (r[7] || "").toUpperCase();
+        const val = parseAmount(r[7]);
+        const cur = (r[8] || "").toUpperCase();
         if (cur === "USD" || cur === "$") totalOutgoingUSD += val;
         else totalOutgoingLBP += val;
     });
 
     // Net Balance
-    // Total Available (Balance)
-    // User wants everything in $. 
-    // Assuming 1 USD = 89,500 LBP for conversion if needed, or just summing USD.
-    // Let's sum USD and convert LBP to USD for a "Total in $" view.
-    // Net Balance
     const balanceUSD = totalIncomingUSD - totalOutgoingUSD;
     const balanceLBP = totalIncomingLBP - totalOutgoingLBP;
 
     // Total Available (Balance)
-    // User wants everything in $. 
-    // Assuming 1 USD = 89,500 LBP for conversion if needed, or just summing USD.
-    // Let's sum USD and convert LBP to USD for a "Total in $" view.
     const RATE = 89500;
 
     const totalAvailableUSD = (totalIncomingUSD + (totalIncomingLBP / RATE)) - (totalOutgoingUSD + (totalOutgoingLBP / RATE));
@@ -132,7 +128,6 @@ export default function Donations() {
     async function handleSubmit(e) {
         e.preventDefault();
 
-        // Prepare payload based on tab
         // Prepare payload based on tab
         const payload = {
             ...form,
@@ -365,18 +360,18 @@ export default function Donations() {
                                         <>
                                             <td>{r[3]}</td>
                                             <td>{r[4]}</td>
-                                            <td>{r[6]}</td>
                                             <td>{r[7]}</td>
                                             <td>{r[8]}</td>
                                             <td>{r[9]}</td>
-                                            <td>{r[12]}</td>
+                                            <td>{r[10]}</td>
+                                            <td>{r[13]}</td>
                                         </>
                                     ) : (
                                         <>
-                                            <td>{r[10]}</td> {/* How Spent / Spending Channel */}
-                                            <td style={{ color: "#dc3545", fontWeight: "bold" }}>{r[6]}</td>
-                                            <td>{r[7]}</td>
-                                            <td>{r[12]}</td>
+                                            <td>{r[11]}</td> {/* How Spent / Spending Channel */}
+                                            <td style={{ color: "#dc3545", fontWeight: "bold" }}>{r[7]}</td>
+                                            <td>{r[8]}</td>
+                                            <td>{r[13]}</td>
                                         </>
                                     )}
                                 </tr>

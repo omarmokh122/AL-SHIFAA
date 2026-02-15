@@ -142,6 +142,9 @@ export default function Donations() {
             ملاحظات: form.ملاحظات || ""
         };
 
+        // Debug Log
+        console.log("Submitting Donation Payload:", payload);
+
         try {
             await api.post("/donations", payload);
             alert(activeTab === "incoming" ? "تم تسجيل التبرع بنجاح" : "تم تسجيل المصروف بنجاح");
@@ -162,8 +165,13 @@ export default function Donations() {
             setShowForm(false);
             fetchDonations();
         } catch (err) {
-            console.error(err);
-            alert("حدث خطأ أثناء الحفظ");
+            console.error("Submission Error Details:", err);
+            console.error("Error Response:", err.response);
+            if (err.response && err.response.data) {
+                alert(`خطأ: ${JSON.stringify(err.response.data)}`);
+            } else {
+                alert(`حدث خطأ أثناء الحفظ: ${err.message}`);
+            }
         }
     }
 

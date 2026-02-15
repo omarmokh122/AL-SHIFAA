@@ -37,6 +37,8 @@ export default function BorrowedAssets() {
 
     const [totalInventory, setTotalInventory] = useState(getInitialInventory());
     const [editingInventory, setEditingInventory] = useState(false);
+    const [filterMonth, setFilterMonth] = useState("");
+    const [filterYear, setFilterYear] = useState("");
 
     const [form, setForm] = useState({
         الفرع: user.branch || "",
@@ -71,9 +73,9 @@ export default function BorrowedAssets() {
     // Filter borrowed assets
     const borrowedAssets = assets.filter((a) => a[2] === "اعاره للاصول المعاره");
 
-    // Calculate inventory with total, borrowed, and available
+    // Calculate inventory with total, borrowed (not returned), and available
     const inventory = BORROWABLE_ITEMS.map((itemName) => {
-        const borrowed = borrowedAssets.filter((a) => a[4] === itemName);
+        const borrowed = borrowedAssets.filter((a) => a[4] === itemName && a[7] !== "مرتجع");
         const totalBorrowed = borrowed.reduce((sum, a) => sum + (parseInt(a[6]) || 0), 0);
         const total = totalInventory[itemName] || 0;
         const available = total - totalBorrowed;
@@ -84,6 +86,17 @@ export default function BorrowedAssets() {
             available,
             borrowedCount: borrowed.length
         };
+    });
+
+    // Filter by month/year
+    const filteredBorrowedAssets = borrowedAssets.filter((a) => {
+        if (!filterMonth && !filterYear) return true;
+        const date = a[3]; // الفئة contains the date
+        if (!date) return false;
+        const itemDate = new Date(date);
+        const matchMonth = filterMonth ? itemDate.getMonth() + 1 === parseInt(filterMonth) : true;
+        const matchYear = filterYear ? itemDate.getFullYear() === parseInt(filterYear) : true;
+        return matchMonth && matchYear;
     });
 
     function updateInventory(itemName, newTotal) {
@@ -180,6 +193,32 @@ export default function BorrowedAssets() {
         } catch (err) {
             console.error(err);
             alert("خطأ أثناء حذف الإعارة");
+        }
+    }
+
+    async function markAsReturned(asset) {
+        if (!window.confirm("هل تم استرجاع هذه الأصول؟")) return;
+
+        try {
+            await api.put(`/assets/${asset[0]}`, {
+                الفرع: asset[1],
+                نوع_الأصل: asset[2],
+                الفئة: asset[3],
+                اسم_الأصل: asset[4],
+                الوصف: asset[5],
+                الكمية: asset[6],
+                الحالة: "مرتجع", // Mark as returned
+                رقم_السيارة: asset[8],
+                سنة_الصنع: asset[9],
+                الموقع: asset[10],
+                تاريخ_الإضافة: asset[11],
+                ملاحظات: asset[13],
+            });
+            alert("تم تسجيل الاسترجاع بنجاح");
+            fetchAssets();
+        } catch (err) {
+            console.error(err);
+            alert("خطأ أثناء تسجيل الاسترجاع");
         }
     }
 
@@ -282,7 +321,29 @@ export default function BorrowedAssets() {
 
             {/* Borrowed Assets Table */}
             <section style={section}>
-                <h4 style={sectionTitle}>سجل الإعارات ({borrowedAssets.length})</h4>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+                    <h4 style={{ margin: 0 }}>سجل الإعارات ({filteredBorrowedAssets.length})</h4>
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                        <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
+                            <option value="">كل الأشهر</option>
+                            {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleDateString('ar', { month: 'long' })}</option>
+                            ))}
+                        </select>
+                        <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
+                            <option value="">كل السنوات</option>
+                            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                        <button
+                            onClick={() => navigate("/reports/borrowed-assets")}
+                            style={reportBtn}
+                        >
+                            📊 تقرير شهري
+                        </button>
+                    </div>
+                </div>
                 <div className="table-container">
                     <table style={table}>
                         <thead>
@@ -300,15 +361,15 @@ export default function BorrowedAssets() {
                             </tr>
                         </thead>
                         <tbody>
-                            {borrowedAssets.length === 0 ? (
+                            {filteredBorrowedAssets.length === 0 ? (
                                 <tr>
                                     <td colSpan="10" style={{ textAlign: "center", padding: "20px", color: "#999" }}>
                                         لا توجد إعارات مسجلة
                                     </td>
                                 </tr>
                             ) : (
-                                borrowedAssets.map((a, i) => (
-                                    <tr key={i}>
+                                filteredBorrowedAssets.map((a, i) => (
+                                    <tr key={i} style={a[7] === "مرتجع" ? returnedRowStyle : {}}>
                                         <td>{i + 1}</td>
                                         <td>{a[1]}</td>
                                         <td>{a[4]}</td>
@@ -316,17 +377,32 @@ export default function BorrowedAssets() {
                                         <td>{a[10]}</td>
                                         <td>{a[3]}</td>
                                         <td>{a[6]}</td>
-                                        <td>{a[7]}</td>
+                                        <td>
+                                            <span style={a[7] === "مرتجع" ? returnedBadge : activeBadge}>
+                                                {a[7] || "معار"}
+                                            </span>
+                                        </td>
                                         <td>{a[13]}</td>
                                         <td>
                                             <div style={{ display: "flex", gap: "6px" }}>
-                                                <button
-                                                    onClick={() => updateQuantity(a)}
-                                                    style={{ ...actionBtn, background: "#28a745" }}
-                                                    title="تعديل الكمية"
-                                                >
-                                                    🔢
-                                                </button>
+                                                {a[7] !== "مرتجع" && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => markAsReturned(a)}
+                                                            style={{ ...actionBtn, background: "#17a2b8" }}
+                                                            title="تسجيل الاسترجاع"
+                                                        >
+                                                            ✓
+                                                        </button>
+                                                        <button
+                                                            onClick={() => updateQuantity(a)}
+                                                            style={{ ...actionBtn, background: "#28a745" }}
+                                                            title="تعديل الكمية"
+                                                        >
+                                                            🔢
+                                                        </button>
+                                                    </>
+                                                )}
                                                 <button
                                                     onClick={() => deleteAsset(a[0])}
                                                     style={{ ...actionBtn, background: "#dc3545" }}
@@ -514,4 +590,59 @@ const actionBtn = {
     cursor: "pointer",
     color: "#fff",
     fontSize: "14px",
+};
+
+const itemIcon = {
+    fontSize: "24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+};
+
+const filterSelect = {
+    padding: "8px",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    fontSize: "14px",
+    outline: "none",
+    minWidth: "120px",
+};
+
+const reportBtn = {
+    padding: "8px 16px",
+    background: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "bold",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+};
+
+const returnedRowStyle = {
+    background: "#f8f9fa",
+    color: "#6c757d",
+};
+
+const badge = {
+    padding: "4px 8px",
+    borderRadius: "4px",
+    fontSize: "12px",
+    fontWeight: "bold",
+    display: "inline-block",
+};
+
+const activeBadge = {
+    ...badge,
+    background: "#fff3cd",
+    color: "#856404",
+};
+
+const returnedBadge = {
+    ...badge,
+    background: "#d4edda",
+    color: "#155724",
 };

@@ -14,6 +14,24 @@ export default function BorrowedAssets() {
 
     const user = JSON.parse(storedUser);
     const [assets, setAssets] = useState([]);
+
+    // Initialize inventory from localStorage or defaults
+    const getInitialInventory = () => {
+        const saved = localStorage.getItem(`inventory_${user.branch}`);
+        if (saved) return JSON.parse(saved);
+        // Default inventory
+        return {
+            "أدوات طبية": 50,
+            "جهاز أوكسجين": 10,
+            "كرسي متحرك": 15,
+            "عكازات": 30,
+            "أخرى": 20
+        };
+    };
+
+    const [totalInventory, setTotalInventory] = useState(getInitialInventory());
+    const [editingInventory, setEditingInventory] = useState(false);
+
     const [form, setForm] = useState({
         الفرع: user.branch || "",
         اسم_الأصل: "",
@@ -29,6 +47,11 @@ export default function BorrowedAssets() {
         fetchAssets();
     }, []);
 
+    // Save inventory to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem(`inventory_${user.branch}`, JSON.stringify(totalInventory));
+    }, [totalInventory, user.branch]);
+
     function fetchAssets() {
         api
             .get("/assets")
@@ -42,12 +65,26 @@ export default function BorrowedAssets() {
     // Filter borrowed assets
     const borrowedAssets = assets.filter((a) => a[2] === "اعاره للاصول المعاره");
 
-    // Calculate inventory: available quantities by asset type
+    // Calculate inventory with total, borrowed, and available
     const inventory = BORROWABLE_ITEMS.map((itemName) => {
         const borrowed = borrowedAssets.filter((a) => a[4] === itemName);
         const totalBorrowed = borrowed.reduce((sum, a) => sum + (parseInt(a[6]) || 0), 0);
-        return { name: itemName, borrowed: totalBorrowed, borrowedCount: borrowed.length };
+        const total = totalInventory[itemName] || 0;
+        const available = total - totalBorrowed;
+        return {
+            name: itemName,
+            total,
+            borrowed: totalBorrowed,
+            available,
+            borrowedCount: borrowed.length
+        };
     });
+
+    function updateInventory(itemName, newTotal) {
+        const value = parseInt(newTotal);
+        if (isNaN(value) || value < 0) return;
+        setTotalInventory(prev => ({ ...prev, [itemName]: value }));
+    }
 
     function handleChange(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -58,6 +95,14 @@ export default function BorrowedAssets() {
 
         if (!form.اسم_الأصل || !form.لمن || !form.الموقع || !form.التاريخ) {
             alert("يرجى تعبئة جميع الحقول المطلوبة");
+            return;
+        }
+
+        // Check if enough available
+        const item = inventory.find(i => i.name === form.اسم_الأصل);
+        const requestedQty = parseInt(form.الكمية) || 0;
+        if (item && requestedQty > item.available) {
+            alert(`الكمية المتاحة فقط ${item.available} من ${form.اسم_الأصل}`);
             return;
         }
 
@@ -144,20 +189,50 @@ export default function BorrowedAssets() {
 
             <p style={description}>
                 نظام إدارة الأصول المعارة يتيح لك تتبع الأدوات والمعدات المستعارة خارجيًا.
-                الكروت أدناه تعرض إجمالي الكميات المعارة لكل نوع من الأصول.
+                الكروت أدناه تعرض الكميات المتاحة والمعارة لكل نوع من الأصول.
             </p>
 
             {/* Inventory Cards */}
             <section style={section}>
-                <h4 style={sectionTitle}>المخزون المعار</h4>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                    <h4 style={{ margin: 0 }}>المخزون المتاح</h4>
+                    <button
+                        onClick={() => setEditingInventory(!editingInventory)}
+                        style={editInventoryBtn}
+                    >
+                        {editingInventory ? "✓ حفظ" : "✏️ تعديل المخزون"}
+                    </button>
+                </div>
                 <div style={cardsContainer} className="form-grid-mobile">
                     {inventory.map((item) => (
                         <div key={item.name} style={inventoryCard}>
                             <div style={cardIcon}>📦</div>
                             <div style={cardTitle}>{item.name}</div>
-                            <div style={cardCount}>{item.borrowed}</div>
-                            <div style={cardLabel}>إجمالي المعار</div>
-                            <div style={cardSubLabel}>{item.borrowedCount} إعارة</div>
+
+                            {editingInventory ? (
+                                <div style={{ margin: "10px 0" }}>
+                                    <input
+                                        type="number"
+                                        value={item.total}
+                                        onChange={(e) => updateInventory(item.name, e.target.value)}
+                                        style={inventoryInput}
+                                        min="0"
+                                    />
+                                    <div style={cardSubLabel}>إجمالي المخزون</div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div style={{ ...cardCount, color: item.available > 0 ? "#28a745" : "#dc3545" }}>
+                                        {item.available}
+                                    </div>
+                                    <div style={cardLabel}>متاح للإعارة</div>
+                                    <div style={cardStats}>
+                                        <span>الإجمالي: {item.total}</span>
+                                        <span style={{ color: "#C22129" }}>المعار: {item.borrowed}</span>
+                                    </div>
+                                    <div style={cardSubLabel}>{item.borrowedCount} إعارة</div>
+                                </>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -349,9 +424,42 @@ const cardLabel = {
     marginBottom: "4px",
 };
 
+const cardStats = {
+    display: "flex",
+    justifyContent: "space-around",
+    fontSize: "11px",
+    color: "#777",
+    marginTop: "8px",
+    paddingTop: "8px",
+    borderTop: "1px solid #eee",
+};
+
 const cardSubLabel = {
     fontSize: "11px",
     color: "#999",
+    marginTop: "4px",
+};
+
+const editInventoryBtn = {
+    padding: "8px 16px",
+    background: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "bold",
+};
+
+const inventoryInput = {
+    width: "100%",
+    padding: "8px",
+    border: "2px solid #C22129",
+    borderRadius: "6px",
+    fontSize: "18px",
+    fontWeight: "bold",
+    textAlign: "center",
+    outline: "none",
 };
 
 const formBox = {

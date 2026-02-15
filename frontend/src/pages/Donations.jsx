@@ -87,11 +87,7 @@ export default function Donations() {
     let totalIncomingUSD = 0;
     let totalIncomingLBP = 0;
 
-    console.log("Debugging Donations Stats:");
-    console.log("Total Incoming Records:", incomingData.length);
-    if (incomingData.length > 0) {
-        console.log("Sample Row:", incomingData[0]);
-    }
+
 
     incomingData.forEach(r => {
         if (r[4] === "نقدي") {
@@ -157,7 +153,7 @@ export default function Donations() {
             CreatedAt: form.CreatedAt // Preserve CreatedAt if editing
         };
 
-        console.log("Submitting Donation Payload:", payload);
+
 
         try {
             if (editingId) {

@@ -7,6 +7,8 @@ export default function Donations() {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [branchFilter, setBranchFilter] = useState("");
+    const [filterMonth, setFilterMonth] = useState("");
+    const [filterYear, setFilterYear] = useState("");
 
     useEffect(() => {
         api
@@ -18,10 +20,22 @@ export default function Donations() {
     /* ===== FILTER BY BRANCH ===== */
     const sortedData = [...data].reverse();
     const visible = sortedData.filter((r) => {
+        let matchBranch = true;
         if (user.role === "super") {
-            return branchFilter ? (r[2] || "").includes(branchFilter) : true;
+            matchBranch = branchFilter ? (r[2] || "").includes(branchFilter) : true;
+        } else {
+            matchBranch = (r[2] || "").includes(user.branch);
         }
-        return (r[2] || "").includes(user.branch);
+
+        let matchDate = true;
+        if (filterMonth || filterYear) {
+            const d = new Date(r[1]);
+            const m = filterMonth ? d.getMonth() + 1 === parseInt(filterMonth) : true;
+            const y = filterYear ? d.getFullYear() === parseInt(filterYear) : true;
+            matchDate = m && y;
+        }
+
+        return matchBranch && matchDate;
     });
 
     /* ===== CALCULATIONS ===== */
@@ -70,27 +84,33 @@ export default function Donations() {
                 </button>
             </div>
 
-            {/* ===== BRANCH FILTER (FOR SUPER) ===== */}
-            {user.role === "super" && (
-                <div style={{ marginBottom: '20px' }} className="form-grid-mobile">
+            {/* ===== FILTERS ===== */}
+            <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                {user.role === "super" && (
                     <select
                         value={branchFilter}
                         onChange={(e) => setBranchFilter(e.target.value)}
-                        style={{
-                            padding: '10px',
-                            borderRadius: '8px',
-                            border: '1px solid #C22129',
-                            outline: 'none',
-                            fontWeight: 'bold',
-                            minWidth: '200px'
-                        }}
+                        style={{ ...filterSelect, borderColor: '#C22129', fontWeight: 'bold' }}
                     >
                         <option value="">كل الفروع</option>
                         <option value="البقاع الأوسط">البقاع الأوسط</option>
                         <option value="بعلبك">بعلبك</option>
                     </select>
-                </div>
-            )}
+                )}
+
+                <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
+                    <option value="">كل الأشهر</option>
+                    {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleDateString('ar', { month: 'long' })}</option>
+                    ))}
+                </select>
+                <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
+                    <option value="">كل السنوات</option>
+                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                        <option key={year} value={year}>{year}</option>
+                    ))}
+                </select>
+            </div>
 
             {/* ===== SUMMARY CARDS ===== */}
             <div style={cardsGrid} className="dashboard-grid">
@@ -219,4 +239,12 @@ const btnSecondary = {
     borderRadius: "8px",
     cursor: "pointer",
     fontSize: "14px",
+};
+
+const filterSelect = {
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "8px",
+    outline: "none",
+    minWidth: "150px",
 };

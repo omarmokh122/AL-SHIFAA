@@ -73,6 +73,8 @@ export default function Cases() {
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState("");
     const [branchFilter, setBranchFilter] = useState("");
+    const [filterMonth, setFilterMonth] = useState("");
+    const [filterYear, setFilterYear] = useState("");
 
     /* ===== Filtering Logic ===== */
     const sortedCases = [...cases].reverse();
@@ -85,9 +87,18 @@ export default function Cases() {
         }
 
         const matchType = typeFilter ? c[4] === typeFilter : true;
+
+        let matchDate = true;
+        if (filterMonth || filterYear) {
+            const d = new Date(c[1]);
+            const m = filterMonth ? d.getMonth() + 1 === parseInt(filterMonth) : true;
+            const y = filterYear ? d.getFullYear() === parseInt(filterYear) : true;
+            matchDate = m && y;
+        }
+
         const searchStr = `${c[5]} ${c[6]}`.toLowerCase();
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());
-        return matchBranch && matchType && matchSearch;
+        return matchBranch && matchType && matchSearch && matchDate;
     });
 
     /* ===== Stats ===== */
@@ -249,6 +260,19 @@ export default function Cases() {
                     >
                         <option value="">كل الأنواع</option>
                         {CASE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+
+                    <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
+                        <option value="">كل الأشهر</option>
+                        {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleDateString('ar', { month: 'long' })}</option>
+                        ))}
+                    </select>
+                    <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
+                        <option value="">كل السنوات</option>
+                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
                     </select>
                 </div>
 

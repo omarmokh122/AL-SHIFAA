@@ -162,15 +162,25 @@ export default function Assets() {
 
     const [searchTerm, setSearchTerm] = useState("");
     const [filter, setFilter] = useState("");
+    const [filterMonth, setFilterMonth] = useState("");
+    const [filterYear, setFilterYear] = useState("");
 
     const visible = assets.filter((a) => {
         const matchBranch = user.role === "super" ? true : a[1] === user.branch;
         const matchType = filter ? a[2] === filter : true;
 
+        let matchDate = true;
+        if (filterMonth || filterYear) {
+            const d = new Date(a[11]); // Index 11 is Added Date
+            const m = filterMonth ? d.getMonth() + 1 === parseInt(filterMonth) : true;
+            const y = filterYear ? d.getFullYear() === parseInt(filterYear) : true;
+            matchDate = m && y;
+        }
+
         const searchStr = `${a[4]} ${a[8]} ${a[13]}`.toLowerCase();
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());
 
-        return matchBranch && matchType && matchSearch;
+        return matchBranch && matchType && matchSearch && matchDate;
     });
 
     // Separate borrowed assets from main assets
@@ -323,6 +333,19 @@ export default function Assets() {
                         <option value="مركز">أصول المركز</option>
                         <option value="سيارة إسعاف">سيارات إسعاف</option>
                         <option value="محتويات سيارة إسعاف">محتويات سيارة إسعاف</option>
+                    </select>
+
+                    <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
+                        <option value="">كل الأشهر</option>
+                        {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleDateString('ar', { month: 'long' })}</option>
+                        ))}
+                    </select>
+                    <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
+                        <option value="">كل السنوات</option>
+                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
                     </select>
                 </div>
 

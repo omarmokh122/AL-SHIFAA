@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import api from "../api";
 
-const BORROWABLE_ITEMS = ["أدوات طبية", "جهاز أوكسجين", "كرسي متحرك", "عكازات"];
+const BORROWABLE_ITEMS = ["كراسي معاقين", "ووكر متحرك", "فرشات هوا", "تخوت مرضى", "جهاز أوكسجين", "عكازات"];
 
 const ITEM_ICONS = {
-    "أدوات طبية": "🏥",
+    "كراسي معاقين": "♿",
+    "ووكر متحرك": "🚶‍♂️",
+    "فرشات هوا": "🛏️",
+    "تخوت مرضى": "🏥",
     "جهاز أوكسجين": "🫁",
-    "كرسي متحرك": "♿",
     "عكازات": "🦯"
 };
 
@@ -22,21 +24,16 @@ export default function BorrowedAssets() {
     const user = JSON.parse(storedUser);
     const [assets, setAssets] = useState([]);
 
-    // Initialize inventory from localStorage or defaults
-    const getInitialInventory = () => {
-        const saved = localStorage.getItem(`inventory_${user.branch}`);
-        if (saved) return JSON.parse(saved);
-        // Default inventory
-        return {
-            "أدوات طبية": 50,
-            "جهاز أوكسجين": 10,
-            "كرسي متحرك": 15,
-            "عكازات": 30
-        };
-    };
-
-    const [totalInventory, setTotalInventory] = useState(getInitialInventory());
+    const [totalInventory, setTotalInventory] = useState({
+        "كراسي معاقين": 15,
+        "ووكر متحرك": 10,
+        "فرشات هوا": 5,
+        "تخوت مرضى": 5,
+        "جهاز أوكسجين": 10,
+        "عكازات": 30
+    });
     const [editingInventory, setEditingInventory] = useState(false);
+    const [isSavingInventory, setIsSavingInventory] = useState(false);
     const [filterMonth, setFilterMonth] = useState("");
     const [filterYear, setFilterYear] = useState("");
 
@@ -53,12 +50,27 @@ export default function BorrowedAssets() {
 
     useEffect(() => {
         fetchAssets();
-    }, []);
+        fetchInventory();
+    }, [user.branch]);
 
-    // Save inventory to localStorage whenever it changes
-    useEffect(() => {
-        localStorage.setItem(`inventory_${user.branch}`, JSON.stringify(totalInventory));
-    }, [totalInventory, user.branch]);
+    function fetchInventory() {
+        api.get("/inventory")
+            .then((res) => {
+                const data = res.data.data || [];
+                const branchRow = data.find(r => r[0] === user.branch);
+                if (branchRow) {
+                    setTotalInventory({
+                        "كراسي معاقين": parseInt(branchRow[1]) || 0,
+                        "ووكر متحرك": parseInt(branchRow[2]) || 0,
+                        "فرشات هوا": parseInt(branchRow[3]) || 0,
+                        "تخوت مرضى": parseInt(branchRow[4]) || 0,
+                        "جهاز أوكسجين": parseInt(branchRow[5]) || 0,
+                        "عكازات": parseInt(branchRow[6]) || 0,
+                    });
+                }
+            })
+            .catch(err => console.error("Error fetching inventory", err));
+    }
 
     function fetchAssets() {
         api
@@ -103,6 +115,28 @@ export default function BorrowedAssets() {
         const value = parseInt(newTotal);
         if (isNaN(value) || value < 0) return;
         setTotalInventory(prev => ({ ...prev, [itemName]: value }));
+    }
+
+    async function handleSaveInventory() {
+        if (!editingInventory) {
+            setEditingInventory(true);
+            return;
+        }
+
+        setIsSavingInventory(true);
+        try {
+            await api.post("/inventory", {
+                branch: user.branch,
+                inventory: totalInventory
+            });
+            setEditingInventory(false);
+            alert("تم حفظ المخزون بنجاح");
+        } catch (err) {
+            console.error(err);
+            alert("خطأ أثناء حفظ المخزون");
+        } finally {
+            setIsSavingInventory(false);
+        }
     }
 
     function handleChange(e) {
@@ -242,10 +276,11 @@ export default function BorrowedAssets() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                     <h4 style={{ margin: 0 }}>المخزون المتاح</h4>
                     <button
-                        onClick={() => setEditingInventory(!editingInventory)}
+                        onClick={handleSaveInventory}
                         style={editInventoryBtn}
+                        disabled={isSavingInventory}
                     >
-                        {editingInventory ? "✓ حفظ" : "✏️ تعديل المخزون"}
+                        {isSavingInventory ? "جاري الحفظ..." : (editingInventory ? "✓ حفظ" : "✏️ تعديل المخزون")}
                     </button>
                 </div>
                 <div style={cardsContainer} className="form-grid-mobile">

@@ -12,6 +12,8 @@ import {
   addDonationSpent,
   getCases,
   addCase,
+  updateCase,
+  deleteCase,
   getFinancialData,
   getAssets,
   addAsset,
@@ -20,6 +22,8 @@ import {
   getMedicalTeam,
   addMedicalTeamMember,
   updateMedicalTeamMember,
+  getInventory,
+  updateBranchInventory
 } from "./googleSheets.js";
 
 console.log("✅ index.js loaded");
@@ -384,6 +388,60 @@ app.post("/cases", async (req, res) => {
   }
 });
 
+// 🔹 UPDATE case
+app.put("/cases/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      التاريخ,
+      الفرع,
+      الجنس,
+      نوع_الحالة,
+      الوصف,
+      الفريق,
+      ملاحظات,
+      CreatedAt
+    } = req.body;
+
+    const row = [
+      id,                         // case_id
+      التاريخ,
+      الفرع,
+      الجنس,
+      نوع_الحالة,
+      الوصف || "",
+      الفريق || "",
+      ملاحظات || "",
+      CreatedAt || new Date().toISOString(),
+      ""                          // Status
+    ];
+
+    await updateCase(id, row);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("PUT /cases error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// 🔹 DELETE case (Soft Delete)
+app.delete("/cases/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await deleteCase(id);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("DELETE /cases error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 // =====================
 // FINANCIAL ROUTES
 // =====================
@@ -528,6 +586,42 @@ app.delete("/assets/:id", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("DELETE /assets error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// 🔹 GET all inventory
+app.get("/inventory", async (req, res) => {
+  try {
+    const data = await getInventory();
+    res.json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error("GET /inventory error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// 🔹 POST update inventory for a branch
+app.post("/inventory", async (req, res) => {
+  try {
+    const { branch, inventory } = req.body;
+
+    // inventory is expected to be an object: { "كراسي معاقين": 15, "ووكر متحرك": 10, ... }
+    await updateBranchInventory(branch, inventory);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("POST /inventory error:", error.message);
     res.status(500).json({
       success: false,
       error: error.message,

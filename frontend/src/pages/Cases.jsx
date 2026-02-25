@@ -20,6 +20,7 @@ export default function Cases() {
 
     const [cases, setCases] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [editingCaseId, setEditingCaseId] = useState(null);
 
     const [form, setForm] = useState({
         التاريخ: "",
@@ -55,10 +56,18 @@ export default function Cases() {
     async function submitCase(e) {
         e.preventDefault();
         try {
-            await api.post("/cases", form);
+            if (editingCaseId) {
+                // Update mode
+                await api.put(`/cases/${editingCaseId}`, form);
+                setEditingCaseId(null);
+            } else {
+                // Add mode
+                await api.post("/cases", form);
+            }
             fetchCases();
             setForm({
-                ...form,
+                التاريخ: "",
+                الفرع: user?.branch || "",
                 الجنس: "",
                 نوع_الحالة: "",
                 الفريق: "",
@@ -66,7 +75,34 @@ export default function Cases() {
             });
         } catch (err) {
             console.error(err);
-            alert("خطأ أثناء إضافة الحالة");
+            alert("خطأ أثناء حفظ الحالة");
+        }
+    }
+
+    function handleEdit(caseData) {
+        setEditingCaseId(caseData[0]); // ID is at index 0
+        setForm({
+            ...form,
+            التاريخ: caseData[1],
+            الفرع: caseData[2],
+            الجنس: caseData[3],
+            نوع_الحالة: caseData[4],
+            الفريق: caseData[5] || "",
+            ملاحظات: caseData[7] || "",
+            CreatedAt: caseData[8] // preserve the original created diff timing
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function handleDelete(id) {
+        if (!window.confirm("هل أنت متأكد من حذف هذه الحالة؟")) return;
+        try {
+            await api.delete(`/cases/${id}`);
+            alert("تم حذف الحالة بنجاح");
+            fetchCases();
+        } catch (err) {
+            console.error(err);
+            alert("خطأ أثناء حذف الحالة");
         }
     }
 
@@ -159,9 +195,11 @@ export default function Cases() {
                 </div>
             </section>
 
-            {/* ===== ADD CASE ===== */}
+            {/* ===== ADD/EDIT CASE ===== */}
             <section style={section}>
-                <h4 style={sectionTitle}>إضافة حالة جديدة</h4>
+                <h4 style={sectionTitle}>
+                    {editingCaseId ? "تعديل الحالة" : "إضافة حالة جديدة"}
+                </h4>
                 <div style={formBox}>
                     <form onSubmit={submitCase} style={formGrid}>
                         <input
@@ -224,9 +262,30 @@ export default function Cases() {
                             style={inputStyle}
                         />
 
-                        <button type="submit" style={submitBtn}>
-                            حفظ الحالة
-                        </button>
+                        <div style={{ gridColumn: "1 / -1", display: 'flex', gap: '10px' }}>
+                            <button type="submit" style={submitBtn}>
+                                {editingCaseId ? "حفظ التعديلات" : "إنشاء الحالة"}
+                            </button>
+                            {editingCaseId && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditingCaseId(null);
+                                        setForm({
+                                            التاريخ: "",
+                                            الفرع: user?.branch || "",
+                                            الجنس: "",
+                                            نوع_الحالة: "",
+                                            الفريق: "",
+                                            ملاحظات: "",
+                                        });
+                                    }}
+                                    style={{ ...submitBtn, background: "#6c757d", width: "auto" }}
+                                >
+                                    إلغاء التعديل
+                                </button>
+                            )}
+                        </div>
                     </form>
                 </div>
             </section>
@@ -290,11 +349,12 @@ export default function Cases() {
                                     <th>نوع الحالة</th>
                                     <th>الفريق</th>
                                     <th>ملاحظات</th>
+                                    <th>إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {visibleCases.length === 0 ? (
-                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
+                                    <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
                                 ) : (
                                     visibleCases.map((c, i) => (
                                         <tr key={i}>
@@ -304,7 +364,25 @@ export default function Cases() {
                                             <td>{c[3]}</td>
                                             <td>{c[4]}</td>
                                             <td>{c[5]}</td>
-                                            <td>{c[6]}</td>
+                                            <td>{c[7]}</td>
+                                            <td>
+                                                <div style={{ display: "flex", gap: "6px" }}>
+                                                    <button
+                                                        onClick={() => handleEdit(c)}
+                                                        style={{ ...actionBtn, background: "#007bff" }}
+                                                        title="تعديل"
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(c[0])}
+                                                        style={{ ...actionBtn, background: "#dc3545" }}
+                                                        title="حذف"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))
                                 )}
@@ -462,4 +540,12 @@ const submitBtn = {
 const table = {
     width: "100%",
     borderCollapse: "collapse",
+};
+const actionBtn = {
+    border: "none",
+    borderRadius: "4px",
+    padding: "4px 8px",
+    cursor: "pointer",
+    color: "#fff",
+    fontSize: "14px",
 };

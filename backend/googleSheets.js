@@ -37,9 +37,10 @@ export async function getCases() {
         });
         const entries = res.data.values || [];
 
-        // Map to standard 9-column format used by the App
-        // Standard: [ID, Date, Branch, Gender, Type, Description, Team, Notes, CreatedAt]
-        const mapped = entries.map(r => [
+        // Standard: [ID, Date, Branch, Gender, Type, Description, Team, Notes, CreatedAt, Status]
+        // Raw headers: [0: Timestamp, 1: التاريخ, 2: الشهر, 3: السنة, 4: الفرع, 5: الجنس, 6: نوع الحالة, 7: ملاحظات, 8: Status]
+
+        let mapped = entries.map(r => [
             r[0],       // ID (Timestamp)
             r[1],       // التاريخ
             r[4],       // الفرع
@@ -49,7 +50,11 @@ export async function getCases() {
             "",         // الفريق
             r[7] || "", // ملاحظات
             r[0],       // CreatedAt
+            r[8] || ""  // Status (Soft Delete flag)
         ]);
+
+        // Filter out soft-deleted records
+        mapped = mapped.filter(r => r[9] !== "Deleted");
 
         // Sort by date (descending)
         return mapped.sort((a, b) => new Date(b[1]) - new Date(a[1]) || (b[0] > a[0] ? 1 : -1));
@@ -77,13 +82,83 @@ export async function addCase(row) {
         row[3],     // الجنس
         row[4],     // نوع الحالة
         row[7],     // ملاحظات
+        ""          // Status (Soft Delete)
     ];
 
     await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Cases_Raw_Data!A:H",
+        range: "Cases_Raw_Data!A:I",
         valueInputOption: "USER_ENTERED",
         requestBody: { values: [rawRow] },
+    });
+}
+
+export async function updateCase(id, updatedRow) {
+    // 1. Get all data to find the row index based on ID
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Cases_Raw_Data!A:I",
+    });
+
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex((r) => String(r[0]) === String(id));
+
+    if (rowIndex === -1) throw new Error("Case not found");
+
+    const dateObj = new Date(updatedRow[1]);
+    const month = dateObj.getMonth() + 1;
+    const year = dateObj.getFullYear();
+
+    // Map updatedRow back to Raw Format
+    // App Format: [ID, Date, Branch, Gender, Type, Description, Team, Notes, CreatedAt, Status]
+    // Raw Format: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع الحالة, ملاحظات, Status]
+    const rawRow = [
+        updatedRow[0],     // Timestamp
+        updatedRow[1],     // التاريخ
+        month,             // الشهر
+        year,              // السنة
+        updatedRow[2],     // الفرع
+        updatedRow[3],     // الجنس
+        updatedRow[4],     // نوع الحالة
+        updatedRow[7],     // ملاحظات
+        updatedRow[9] || "" // Status
+    ];
+
+    const sheetRowNumber = rowIndex + 1; // 1-indexed
+
+    // 2. Update the specific row
+    await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `Cases_Raw_Data!A${sheetRowNumber}:I${sheetRowNumber}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+            values: [rawRow],
+        },
+    });
+}
+
+export async function deleteCase(id) {
+    // Soft delete: Find row and set Status (column I) to "Deleted"
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Cases_Raw_Data!A:I",
+    });
+
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex((r) => String(r[0]) === String(id));
+
+    if (rowIndex === -1) throw new Error("Case not found");
+
+    const sheetRowNumber = rowIndex + 1; // 1-indexed
+
+    // Only updating the Status column (I)
+    await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `Cases_Raw_Data!I${sheetRowNumber}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+            values: [["Deleted"]],
+        },
     });
 }
 
@@ -104,9 +179,11 @@ export async function getFinancialData() {
 export async function getDonationsReceived() {
     const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Donations_Received!A2:O",
+        range: "Donations_Received!A2:P",
     });
-    return res.data.values || [];
+    const rows = res.data.values || [];
+    // Filter out soft-deleted
+    return rows.filter(r => r[15] !== "Deleted");
 }
 
 export async function addDonationReceived(row) {
@@ -121,9 +198,11 @@ export async function addDonationReceived(row) {
 export async function getDonationsSpent() {
     const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Donations_Spent!A2:O",
+        range: "Donations_Spent!A2:P",
     });
-    return res.data.values || [];
+    const rows = res.data.values || [];
+    // Filter out soft-deleted
+    return rows.filter(r => r[15] !== "Deleted");
 }
 
 export async function addDonationSpent(row) {
@@ -188,64 +267,18 @@ export async function deleteDonation(id, type) {
 
     if (rowIndex === -1) throw new Error("Donation not found");
 
+    // Soft delete: We will update column 'P' (index 15) to "Deleted"
+    // Assuming A is col 1, O is col 15 -> P is col 16
+    const sheetRowNumber = rowIndex + 2; // Data starts at A2
+    const updateRange = `${sheetName}!P${sheetRowNumber}`;
 
-    // Fetch sheet metadata to find sheetId
-    const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
-    const sheet = meta.data.sheets.find((s) => s.properties.title === sheetName);
-    if (!sheet) throw new Error("Sheet not found");
-    const sheetId = sheet.properties.sheetId;
-
-    // Row index for batchUpdate is 0-based from the very first row.
-    // Our data starts at A2.
-    // rowIndex 0 (from valyes.get A2:O) -> corresponds to Sheet Row 2 -> Index 1.
-    const sheetRowIndex = rowIndex + 1;
-
-    await sheets.spreadsheets.batchUpdate({
+    await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
-        requestBody: {
-            requests: [{
-                deleteDimension: {
-                    range: {
-                        sheetId: sheetId,
-                        dimension: "ROWS",
-                        startIndex: sheetRowIndex,
-                        endIndex: sheetRowIndex + 1
-                    }
-                }
-            }]
-        }
-    });
-}
-
-export async function addDonationReceived(row) {
-    await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: "Donations_Received!A:O",
+        range: updateRange,
         valueInputOption: "USER_ENTERED",
-        requestBody: { values: [row] },
+        requestBody: { values: [["Deleted"]] },
     });
 }
-
-// =====================
-// DONATIONS (SPENT - EXPENSES)
-// =====================
-export async function getDonationsSpent() {
-    const res = await sheets.spreadsheets.values.get({
-        spreadsheetId: SPREADSHEET_ID,
-        range: "Donations_Spent!A2:O",
-    });
-    return res.data.values || [];
-}
-
-export async function addDonationSpent(row) {
-    await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
-        range: "Donations_Spent!A:O",
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [row] },
-    });
-}
-
 // =====================
 // ASSETS
 // =====================
@@ -378,4 +411,66 @@ export async function updateMedicalTeamMember(id, updatedRow) {
             values: [updatedRow],
         },
     });
+}
+
+// =======================================================
+// INVENTORY
+// Sheet: Inventory
+// =======================================================
+
+export async function getInventory() {
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Inventory!A2:G",
+        });
+        return res.data.values || [];
+    } catch (e) {
+        console.error("Error fetching inventory:", e.message);
+        return [];
+    }
+}
+
+export async function updateBranchInventory(branch, inventoryObj) {
+    let rows = [];
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Inventory!A:G",
+        });
+        rows = res.data.values || [];
+    } catch (e) {
+        console.error("Inventory check error:", e.message);
+    }
+
+    const rowIndex = rows.findIndex(r => r[0] === branch);
+
+    const rowToSave = [
+        branch,
+        inventoryObj["كراسي معاقين"] || 0,
+        inventoryObj["ووكر متحرك"] || 0,
+        inventoryObj["فرشات هوا"] || 0,
+        inventoryObj["تخوت مرضى"] || 0,
+        inventoryObj["جهاز أوكسجين"] || 0,
+        inventoryObj["عكازات"] || 0
+    ];
+
+    if (rowIndex === -1) {
+        // Appending new branch
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Inventory!A:G",
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [rowToSave] },
+        });
+    } else {
+        // Updating existing branch
+        const sheetRowNumber = rowIndex + 1;
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `Inventory!A${sheetRowNumber}:G${sheetRowNumber}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [rowToSave] },
+        });
+    }
 }

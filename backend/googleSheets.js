@@ -43,8 +43,8 @@ export async function getCases() {
         let mapped = entries.map(r => [
             r[0],       // ID (Timestamp)
             r[1],       // التاريخ
-            r[2],       // الشهر
-            r[3],       // السنة
+            r[2],       // الشهر (String label)
+            r[3],       // السنة (String/Int)
             r[4],       // الفرع
             r[5],       // الجنس
             r[6],       // نوع الحالة
@@ -70,8 +70,13 @@ export async function addCase(row) {
     // Raw Sheet expects: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع الحالة, ملاحظات, Status]
 
     const dateObj = new Date(row[1]);
-    const month = dateObj.getMonth() + 1;
-    const year = dateObj.getFullYear();
+    const monthNames = [
+        "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+        "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+    ];
+    // Use Arabic strings like in the sample if Date is valid
+    const month = isNaN(dateObj) ? "" : monthNames[dateObj.getMonth()];
+    const year = isNaN(dateObj) ? "" : dateObj.getFullYear();
 
     const rawRow = [
         row[0],     // Timestamp
@@ -106,8 +111,12 @@ export async function updateCase(id, updatedRow) {
     if (rowIndex === -1) throw new Error("Case not found");
 
     const dateObj = new Date(updatedRow[1]);
-    const month = dateObj.getMonth() + 1;
-    const year = dateObj.getFullYear();
+    const monthNames = [
+        "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+        "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+    ];
+    const month = isNaN(dateObj) ? "" : monthNames[dateObj.getMonth()];
+    const year = isNaN(dateObj) ? "" : dateObj.getFullYear();
 
     // Map updatedRow back to Raw Format
     // App Format: [ID, Date, Branch, Gender, Type, Notes, CreatedAt, Status]

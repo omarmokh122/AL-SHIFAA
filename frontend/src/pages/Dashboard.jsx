@@ -35,10 +35,23 @@ export default function Dashboard() {
   }, []);
 
   /* ================= FILTER HELPERS ================= */
-  function filterByDateAndBranch(rows, dateIndex, branchIndex) {
+  function filterByDateAndBranch(rows, dateIndex, branchIndex, monthIndex = null) {
+    const monthsNames = [
+      "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+      "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+    ];
+
     return rows.filter(r => {
       const date = new Date(r[dateIndex]);
-      const matchMonth = month ? date.getMonth() + 1 === Number(month) : true;
+      let matchMonth = true;
+      if (month) {
+        if (monthIndex !== null && r[monthIndex]) {
+          matchMonth = r[monthIndex] === monthsNames[Number(month) - 1];
+        } else {
+          matchMonth = date.getMonth() + 1 === Number(month);
+        }
+      }
+
       const matchYear = year ? date.getFullYear() === Number(year) : true;
 
       let matchBranch = true;
@@ -57,7 +70,7 @@ export default function Dashboard() {
   const sortedCases = [...cases].reverse();
   const sortedDonations = [...donations].reverse();
 
-  const filteredCases = filterByDateAndBranch(sortedCases, 1, 2);
+  const filteredCases = filterByDateAndBranch(sortedCases, 1, 4, 2); // Branch is index 4 for cases, Month is 2
   const filteredDonations = filterByDateAndBranch(sortedDonations, 1, 2);
 
   const parseAmount = (val) => {
@@ -102,18 +115,23 @@ export default function Dashboard() {
   ];
 
   const chartData = monthsNames.map((name, index) => {
+    const arabicName = [
+      "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+      "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+    ][index];
+
     const count = cases.filter(c => {
       const d = new Date(c[1]);
       const matchYear = year ? d.getFullYear() === Number(year) : true;
 
       let matchBranch = true;
       if (user.role === "super") {
-        matchBranch = selectedBranch ? (c[2] || "").includes(selectedBranch) : true;
+        matchBranch = selectedBranch ? (c[4] || "").includes(selectedBranch) : true;
       } else {
-        matchBranch = (c[2] || "").includes(user.branch);
+        matchBranch = (c[4] || "").includes(user.branch);
       }
 
-      return d.getMonth() === index && matchYear && matchBranch;
+      return c[2] === arabicName && matchYear && matchBranch;
     }).length;
     return { name, cases: count };
   });

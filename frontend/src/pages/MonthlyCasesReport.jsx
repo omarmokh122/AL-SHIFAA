@@ -60,12 +60,12 @@ export default function MonthlyCasesReport() {
     }, []);
 
     const months = [
-        { v: 1, l: "يناير" }, { v: 2, l: "فبراير" },
-        { v: 3, l: "مارس" }, { v: 4, l: "أبريل" },
-        { v: 5, l: "مايو" }, { v: 6, l: "يونيو" },
-        { v: 7, l: "يوليو" }, { v: 8, l: "أغسطس" },
-        { v: 9, l: "سبتمبر" }, { v: 10, l: "أكتوبر" },
-        { v: 11, l: "نوفمبر" }, { v: 12, l: "ديسمبر" },
+        { v: "كانون الثاني", l: "كانون الثاني" }, { v: "شباط", l: "شباط" },
+        { v: "آذار", l: "آذار" }, { v: "نيسان", l: "نيسان" },
+        { v: "أيار", l: "أيار" }, { v: "حزيران", l: "حزيران" },
+        { v: "تموز", l: "تموز" }, { v: "آب", l: "آب" },
+        { v: "أيلول", l: "أيلول" }, { v: "تشرين الأول", l: "تشرين الأول" },
+        { v: "تشرين الثاني", l: "تشرين الثاني" }, { v: "كانون الأول", l: "كانون الأول" },
     ];
 
     const years = [2024, 2025, 2026, 2027];
@@ -78,10 +78,9 @@ export default function MonthlyCasesReport() {
         }
 
         const base = cases.filter((c) => {
-            const d = new Date(c[1]);
             return (
-                d.getMonth() + 1 === Number(month) &&
-                d.getFullYear() === Number(year) &&
+                c[2] === month &&
+                String(c[3]) === String(year) &&
                 (user.role === "super" || (c[2] || "").includes(user.branch))
             );
         });
@@ -114,10 +113,9 @@ export default function MonthlyCasesReport() {
         setSelectedType(v);
         // We filter from the already month-filtered 'cases' logic if we want to be correct
         const base = cases.filter((c) => {
-            const d = new Date(c[1]);
             return (
-                d.getMonth() + 1 === Number(month) &&
-                d.getFullYear() === Number(year) &&
+                c[2] === month &&
+                String(c[3]) === String(year) &&
                 (user.role === "super" || (c[2] || "").includes(user.branch))
             );
         });

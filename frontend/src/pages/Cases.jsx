@@ -32,12 +32,12 @@ const CASE_TYPES = [
 ];
 
 const MONTHS = [
-    { v: 1, l: "يناير" }, { v: 2, l: "فبراير" },
-    { v: 3, l: "مارس" }, { v: 4, l: "أبريل" },
-    { v: 5, l: "مايو" }, { v: 6, l: "يونيو" },
-    { v: 7, l: "يوليو" }, { v: 8, l: "أغسطس" },
-    { v: 9, l: "سبتمبر" }, { v: 10, l: "أكتوبر" },
-    { v: 11, l: "نوفمبر" }, { v: 12, l: "ديسمبر" },
+    { v: "كانون الثاني", l: "كانون الثاني" }, { v: "شباط", l: "شباط" },
+    { v: "آذار", l: "آذار" }, { v: "نيسان", l: "نيسان" },
+    { v: "أيار", l: "أيار" }, { v: "حزيران", l: "حزيران" },
+    { v: "تموز", l: "تموز" }, { v: "آب", l: "آب" },
+    { v: "أيلول", l: "أيلول" }, { v: "تشرين الأول", l: "تشرين الأول" },
+    { v: "تشرين الثاني", l: "تشرين الثاني" }, { v: "كانون الأول", l: "كانون الأول" },
 ];
 
 export default function Cases() {
@@ -149,9 +149,8 @@ export default function Cases() {
 
         let matchDate = true;
         if (filterMonth || filterYear) {
-            const d = new Date(c[1]);
-            const m = filterMonth ? d.getMonth() + 1 === parseInt(filterMonth) : true;
-            const y = filterYear ? d.getFullYear() === parseInt(filterYear) : true;
+            const m = filterMonth ? c[2] === filterMonth : true;
+            const y = filterYear ? String(c[3]) === String(filterYear) : true;
             matchDate = m && y;
         }
 
@@ -372,15 +371,12 @@ export default function Cases() {
                                     <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
                                 ) : (
                                     visibleCases.map((c, i) => {
-                                        const d = new Date(c[1]);
-                                        const mName = isNaN(d) ? "" : (MONTHS.find(m => m.v === d.getMonth() + 1)?.l || "");
-                                        const yNum = isNaN(d) ? "" : d.getFullYear();
                                         return (
                                             <tr key={i}>
                                                 <td>{i + 1}</td>
                                                 <td>{c[1]}</td>
-                                                <td>{mName}</td>
-                                                <td>{yNum}</td>
+                                                <td>{c[2]}</td>
+                                                <td>{c[3]}</td>
                                                 <td>{c[2]}</td>
                                                 <td>{c[3]}</td>
                                                 <td>{c[4]}</td>

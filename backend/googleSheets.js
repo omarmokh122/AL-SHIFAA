@@ -37,19 +37,19 @@ export async function getCases() {
         });
         const entries = res.data.values || [];
 
-        // Standard: [ID, Date, Branch, Gender, Type, Description, Team, Notes, CreatedAt, Status]
+        // Standard: [ID, Date, Month, Year, Branch, Gender, Type, Notes, CreatedAt, Status]
         // Raw headers: [0: Timestamp, 1: التاريخ, 2: الشهر, 3: السنة, 4: الفرع, 5: الجنس, 6: نوع الحالة, 7: ملاحظات, 8: Status]
 
         let mapped = entries.map(r => [
             r[0],       // ID (Timestamp)
             r[1],       // التاريخ
+            r[2],       // الشهر
+            r[3],       // السنة
             r[4],       // الفرع
             r[5],       // الجنس
             r[6],       // نوع الحالة
-            "",         // الوصف
-            "",         // الفريق
             r[7] || "", // ملاحظات
-            r[0],       // CreatedAt
+            r[0],       // CreatedAt (using timestamp)
             r[8] || ""  // Status (Soft Delete flag)
         ]);
 
@@ -66,8 +66,8 @@ export async function getCases() {
 
 export async function addCase(row) {
     // Write only to Cases_Raw_Data to maintain one source of truth
-    // Frontend provides: [Date.now(), التاريخ, الفرع, الجنس, نوع_الحالة, الوصف, الفريق, ملاحظات, CreatedAt]
-    // Raw Sheet expects: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع الحالة, ملاحظات]
+    // Frontend provides: [Date.now(), التاريخ, الفرع, الجنس, نوع_الحالة, ملاحظات, CreatedAt]
+    // Raw Sheet expects: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع الحالة, ملاحظات, Status]
 
     const dateObj = new Date(row[1]);
     const month = dateObj.getMonth() + 1;
@@ -81,7 +81,7 @@ export async function addCase(row) {
         row[2],     // الفرع
         row[3],     // الجنس
         row[4],     // نوع الحالة
-        row[7],     // ملاحظات
+        row[5],     // ملاحظات
         ""          // Status (Soft Delete)
     ];
 
@@ -110,7 +110,7 @@ export async function updateCase(id, updatedRow) {
     const year = dateObj.getFullYear();
 
     // Map updatedRow back to Raw Format
-    // App Format: [ID, Date, Branch, Gender, Type, Description, Team, Notes, CreatedAt, Status]
+    // App Format: [ID, Date, Branch, Gender, Type, Notes, CreatedAt, Status]
     // Raw Format: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع الحالة, ملاحظات, Status]
     const rawRow = [
         updatedRow[0],     // Timestamp
@@ -120,8 +120,8 @@ export async function updateCase(id, updatedRow) {
         updatedRow[2],     // الفرع
         updatedRow[3],     // الجنس
         updatedRow[4],     // نوع الحالة
-        updatedRow[7],     // ملاحظات
-        updatedRow[9] || "" // Status
+        updatedRow[5],     // ملاحظات
+        updatedRow[7] || "" // Status
     ];
 
     const sheetRowNumber = rowIndex + 1; // 1-indexed

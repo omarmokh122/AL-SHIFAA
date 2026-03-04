@@ -6,6 +6,33 @@ import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+const CASE_TYPES = [
+    "حالات طارئة",
+    "كسور",
+    "حروق",
+    "جروح",
+    "حالات قلبية",
+    "جهاز تنفسي",
+    "حالات عصبية",
+    "حالات طبية عامة",
+    "حالات أطفال",
+    "حالات نسائية",
+    "أمراض مزمنة",
+    "غسيل كلى",
+    "نقل مرضى",
+    "نقل وفيات",
+    "حوادث سير",
+    "تسمم",
+    "إصابات عمل",
+    "حالات نفسية",
+    "كورونا / عزل",
+    "ولادة",
+    "إنعاش قلبي",
+    "إصابات رياضية",
+    "حساسية مفرطة",
+    "أخرى",
+];
+
 export default function MonthlyCasesReport() {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem("user"));
@@ -162,7 +189,7 @@ export default function MonthlyCasesReport() {
                         <label>نوع الحالة:</label>
                         <select value={selectedType} onChange={(e) => handleTypeChange(e.target.value)}>
                             <option value="ALL">كل الحالات</option>
-                            {Object.keys(stats.types).map((t) => (
+                            {CASE_TYPES.map((t) => (
                                 <option key={t}>{t}</option>
                             ))}
                         </select>

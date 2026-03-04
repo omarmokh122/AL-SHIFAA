@@ -359,8 +359,6 @@ app.post("/cases", async (req, res) => {
       الفرع,
       الجنس,
       نوع_الحالة,
-      الوصف,
-      الفريق,
       ملاحظات,
     } = req.body;
 
@@ -370,8 +368,6 @@ app.post("/cases", async (req, res) => {
       الفرع,
       الجنس,
       نوع_الحالة,
-      الوصف || "",
-      الفريق || "",
       ملاحظات || "",
       new Date().toISOString(),   // created_at
     ];
@@ -397,8 +393,6 @@ app.put("/cases/:id", async (req, res) => {
       الفرع,
       الجنس,
       نوع_الحالة,
-      الوصف,
-      الفريق,
       ملاحظات,
       CreatedAt
     } = req.body;
@@ -409,8 +403,6 @@ app.put("/cases/:id", async (req, res) => {
       الفرع,
       الجنس,
       نوع_الحالة,
-      الوصف || "",
-      الفريق || "",
       ملاحظات || "",
       CreatedAt || new Date().toISOString(),
       ""                          // Status

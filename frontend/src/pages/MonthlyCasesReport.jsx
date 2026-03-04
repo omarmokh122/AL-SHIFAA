@@ -217,7 +217,6 @@ export default function MonthlyCasesReport() {
                         <Card title="إجمالي الحالات" value={stats.total} />
                         <Card title="ذكور" value={stats.male} />
                         <Card title="إناث" value={stats.female} />
-                        <Card title="أنواع الحالات" value={Object.keys(stats.types).length} />
                     </div>
 
                     {/* Table */}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import { exportStyledExcel, exportStyledPDF, exportYearlyCasesTemplateExcel, exportMonthlyCasesTemplateExcel } from "../utils/exportUtils";
+import { exportStyledExcel, exportYearlyCasesTemplateExcel, exportMonthlyCasesTemplateExcel } from "../utils/exportUtils";
 
 const CASE_TYPES = [
     "كسور",
@@ -148,22 +148,6 @@ export default function MonthlyCasesReport() {
         await exportYearlyCasesTemplateExcel(year, branchName, cases, `التقرير_السنوي_للحالات_${year}.xlsx`);
     };
 
-    const exportPDF = async () => {
-        const title = "تقرير الحالات الطبية";
-        const subtitle = `شهر ${month} سنة ${year}`;
-        const medicName = user.name || user.username || "غير محدد";
-        const headers = [['التاريخ', 'الفرع', 'الجنس', 'نوع الحالة', 'ملاحظات']];
-        const rows = filtered.map(c => [c[1], c[4], c[5], c[6], c[7] || ""]);
-
-        const summaryData = [
-            { label: "إجمالي الحالات:", value: stats.total },
-            { label: "ذكور:", value: stats.male },
-            { label: "إناث:", value: stats.female },
-        ];
-
-        await exportStyledPDF(title, subtitle, medicName, headers, rows, `تقرير_الحالات_${month}_${year}.pdf`, summaryData);
-    };
-
     /* ================= UI ================= */
     return (
         <div dir="rtl" style={page}>
@@ -266,9 +250,6 @@ export default function MonthlyCasesReport() {
                         </button>
                         <button onClick={exportExcel} style={{ ...secondaryBtn, background: "#0d6efd" }}>
                             تصدير التقرير الشهري (قالب اكسيل)
-                        </button>
-                        <button onClick={exportPDF} style={secondaryBtn}>
-                            تصدير PDF
                         </button>
                     </div>
                 </>

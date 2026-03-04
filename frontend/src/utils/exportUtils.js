@@ -180,3 +180,210 @@ export async function exportStyledExcel(title, subtitle, medicName, headers, row
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     saveAs(blob, filename);
 }
+
+export async function exportYearlyCasesTemplateExcel(year, branch, cases, filename) {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet(`تقرير ${year}`, { views: [{ rightToLeft: true }] });
+
+    // 1. Columns Setup
+    sheet.columns = [
+        { width: 18 }, // A: Category
+        { width: 25 }, // B: Sub-category
+        { width: 8 },  // C: ك2 (1)
+        { width: 8 },  // D: شباط (2)
+        { width: 8 },  // E: اذار (3)
+        { width: 8 },  // F: نيسان (4)
+        { width: 8 },  // G: ايار (5)
+        { width: 8 },  // H: حزيران (6)
+        { width: 8 },  // I: تموز (7)
+        { width: 8 },  // J: اب (8)
+        { width: 8 },  // K: ايلول (9)
+        { width: 8 },  // L: ت1 (10)
+        { width: 8 },  // M: ت2 (11)
+        { width: 8 }   // N: ك1 (12)
+    ];
+
+    // Array of Arabic month names as stored in the DB
+    const monthNamesDB = [
+        "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+        "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+    ];
+    // Short names for header
+    const shortMonths = [
+        "ك2", "شباط", "اذار", "نيسان", "ايار", "حزيران",
+        "تموز", "اب", "ايلول", "ت1", "ت2", "ك1"
+    ];
+
+    // Helper to calculate stats per month
+    // cases format: [id, date, month, year, branch, gender, type, notes]
+    // Filter cases for the given year
+    const yearlyCases = cases.filter(c => String(c[3]) === String(year));
+
+    const getCount = (monthIdx, filterFn) => {
+        return yearlyCases.filter(c => c[2] === monthNamesDB[monthIdx] && filterFn(c)).length;
+    };
+
+    const getMonthTotals = (filterFn) => {
+        return shortMonths.map((_, i) => getCount(i, filterFn));
+    };
+
+    const totalsByMonth = getMonthTotals(() => true);
+    // highlight rule: if a month has > 0 cases, we might highlight its column.
+    const highlightCols = totalsByMonth.map((t, idx) => t > 0);
+
+    // Style helpers
+    const setBorders = (cell) => {
+        cell.border = {
+            top: { style: 'thin' }, left: { style: 'thin' },
+            bottom: { style: 'thin' }, right: { style: 'thin' }
+        };
+    };
+    const centerAlign = (cell) => {
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    };
+    const boldFont = (cell) => {
+        cell.font = { bold: true, size: 12 };
+    };
+
+    // 2. Header Area
+    // Row 1 & 2 & 3
+    sheet.getRow(1).height = 25;
+    sheet.getRow(2).height = 25;
+    sheet.getRow(3).height = 25;
+
+    // Top Right texts
+    const titleCell1 = sheet.getCell('A1');
+    titleCell1.value = "الشِفاء";
+    titleCell1.font = { size: 22, bold: true };
+    titleCell1.alignment = { horizontal: 'right', vertical: 'bottom' };
+
+    const titleCell2 = sheet.getCell('A2');
+    titleCell2.value = "للخدمات الطبية والإنسانية";
+    titleCell2.font = { size: 14, bold: true };
+    titleCell2.alignment = { horizontal: 'right', vertical: 'top' };
+    sheet.mergeCells('A1:C1');
+    sheet.mergeCells('A2:C2');
+
+    // Add Logo to top Left (M1)
+    try {
+        const logoBase64 = await getBase64ImageFromUrl(logoPng);
+        const imageId = workbook.addImage({ base64: logoBase64, extension: 'png' });
+        sheet.addImage(imageId, {
+            tl: { col: 12, row: 0 },
+            ext: { width: 80, height: 80 }
+        });
+    } catch (e) { console.warn("Logo error", e); }
+
+    // Center Title "الحالات الاسعافية خلال العام YYYY"
+    sheet.mergeCells('E3:J3');
+    const mainTitle = sheet.getCell('E3');
+    mainTitle.value = `الحالات الاسعافية خلال العام ${year}`;
+    mainTitle.font = { size: 14, bold: true };
+    centerAlign(mainTitle);
+
+    // Row 4: المركز
+    sheet.mergeCells('A4:B4');
+    const r4c1 = sheet.getCell('A4'); r4c1.value = "المركز"; centerAlign(r4c1); boldFont(r4c1); setBorders(r4c1);
+    sheet.mergeCells('C4:N4');
+    const r4c2 = sheet.getCell('C4'); r4c2.value = "تعلبايا"; centerAlign(r4c2); setBorders(r4c2);
+
+    // Row 5: المكان
+    sheet.mergeCells('A5:B5');
+    const r5c1 = sheet.getCell('A5'); r5c1.value = "المكان"; centerAlign(r5c1); boldFont(r5c1); setBorders(r5c1);
+    sheet.mergeCells('C5:N5');
+    const r5c2 = sheet.getCell('C5'); r5c2.value = branch || "البقاع الأوسط"; centerAlign(r5c2); setBorders(r5c2);
+
+    // Row 6: Months Header
+    sheet.mergeCells('A6:B6');
+    const r6c1 = sheet.getCell('A6'); r6c1.value = "الشهر"; centerAlign(r6c1); boldFont(r6c1); setBorders(r6c1);
+    r6c1.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+    r6c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
+
+    shortMonths.forEach((m, idx) => {
+        const cell = sheet.getCell(6, 3 + idx);
+        cell.value = m;
+        centerAlign(cell); boldFont(cell); setBorders(cell);
+        cell.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
+    });
+
+    // Row 7: Total Cases
+    sheet.mergeCells('A7:B7');
+    const r7c1 = sheet.getCell('A7'); r7c1.value = "اجمالي عدد الحالات"; centerAlign(r7c1); boldFont(r7c1); setBorders(r7c1);
+    totalsByMonth.forEach((val, idx) => {
+        const cell = sheet.getCell(7, 3 + idx);
+        cell.value = val;
+        centerAlign(cell); boldFont(cell); setBorders(cell);
+        if (highlightCols[idx]) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    });
+
+    // Row 8: Red Separator
+    const r8 = sheet.getRow(8);
+    r8.height = 10;
+    for (let c = 1; c <= 14; c++) {
+        const cell = sheet.getCell(8, c);
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } }; // Red
+        setBorders(cell);
+    }
+
+    // Row 9 & 10: Gender (ذكر, انثى)
+    sheet.mergeCells('A9:A10');
+    const r9c1 = sheet.getCell('A9'); r9c1.value = "الجنس"; centerAlign(r9c1); boldFont(r9c1); setBorders(r9c1);
+    sheet.getCell('A10').border = { bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+
+    const maleTotals = getMonthTotals((c) => c[5] === "ذكر");
+    const r9c2 = sheet.getCell('B9'); r9c2.value = "ذكر"; centerAlign(r9c2); boldFont(r9c2); setBorders(r9c2);
+    maleTotals.forEach((val, idx) => {
+        const cell = sheet.getCell(9, 3 + idx); cell.value = val; centerAlign(cell); boldFont(cell); setBorders(cell);
+        if (highlightCols[idx]) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    });
+
+    const femaleTotals = getMonthTotals((c) => c[5] === "أنثى" || c[5] === "انثى");
+    const r10c2 = sheet.getCell('B10'); r10c2.value = "انثى"; centerAlign(r10c2); boldFont(r10c2); setBorders(r10c2);
+    femaleTotals.forEach((val, idx) => {
+        const cell = sheet.getCell(10, 3 + idx); cell.value = val; centerAlign(cell); boldFont(cell); setBorders(cell);
+        if (highlightCols[idx]) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    });
+
+    // Row 11: Red Separator
+    const r11 = sheet.getRow(11);
+    r11.height = 10;
+    for (let c = 1; c <= 14; c++) {
+        const cell = sheet.getCell(11, c);
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
+        setBorders(cell);
+    }
+
+    // Row 12+: Case Types
+    const CASE_TYPES = [
+        "كسور", "حادث", "أمراض قلبية", "جهاز تنفسي", "حالات طبية", "جراحة", "جثة", "حروق", "جروح", "كورونا", "متابعة",
+        "دفاع مدني", "حالات عصبية", "حالات طارئة", "نقل إصابات وجرحى", "نقل شهداء", "علاج ميداني", "تأمين نازحين (عوائل)",
+        "توزيع أدوية", "تأمين معدات طبية", "توزيع حليب", "توزيع حفاضات", "تلبية استهدافات",
+        "انتخابات – نقل ناخبين من ذوي الاحتياجات الخاصة", "متابعة منزلية للمرضى"
+    ];
+
+    sheet.mergeCells(`A12:A${11 + CASE_TYPES.length}`);
+    const r12c1 = sheet.getCell('A12'); r12c1.value = "نوع الحالات"; centerAlign(r12c1); boldFont(r12c1); setBorders(r12c1);
+
+    // ensure borders for merged area
+    for (let i = 12; i <= 11 + CASE_TYPES.length; i++) {
+        sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i === 12 ? { style: 'thin' } : undefined), bottom: (i === 11 + CASE_TYPES.length ? { style: 'thin' } : undefined) };
+    }
+
+    CASE_TYPES.forEach((type, tIdx) => {
+        const rIdx = 12 + tIdx;
+        const c2 = sheet.getCell(rIdx, 2);
+        c2.value = type; centerAlign(c2); boldFont(c2); setBorders(c2);
+
+        const typeTotals = getMonthTotals((c) => c[6] === type);
+        typeTotals.forEach((val, idx) => {
+            const cell = sheet.getCell(rIdx, 3 + idx);
+            cell.value = val; centerAlign(cell); boldFont(cell); setBorders(cell);
+            if (highlightCols[idx]) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+        });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blob, filename);
+}

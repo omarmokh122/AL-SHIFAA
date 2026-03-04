@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import { exportStyledExcel, exportStyledPDF } from "../utils/exportUtils";
+import { exportStyledExcel, exportStyledPDF, exportYearlyCasesTemplateExcel } from "../utils/exportUtils";
 
 const CASE_TYPES = [
     "كسور",
@@ -136,6 +136,14 @@ export default function MonthlyCasesReport() {
         await exportStyledExcel(title, subtitle, medicName, headers, rows, `تقرير_الحالات_${month}_${year}.xlsx`, summaryData);
     };
 
+    const exportYearlyExcel = async () => {
+        if (!year) {
+            alert("يرجى اختيار السنة لتصدير التقرير السنوي");
+            return;
+        }
+        await exportYearlyCasesTemplateExcel(year, user.role === "super" ? "كل الفروع" : user.branch, cases, `التقرير_السنوي_للحالات_${year}.xlsx`);
+    };
+
     const exportPDF = async () => {
         const title = "تقرير الحالات الطبية";
         const subtitle = `شهر ${month} سنة ${year}`;
@@ -240,7 +248,10 @@ export default function MonthlyCasesReport() {
                         </table>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <button onClick={exportYearlyExcel} style={{ ...secondaryBtn, background: "#198754" }}>
+                            تصدير التقرير السنوي (قالب اكسيل)
+                        </button>
                         <button onClick={exportExcel} style={secondaryBtn}>
                             تصدير Excel (XLSX)
                         </button>

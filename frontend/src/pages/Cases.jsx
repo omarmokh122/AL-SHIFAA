@@ -108,9 +108,9 @@ export default function Cases() {
         setForm({
             ...form,
             التاريخ: caseData[1],
-            الفرع: caseData[2],
-            الجنس: caseData[3],
-            نوع_الحالة: caseData[4],
+            الفرع: caseData[4],
+            الجنس: caseData[5],
+            نوع_الحالة: caseData[6],
             ملاحظات: caseData[7] || "",
             CreatedAt: caseData[8] // preserve the original created diff timing
         });
@@ -140,12 +140,12 @@ export default function Cases() {
     const visibleCases = sortedCases.filter((c) => {
         let matchBranch = true;
         if (user.role === "super") {
-            matchBranch = branchFilter ? (c[2] || "").includes(branchFilter) : true;
+            matchBranch = branchFilter ? (c[4] || "").includes(branchFilter) : true;
         } else {
-            matchBranch = (c[2] || "").includes(user.branch);
+            matchBranch = (c[4] || "").includes(user.branch);
         }
 
-        const matchType = typeFilter ? c[4] === typeFilter : true;
+        const matchType = typeFilter ? c[6] === typeFilter : true;
 
         let matchDate = true;
         if (filterMonth || filterYear) {
@@ -154,18 +154,18 @@ export default function Cases() {
             matchDate = m && y;
         }
 
-        const searchStr = `${c[7]} ${c[4]}`.toLowerCase();
+        const searchStr = `${c[7]} ${c[6]}`.toLowerCase();
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());
         return matchBranch && matchType && matchSearch && matchDate;
     });
 
     /* ===== Stats ===== */
-    const male = visibleCases.filter((c) => c[3] === "ذكر").length;
-    const female = visibleCases.filter((c) => c[3] === "أنثى").length;
+    const male = visibleCases.filter((c) => c[5] === "ذكر").length;
+    const female = visibleCases.filter((c) => c[5] === "أنثى").length;
 
     const typeStats = {};
     visibleCases.forEach((c) => {
-        typeStats[c[4]] = (typeStats[c[4]] || 0) + 1;
+        typeStats[c[6]] = (typeStats[c[6]] || 0) + 1;
     });
 
     /* ===== UI ===== */
@@ -377,9 +377,9 @@ export default function Cases() {
                                                 <td>{c[1]}</td>
                                                 <td>{c[2]}</td>
                                                 <td>{c[3]}</td>
-                                                <td>{c[2]}</td>
-                                                <td>{c[3]}</td>
                                                 <td>{c[4]}</td>
+                                                <td>{c[5]}</td>
+                                                <td>{c[6]}</td>
                                                 <td>{c[7]}</td>
                                                 <td>
                                                     <div style={{ display: "flex", gap: "6px" }}>

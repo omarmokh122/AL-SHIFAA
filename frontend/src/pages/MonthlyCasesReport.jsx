@@ -81,7 +81,7 @@ export default function MonthlyCasesReport() {
             return (
                 c[2] === month &&
                 String(c[3]) === String(year) &&
-                (user.role === "super" || (c[2] || "").includes(user.branch))
+                (user.role === "super" || (c[4] || "").includes(user.branch))
             );
         });
 
@@ -90,14 +90,14 @@ export default function MonthlyCasesReport() {
     };
 
     const applyTypeFilter = (data, type) => {
-        const result = type === "ALL" ? data : data.filter((c) => c[4] === type);
+        const result = type === "ALL" ? data : data.filter((c) => c[6] === type);
 
-        const maleCases = result.filter((c) => c[3] === "ذكر").length;
-        const femaleCases = result.filter((c) => c[3] === "أنثى").length;
+        const maleCases = result.filter((c) => c[5] === "ذكر").length;
+        const femaleCases = result.filter((c) => c[5] === "أنثى").length;
 
         const types = {};
         data.forEach((c) => {
-            types[c[4]] = (types[c[4]] || 0) + 1;
+            types[c[6]] = (types[c[6]] || 0) + 1;
         });
 
         setFiltered(result);
@@ -116,7 +116,7 @@ export default function MonthlyCasesReport() {
             return (
                 c[2] === month &&
                 String(c[3]) === String(year) &&
-                (user.role === "super" || (c[2] || "").includes(user.branch))
+                (user.role === "super" || (c[4] || "").includes(user.branch))
             );
         });
         applyTypeFilter(base, v);
@@ -125,9 +125,9 @@ export default function MonthlyCasesReport() {
     const exportExcel = () => {
         const worksheet = XLSX.utils.json_to_sheet(filtered.map(c => ({
             "التاريخ": c[1],
-            "الفرع": c[2],
-            "الجنس": c[3],
-            "نوع الحالة": c[4],
+            "الفرع": c[4],
+            "الجنس": c[5],
+            "نوع الحالة": c[6],
             "ملاحظات": c[7] || ""
         })));
         const workbook = XLSX.utils.book_new();
@@ -142,7 +142,7 @@ export default function MonthlyCasesReport() {
         doc.text(`تقرير الحالات الطبية - شهر ${month} سنة ${year}`, 10, 10);
         doc.autoTable({
             head: [['التاريخ', 'الفرع', 'الجنس', 'نوع الحالة', 'ملاحظات']],
-            body: filtered.map(c => [c[1], c[2], c[3], c[4], c[7] || ""]),
+            body: filtered.map(c => [c[1], c[4], c[5], c[6], c[7] || ""]),
             startY: 20,
             styles: { font: "Amiri", direction: 'rtl' } // Assuming a font for Arabic if needed, or stick to simple
         });
@@ -228,9 +228,9 @@ export default function MonthlyCasesReport() {
                                 {filtered.map((c, i) => (
                                     <tr key={i}>
                                         <td>{c[1]}</td>
-                                        <td>{c[2]}</td>
-                                        <td>{c[3]}</td>
                                         <td>{c[4]}</td>
+                                        <td>{c[5]}</td>
+                                        <td>{c[6]}</td>
                                     </tr>
                                 ))}
                             </tbody>

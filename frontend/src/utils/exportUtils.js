@@ -216,8 +216,12 @@ export async function exportYearlyCasesTemplateExcel(year, branch, cases, filena
 
     // Helper to calculate stats per month
     // cases format: [id, date, month, year, branch, gender, type, notes]
-    // Filter cases for the given year
-    const yearlyCases = cases.filter(c => String(c[3]) === String(year));
+    // Filter cases for the given year and validate branch
+    const yearlyCases = cases.filter(c => {
+        if (String(c[3]) !== String(year)) return false;
+        if (branch === "كل الفروع" || branch === "All") return true;
+        return (c[4] || "").includes(branch);
+    });
 
     const getCount = (monthIdx, filterFn) => {
         return yearlyCases.filter(c => c[2] === monthNamesDB[monthIdx] && filterFn(c)).length;
@@ -417,8 +421,12 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         { width: 15 }  // C: Month Count
     ];
 
-    // Filter cases for the given year and month
-    const monthlyCases = cases.filter(c => String(c[3]) === String(year) && c[2] === month);
+    // Filter cases for the given year and month, and validate branch
+    const monthlyCases = cases.filter(c => {
+        if (String(c[3]) !== String(year) || c[2] !== month) return false;
+        if (branch === "كل الفروع" || branch === "All") return true;
+        return (c[4] || "").includes(branch);
+    });
     const getCount = (filterFn) => monthlyCases.filter(filterFn).length;
     const totalCases = monthlyCases.length;
 

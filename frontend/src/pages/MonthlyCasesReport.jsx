@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import { exportStyledExcel, exportStyledPDF, exportYearlyCasesTemplateExcel } from "../utils/exportUtils";
+import { exportStyledExcel, exportStyledPDF, exportYearlyCasesTemplateExcel, exportMonthlyCasesTemplateExcel } from "../utils/exportUtils";
 
 const CASE_TYPES = [
     "كسور",
@@ -121,19 +121,11 @@ export default function MonthlyCasesReport() {
     };
 
     const exportExcel = async () => {
-        const title = "تقرير الحالات الطبية";
-        const subtitle = `شهر ${month} سنة ${year}`;
-        const medicName = user.name || user.username || "غير محدد";
-        const headers = ["التاريخ", "الفرع", "الجنس", "نوع الحالة", "ملاحظات"];
-        const rows = filtered.map(c => [c[1], c[4], c[5], c[6], c[7] || ""]);
-
-        const summaryData = [
-            { label: "إجمالي الحالات:", value: stats.total },
-            { label: "ذكور:", value: stats.male },
-            { label: "إناث:", value: stats.female },
-        ];
-
-        await exportStyledExcel(title, subtitle, medicName, headers, rows, `تقرير_الحالات_${month}_${year}.xlsx`, summaryData);
+        if (!month || !year) {
+            alert("يرجى إنشاء التقرير أولاً");
+            return;
+        }
+        await exportMonthlyCasesTemplateExcel(year, month, user.role === "super" ? "كل الفروع" : user.branch, cases, `تقرير_الحالات_${month}_${year}.xlsx`);
     };
 
     const exportYearlyExcel = async () => {
@@ -252,8 +244,8 @@ export default function MonthlyCasesReport() {
                         <button onClick={exportYearlyExcel} style={{ ...secondaryBtn, background: "#198754" }}>
                             تصدير التقرير السنوي (قالب اكسيل)
                         </button>
-                        <button onClick={exportExcel} style={secondaryBtn}>
-                            تصدير Excel (XLSX)
+                        <button onClick={exportExcel} style={{ ...secondaryBtn, background: "#0d6efd" }}>
+                            تصدير التقرير الشهري (قالب اكسيل)
                         </button>
                         <button onClick={exportPDF} style={secondaryBtn}>
                             تصدير PDF

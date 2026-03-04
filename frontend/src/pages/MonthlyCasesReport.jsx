@@ -209,14 +209,11 @@ export default function MonthlyCasesReport() {
                             <strong>{year}</strong> في{" "}
                             <strong>{user.role === "super" ? (selectedBranch === "All" ? "جميع الفروع" : selectedBranch) : user.branch}</strong>.
                         </p>
-                        <p><strong>إجمالي الحالات:</strong> {stats.total}</p>
-                    </div>
-
-                    {/* Cards */}
-                    <div style={cards}>
-                        <Card title="إجمالي الحالات" value={stats.total} />
-                        <Card title="ذكور" value={stats.male} />
-                        <Card title="إناث" value={stats.female} />
+                        <div style={{ display: 'flex', gap: '15px', marginTop: '15px', flexWrap: 'wrap' }}>
+                            <div style={statPill}><strong>إجمالي الحالات:</strong> {stats.total}</div>
+                            <div style={statPill}><strong>ذكور:</strong> {stats.male}</div>
+                            <div style={statPill}><strong>إناث:</strong> {stats.female}</div>
+                        </div>
                     </div>
 
                     {/* Table */}
@@ -257,16 +254,6 @@ export default function MonthlyCasesReport() {
     );
 }
 
-/* ================= Components ================= */
-function Card({ title, value }) {
-    return (
-        <div style={card}>
-            <span>{title}</span>
-            <strong>{value}</strong>
-        </div>
-    );
-}
-
 /* ================= Styles ================= */
 const page = {
     padding: "24px",
@@ -298,20 +285,16 @@ const summary = {
     marginTop: "16px",
 };
 
-const cards = {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "14px",
-    marginBottom: "28px",
-    marginTop: "16px",
-};
-
-const card = {
-    background: "#fff",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    padding: "16px",
-    textAlign: "center",
+const statPill = {
+    background: "#f4f6f8",
+    padding: "7px 16px",
+    borderRadius: "20px",
+    fontSize: "14px",
+    color: "#333",
+    border: "1px solid #e1e4e8",
+    display: "flex",
+    gap: "6px",
+    alignItems: "center",
 };
 
 const tableBox = {

@@ -281,17 +281,35 @@ export async function exportYearlyCasesTemplateExcel(year, branch, cases, filena
     mainTitle.font = { size: 14, bold: true };
     centerAlign(mainTitle);
 
+    // Determine Arabic texts for Center and Location
+    let centerText = "تعلبايا";
+    let locationText = "البقاع الأوسط";
+    if (branch.includes("بعلبك") && branch.includes("البقاع الأوسط") || branch === "كل الفروع" || branch === "All") {
+        centerText = "تعلبايا و بعلبك";
+        locationText = "البقاع الأوسط و بعلبك";
+    } else if (branch.includes("بعلبك")) {
+        centerText = "بعلبك";
+        locationText = "بعلبك";
+    } else if (branch.includes("البقاع الأوسط")) {
+        centerText = "تعلبايا";
+        locationText = "البقاع الأوسط";
+    } else if (branch) {
+        // Fallback to whatever string was passed if it's not the standard two
+        centerText = branch;
+        locationText = branch;
+    }
+
     // Row 4: المركز
     sheet.mergeCells('A4:B4');
     const r4c1 = sheet.getCell('A4'); r4c1.value = "المركز"; centerAlign(r4c1); boldFont(r4c1); setBorders(r4c1);
     sheet.mergeCells('C4:N4');
-    const r4c2 = sheet.getCell('C4'); r4c2.value = "تعلبايا"; centerAlign(r4c2); setBorders(r4c2);
+    const r4c2 = sheet.getCell('C4'); r4c2.value = centerText; centerAlign(r4c2); setBorders(r4c2);
 
     // Row 5: المكان
     sheet.mergeCells('A5:B5');
     const r5c1 = sheet.getCell('A5'); r5c1.value = "المكان"; centerAlign(r5c1); boldFont(r5c1); setBorders(r5c1);
     sheet.mergeCells('C5:N5');
-    const r5c2 = sheet.getCell('C5'); r5c2.value = branch || "البقاع الأوسط"; centerAlign(r5c2); setBorders(r5c2);
+    const r5c2 = sheet.getCell('C5'); r5c2.value = locationText; centerAlign(r5c2); setBorders(r5c2);
 
     // Row 6: Months Header
     sheet.mergeCells('A6:B6');
@@ -428,7 +446,7 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     titleCell1.value = "الشِفاء";
     titleCell1.font = { size: 22, bold: true };
     titleCell1.alignment = { horizontal: 'right', vertical: 'bottom' };
-    
+
     const titleCell2 = sheet.getCell('A2');
     titleCell2.value = "للخدمات الطبية والإنسانية";
     titleCell2.font = { size: 14, bold: true };
@@ -453,22 +471,40 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     mainTitle.font = { size: 14, bold: true };
     centerAlign(mainTitle);
 
+    // Determine Arabic texts for Center and Location
+    let centerText = "تعلبايا";
+    let locationText = "البقاع الأوسط";
+    if (branch.includes("بعلبك") && branch.includes("البقاع الأوسط") || branch === "كل الفروع" || branch === "All") {
+        centerText = "تعلبايا و بعلبك";
+        locationText = "البقاع الأوسط و بعلبك";
+    } else if (branch.includes("بعلبك")) {
+        centerText = "بعلبك";
+        locationText = "بعلبك";
+    } else if (branch.includes("البقاع الأوسط")) {
+        centerText = "تعلبايا";
+        locationText = "البقاع الأوسط";
+    } else if (branch) {
+        // Fallback
+        centerText = branch;
+        locationText = branch;
+    }
+
     // Row 4: المركز
     sheet.mergeCells('A4:B4');
     const r4c1 = sheet.getCell('A4'); r4c1.value = "المركز"; centerAlign(r4c1); boldFont(r4c1); setBorders(r4c1);
-    const r4c2 = sheet.getCell('C4'); r4c2.value = "تعلبايا"; centerAlign(r4c2); setBorders(r4c2);
+    const r4c2 = sheet.getCell('C4'); r4c2.value = centerText; centerAlign(r4c2); setBorders(r4c2);
 
     // Row 5: المكان
     sheet.mergeCells('A5:B5');
     const r5c1 = sheet.getCell('A5'); r5c1.value = "المكان"; centerAlign(r5c1); boldFont(r5c1); setBorders(r5c1);
-    const r5c2 = sheet.getCell('C5'); r5c2.value = branch || "البقاع الأوسط"; centerAlign(r5c2); setBorders(r5c2);
+    const r5c2 = sheet.getCell('C5'); r5c2.value = locationText; centerAlign(r5c2); setBorders(r5c2);
 
     // Row 6: Month Header
     sheet.mergeCells('A6:B6');
     const r6c1 = sheet.getCell('A6'); r6c1.value = "الشهر"; centerAlign(r6c1); boldFont(r6c1); setBorders(r6c1);
     r6c1.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
     r6c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
-    
+
     const r6c3 = sheet.getCell('C6'); r6c3.value = month; centerAlign(r6c3); boldFont(r6c3); setBorders(r6c3);
     r6c3.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
     r6c3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
@@ -477,14 +513,14 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     sheet.mergeCells('A7:B7');
     const r7c1 = sheet.getCell('A7'); r7c1.value = "اجمالي عدد الحالات"; centerAlign(r7c1); boldFont(r7c1); setBorders(r7c1);
     const cell7_3 = sheet.getCell('C7'); cell7_3.value = totalCases; centerAlign(cell7_3); boldFont(cell7_3); setBorders(cell7_3);
-    if(totalCases > 0) cell7_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    if (totalCases > 0) cell7_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
 
     // Row 8: Red Separator
     const r8 = sheet.getRow(8);
     r8.height = 10;
-    for(let c=1; c<=3; c++) {
+    for (let c = 1; c <= 3; c++) {
         const cell = sheet.getCell(8, c);
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } }; 
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
         setBorders(cell);
     }
 
@@ -496,17 +532,17 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     const maleTotal = getCount((c) => c[5] === "ذكر");
     const r9c2 = sheet.getCell('B9'); r9c2.value = "ذكر"; centerAlign(r9c2); boldFont(r9c2); setBorders(r9c2);
     const cell9_3 = sheet.getCell('C9'); cell9_3.value = maleTotal; centerAlign(cell9_3); boldFont(cell9_3); setBorders(cell9_3);
-    if(maleTotal > 0) cell9_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    if (maleTotal > 0) cell9_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
 
     const femaleTotal = getCount((c) => c[5] === "أنثى" || c[5] === "انثى");
     const r10c2 = sheet.getCell('B10'); r10c2.value = "انثى"; centerAlign(r10c2); boldFont(r10c2); setBorders(r10c2);
     const cell10_3 = sheet.getCell('C10'); cell10_3.value = femaleTotal; centerAlign(cell10_3); boldFont(cell10_3); setBorders(cell10_3);
-    if(femaleTotal > 0) cell10_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    if (femaleTotal > 0) cell10_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
 
     // Row 11: Red Separator
     const r11 = sheet.getRow(11);
     r11.height = 10;
-    for(let c=1; c<=3; c++) {
+    for (let c = 1; c <= 3; c++) {
         const cell = sheet.getCell(11, c);
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
         setBorders(cell);
@@ -522,9 +558,9 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
 
     sheet.mergeCells(`A12:A${11 + CASE_TYPES.length}`);
     const r12c1 = sheet.getCell('A12'); r12c1.value = "نوع الحالات"; centerAlign(r12c1); boldFont(r12c1); setBorders(r12c1);
-    
-    for(let i=12; i <= 11 + CASE_TYPES.length; i++) {
-        sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i===12?{style:'thin'}:undefined), bottom: (i===11+CASE_TYPES.length?{style:'thin'}:undefined) };
+
+    for (let i = 12; i <= 11 + CASE_TYPES.length; i++) {
+        sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i === 12 ? { style: 'thin' } : undefined), bottom: (i === 11 + CASE_TYPES.length ? { style: 'thin' } : undefined) };
     }
 
     CASE_TYPES.forEach((type, tIdx) => {
@@ -535,7 +571,7 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         const typeTotal = getCount((c) => c[6] === type);
         const cellType = sheet.getCell(rIdx, 3);
         cellType.value = typeTotal; centerAlign(cellType); boldFont(cellType); setBorders(cellType);
-        if(typeTotal > 0) cellType.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+        if (typeTotal > 0) cellType.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
     });
 
     const buffer = await workbook.xlsx.writeBuffer();

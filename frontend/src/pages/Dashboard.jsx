@@ -141,7 +141,7 @@ export default function Dashboard() {
     <div dir="rtl" style={{ padding: "24px", width: "100%", background: "#f9f9f9", minHeight: "100vh" }}>
       <h2 style={{ color: "#333", marginBottom: "8px" }}>لوحة التحكم</h2>
 
-      <p style={{ color: "#666", maxWidth: "900px", marginBottom: "24px", lineHeight: "1.6" }}>
+      <p style={{ color: "#666", width: "100%", marginBottom: "24px", lineHeight: "1.6" }}>
         تتيح لك لوحة التحكم متابعة الأداء العام للجمعية بشكل سريع ومركزي، من
         خلال عرض ملخص الحالات الطبية، التبرعات، الأصول، والفريق الطبي حسب
         الفترة الزمنية المختارة والفرع.

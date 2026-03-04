@@ -486,7 +486,7 @@ const title = {
 };
 
 const description = {
-    maxWidth: "900px",
+    width: "100%",
     color: "#555",
     lineHeight: "1.7",
     marginBottom: "26px",

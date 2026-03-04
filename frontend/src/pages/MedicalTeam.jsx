@@ -290,9 +290,8 @@ export default function MedicalTeam() {
 /* ================= STYLES ================= */
 
 const page = {
-    padding: "20px",
-    maxWidth: "1400px",
-    margin: "0 auto",
+    padding: "24px",
+    width: "100%",
 };
 
 const desc = {

@@ -14,6 +14,15 @@ const CASE_TYPES = [
     "حالات طبية عامة",
 ];
 
+const MONTHS = [
+    { v: 1, l: "يناير" }, { v: 2, l: "فبراير" },
+    { v: 3, l: "مارس" }, { v: 4, l: "أبريل" },
+    { v: 5, l: "مايو" }, { v: 6, l: "يونيو" },
+    { v: 7, l: "يوليو" }, { v: 8, l: "أغسطس" },
+    { v: 9, l: "سبتمبر" }, { v: 10, l: "أكتوبر" },
+    { v: 11, l: "نوفمبر" }, { v: 12, l: "ديسمبر" },
+];
+
 export default function Cases() {
     const user = JSON.parse(localStorage.getItem("user"));
     const navigate = useNavigate();
@@ -27,7 +36,6 @@ export default function Cases() {
         الفرع: user?.branch || "",
         الجنس: "",
         نوع_الحالة: "",
-        الفريق: "",
         ملاحظات: "",
     });
 
@@ -70,7 +78,6 @@ export default function Cases() {
                 الفرع: user?.branch || "",
                 الجنس: "",
                 نوع_الحالة: "",
-                الفريق: "",
                 ملاحظات: "",
             });
         } catch (err) {
@@ -87,7 +94,6 @@ export default function Cases() {
             الفرع: caseData[2],
             الجنس: caseData[3],
             نوع_الحالة: caseData[4],
-            الفريق: caseData[5] || "",
             ملاحظات: caseData[7] || "",
             CreatedAt: caseData[8] // preserve the original created diff timing
         });
@@ -132,7 +138,7 @@ export default function Cases() {
             matchDate = m && y;
         }
 
-        const searchStr = `${c[5]} ${c[6]}`.toLowerCase();
+        const searchStr = `${c[7]} ${c[4]}`.toLowerCase();
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());
         return matchBranch && matchType && matchSearch && matchDate;
     });
@@ -247,14 +253,6 @@ export default function Cases() {
                         </select>
 
                         <input
-                            name="الفريق"
-                            placeholder="الفريق"
-                            value={form.الفريق}
-                            onChange={handleChange}
-                            style={inputStyle}
-                        />
-
-                        <input
                             name="ملاحظات"
                             placeholder="ملاحظات"
                             value={form.ملاحظات}
@@ -276,7 +274,6 @@ export default function Cases() {
                                             الفرع: user?.branch || "",
                                             الجنس: "",
                                             نوع_الحالة: "",
-                                            الفريق: "",
                                             ملاحظات: "",
                                         });
                                     }}
@@ -296,7 +293,7 @@ export default function Cases() {
                 <div style={filterBar} className="form-grid-mobile">
                     <input
                         type="text"
-                        placeholder="بحث في الفريق أو الملاحظات..."
+                        placeholder="بحث في الملاحظات أو نوع الحالة..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={searchBox}
@@ -323,8 +320,8 @@ export default function Cases() {
 
                     <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
                         <option value="">كل الأشهر</option>
-                        {Array.from({ length: 12 }, (_, i) => (
-                            <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleDateString('ar', { month: 'long' })}</option>
+                        {MONTHS.map(m => (
+                            <option key={m.v} value={m.v}>{m.l}</option>
                         ))}
                     </select>
                     <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
@@ -344,47 +341,54 @@ export default function Cases() {
                                 <tr>
                                     <th>#</th>
                                     <th>التاريخ</th>
+                                    <th>الشهر</th>
+                                    <th>السنة</th>
                                     <th>الفرع</th>
                                     <th>الجنس</th>
                                     <th>نوع الحالة</th>
-                                    <th>الفريق</th>
                                     <th>ملاحظات</th>
                                     <th>إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {visibleCases.length === 0 ? (
-                                    <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
+                                    <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
                                 ) : (
-                                    visibleCases.map((c, i) => (
-                                        <tr key={i}>
-                                            <td>{i + 1}</td>
-                                            <td>{c[1]}</td>
-                                            <td>{c[2]}</td>
-                                            <td>{c[3]}</td>
-                                            <td>{c[4]}</td>
-                                            <td>{c[5]}</td>
-                                            <td>{c[7]}</td>
-                                            <td>
-                                                <div style={{ display: "flex", gap: "6px" }}>
-                                                    <button
-                                                        onClick={() => handleEdit(c)}
-                                                        style={{ ...actionBtn, background: "#007bff" }}
-                                                        title="تعديل"
-                                                    >
-                                                        ✏️
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(c[0])}
-                                                        style={{ ...actionBtn, background: "#dc3545" }}
-                                                        title="حذف"
-                                                    >
-                                                        🗑️
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    visibleCases.map((c, i) => {
+                                        const d = new Date(c[1]);
+                                        const mName = isNaN(d) ? "" : (MONTHS.find(m => m.v === d.getMonth() + 1)?.l || "");
+                                        const yNum = isNaN(d) ? "" : d.getFullYear();
+                                        return (
+                                            <tr key={i}>
+                                                <td>{i + 1}</td>
+                                                <td>{c[1]}</td>
+                                                <td>{mName}</td>
+                                                <td>{yNum}</td>
+                                                <td>{c[2]}</td>
+                                                <td>{c[3]}</td>
+                                                <td>{c[4]}</td>
+                                                <td>{c[7]}</td>
+                                                <td>
+                                                    <div style={{ display: "flex", gap: "6px" }}>
+                                                        <button
+                                                            onClick={() => handleEdit(c)}
+                                                            style={{ ...actionBtn, background: "#007bff" }}
+                                                            title="تعديل"
+                                                        >
+                                                            ✏️
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(c[0])}
+                                                            style={{ ...actionBtn, background: "#dc3545" }}
+                                                            title="حذف"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>

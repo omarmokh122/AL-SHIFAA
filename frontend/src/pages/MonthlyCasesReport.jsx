@@ -103,8 +103,7 @@ export default function MonthlyCasesReport() {
             "الفرع": c[2],
             "الجنس": c[3],
             "نوع الحالة": c[4],
-            "الفريق": c[5],
-            "ملاحظات": c[6]
+            "ملاحظات": c[7] || ""
         })));
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Cases");
@@ -117,8 +116,8 @@ export default function MonthlyCasesReport() {
         const doc = new jsPDF();
         doc.text(`تقرير الحالات الطبية - شهر ${month} سنة ${year}`, 10, 10);
         doc.autoTable({
-            head: [['التاريخ', 'الفرع', 'الجنس', 'نوع الحالة', 'الفريق']],
-            body: filtered.map(c => [c[1], c[2], c[3], c[4], c[5]]),
+            head: [['التاريخ', 'الفرع', 'الجنس', 'نوع الحالة', 'ملاحظات']],
+            body: filtered.map(c => [c[1], c[2], c[3], c[4], c[7] || ""]),
             startY: 20,
             styles: { font: "Amiri", direction: 'rtl' } // Assuming a font for Arabic if needed, or stick to simple
         });

@@ -30,10 +30,10 @@ const SPREADSHEET_ID =
 export async function getCases() {
     try {
         // Fetch exclusively from Cases_Raw_Data (Direct Form Responses)
-        // Headers: [0: Timestamp, 1: التاريخ, 2: الشهر, 3: السنة, 4: الفرع, 5: الجنس, 6: نوع الحالة, 7: ملاحظات]
+        // Headers: [0: Timestamp, 1: التاريخ, 2: الشهر, 3: السنة, 4: الفرع, 5: الجنس, 6: نوع الحالة, 7: ملاحظات, 8: Status]
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: "Cases_Raw_Data!A2:H",
+            range: "Cases_Raw_Data!A2:I",
         });
         const entries = res.data.values || [];
 

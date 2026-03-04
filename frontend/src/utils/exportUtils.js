@@ -64,14 +64,15 @@ export async function exportStyledPDF(title, subtitle, medicName, headers, rows,
 
     if (summaryData && summaryData.length > 0) {
         const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
 
-        let currentY = finalY;
-        summaryData.forEach(item => {
-            // Right-aligned RTL text
-            doc.text(`${item.label} ${item.value}`, 200, currentY, { align: 'right' });
-            currentY += 8;
+        // Use autoTable for the summary to guarantee Arabic text rendering support
+        doc.autoTable({
+            body: summaryData.map(item => [item.label, item.value]),
+            startY: finalY,
+            styles: { font: "Amiri", direction: 'rtl', halign: 'right', fontSize: 12, fontStyle: 'bold' },
+            theme: 'plain', // No grid or backgrounds
+            tableWidth: 80, // Keep it compact on the right side
+            margin: { right: 14 },
         });
     }
 

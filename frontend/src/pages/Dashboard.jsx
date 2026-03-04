@@ -141,7 +141,7 @@ export default function Dashboard() {
     <div dir="rtl" style={{ padding: "24px", width: "100%", background: "#f9f9f9", minHeight: "100vh" }}>
       <h2 style={{ color: "#333", marginBottom: "8px" }}>لوحة التحكم</h2>
 
-      <p style={{ color: "#666", width: "100%", marginBottom: "24px", lineHeight: "1.6" }}>
+      <p style={{ color: "#666", width: "100%", marginBottom: "26px", lineHeight: "1.7" }}>
         تتيح لك لوحة التحكم متابعة الأداء العام للجمعية بشكل سريع ومركزي، من
         خلال عرض ملخص الحالات الطبية، التبرعات، الأصول، والفريق الطبي حسب
         الفترة الزمنية المختارة والفرع.
@@ -245,15 +245,15 @@ const selectStyle = {
 const cardsGrid = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "20px",
-  marginBottom: "32px",
+  gap: "14px",
+  marginBottom: "28px",
 };
 
 const card = {
   background: "#fff",
-  border: "1px solid #eee",
-  borderRadius: "16px",
-  padding: "24px",
+  border: "1px solid #ddd",
+  borderRadius: "10px",
+  padding: "16px",
   textAlign: "center",
   boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
   transition: "transform 0.2s ease",

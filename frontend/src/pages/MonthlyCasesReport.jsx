@@ -267,7 +267,8 @@ function Card({ title, value }) {
 /* ================= Styles ================= */
 const page = {
     padding: "24px",
-    background: "#f4f6f8",
+    background: "#f9f9f9",
+    width: "100%",
     minHeight: "100vh",
 };
 
@@ -296,17 +297,18 @@ const summary = {
 
 const cards = {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: "16px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: "14px",
+    marginBottom: "28px",
     marginTop: "16px",
 };
 
 const card = {
     background: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: "10px",
     padding: "16px",
-    borderRadius: "8px",
     textAlign: "center",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
 };
 
 const tableBox = {
@@ -325,17 +327,20 @@ const primaryBtn = {
     background: "#C22129",
     color: "#fff",
     border: "none",
-    padding: "8px 16px",
-    borderRadius: "6px",
+    padding: "10px 18px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "14px",
 };
 
 const secondaryBtn = {
-    marginTop: "16px",
     background: "#424443",
     color: "#fff",
     border: "none",
-    padding: "8px 16px",
-    borderRadius: "6px",
+    padding: "10px 18px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "14px",
 };
 
 const header = {

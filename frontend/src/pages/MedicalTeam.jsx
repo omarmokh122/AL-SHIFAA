@@ -296,8 +296,8 @@ const page = {
 
 const desc = {
     color: "#555",
-    marginBottom: "24px",
-    lineHeight: "1.8",
+    lineHeight: "1.7",
+    marginBottom: "26px",
 };
 
 const grid = {
@@ -309,8 +309,8 @@ const grid = {
 const card = {
     background: "#fff",
     border: "1px solid #ddd",
-    borderRadius: "14px",
-    padding: "14px",
+    borderRadius: "10px",
+    padding: "16px",
     textAlign: "center",
     cursor: "pointer",
 };

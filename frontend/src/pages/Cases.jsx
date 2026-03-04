@@ -438,7 +438,7 @@ const description = {
     width: "100%",
     color: "#555",
     lineHeight: "1.7",
-    marginBottom: "24px",
+    marginBottom: "26px",
 };
 
 const header = {

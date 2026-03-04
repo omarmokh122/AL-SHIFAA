@@ -215,13 +215,13 @@ export default function Donations() {
         if (!window.confirm("هل أنت متأكد من حذف هذا السجل؟")) return;
 
         try {
-            // Need to pass type to backend to know which sheet to delete from
-            await api.delete(`/donations/${id}?type=${type}`);
+            await api.delete(`/donations/${id}`, { params: { type } });
             alert("تم الحذف بنجاح");
             fetchDonations();
         } catch (err) {
             console.error("Delete Error:", err);
-            alert("حدث خطأ أثناء الحذف");
+            const serverError = err.response?.data?.error || err.message;
+            alert(`حدث خطأ أثناء الحذف: ${serverError}`);
         }
     }
 
@@ -231,7 +231,7 @@ export default function Donations() {
             <div style={header}>
                 <div>
                     <h2 style={title}>إدارة التبرعات والمصروفات</h2>
-                    <p style={{ color: "#666", fontSize: "14px" }}>
+                    <p style={{ color: "#555", fontSize: "16px", marginBottom: "26px", lineHeight: "1.7", width: "100%" }}>
                         تتبع الواردات من التبرعات وكيفية صرفها
                     </p>
                 </div>
@@ -457,8 +457,8 @@ function Card({ title, value, subValue, color, icon }) {
     return (
         <div style={{ ...card, borderBottom: `4px solid ${color}` }}>
             <div style={{ fontSize: "24px", marginBottom: "10px" }}>{icon}</div>
-            <div style={{ fontSize: "13px", color: "#666" }}>{title}</div>
-            <div style={{ fontSize: "22px", fontWeight: "bold", color: "#333" }}>{value}</div>
+            <div style={{ fontSize: "14px", color: "#555", marginBottom: "8px" }}>{title}</div>
+            <div style={{ fontSize: "18px", fontWeight: "bold", color: "#333" }}>{value}</div>
             {subValue && <div style={{ fontSize: "11px", color: "#888", marginTop: "4px" }}>{subValue}</div>}
         </div>
     );
@@ -467,10 +467,10 @@ function Card({ title, value, subValue, color, icon }) {
 /*Styles*/
 const container = { padding: "24px", width: "100%", background: "#f8f9fa", minHeight: "100vh" };
 const header = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" };
-const title = { margin: 0, fontSize: "24px", color: "#333" };
-const btnSecondary = { background: "#6c757d", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "6px", cursor: "pointer" };
-const cardsGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginBottom: "25px" };
-const card = { background: "#fff", padding: "20px", borderRadius: "8px", textAlign: "center", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" };
+const title = { margin: 0, fontSize: "24px", color: "#333", marginBottom: "6px" };
+const btnSecondary = { background: "#424443", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "14px" };
+const cardsGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px", marginBottom: "28px" };
+const card = { background: "#fff", padding: "16px", borderRadius: "10px", textAlign: "center", border: "1px solid #ddd" };
 const tabContainer = { display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid #ddd", paddingBottom: "1px" };
 const tabStyle = { padding: "10px 20px", border: "none", background: "none", cursor: "pointer", fontSize: "16px", color: "#666" };
 const activeTabStyle = { ...tabStyle, borderBottom: "3px solid #C22129", fontWeight: "bold", color: "#C22129" };

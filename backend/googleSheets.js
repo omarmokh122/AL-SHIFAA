@@ -276,17 +276,34 @@ export async function deleteDonation(id, type) {
 
     if (rowIndex === -1) throw new Error("Donation not found");
 
-    // Soft delete: We will update column 'P' (index 15) to "Deleted"
-    // Assuming A is col 1, O is col 15 -> P is col 16
-    const sheetRowNumber = rowIndex + 2; // Data starts at A2
-    const updateRange = `${sheetName}!P${sheetRowNumber}`;
+    // 2. Resolve numeric sheetId for Hard Delete
+    const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
+    const sheetObj = spreadsheet.data.sheets.find(s => s.properties.title === sheetName);
+    if (!sheetObj) throw new Error(`Google Sheet tab '${sheetName}' not found`);
 
-    await sheets.spreadsheets.values.update({
+    const sheetId = sheetObj.properties.sheetId;
+
+    // 3. Hard Delete (remove the row completely)
+    // Note: Since range is A2:O, rowIndex 0 is row 2, which requires startIndex=1 in the API (0-based)
+    await sheets.spreadsheets.batchUpdate({
         spreadsheetId: SPREADSHEET_ID,
-        range: updateRange,
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [["Deleted"]] },
+        requestBody: {
+            requests: [
+                {
+                    deleteDimension: {
+                        range: {
+                            sheetId: sheetId,
+                            dimension: "ROWS",
+                            startIndex: rowIndex + 1,
+                            endIndex: rowIndex + 2,
+                        }
+                    }
+                }
+            ]
+        }
     });
+
+    console.log(`Hard deleted donation ${id} from ${sheetName} at row ${rowIndex + 2}`);
 }
 // =====================
 // ASSETS

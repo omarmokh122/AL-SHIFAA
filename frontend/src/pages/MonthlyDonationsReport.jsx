@@ -105,7 +105,7 @@ export default function MonthlyDonationsReport() {
     };
 
     return (
-        <div dir="rtl" style={{ padding: "20px", background: "#f4f6f8", minHeight: "100vh" }}>
+        <div dir="rtl" style={{ padding: "24px", width: "100%" }}>
             <div style={header}>
                 <h2 style={{ margin: 0 }}>تقرير التبرعات والمصروفات الشهري</h2>
                 <button onClick={() => navigate("/donations")} style={backBtn}>
@@ -206,10 +206,10 @@ function Card({ title, value, color }) {
 
 const select = { padding: "8px", borderRadius: "6px", border: "1px solid #ddd" };
 const filterBox = { display: "flex", gap: "10px", marginBottom: "20px", background: "#fff", padding: "15px", borderRadius: "8px" };
-const cardsGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginBottom: "20px" };
-const card = { background: "#fff", padding: "15px", borderRadius: "8px", textAlign: "center", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" };
+const cardsGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px", marginBottom: "28px" };
+const card = { background: "#fff", border: "1px solid #ddd", padding: "16px", borderRadius: "10px", textAlign: "center" };
 const btnPrimary = { background: "#C22129", color: "#fff", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" };
-const btnSecondary = { background: "#424443", color: "#fff", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer" };
+const btnSecondary = { background: "#424443", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "14px" };
 const header = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" };
 const backBtn = { background: "#C22129", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "6px", cursor: "pointer" };
 const sectionStyle = { background: "#fff", padding: "15px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" };

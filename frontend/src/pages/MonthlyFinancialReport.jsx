@@ -100,7 +100,7 @@ export default function MonthlyFinancialReport() {
 
     /* ================= UI ================= */
     return (
-        <div dir="rtl" style={{ padding: "20px" }}>
+        <div dir="rtl" style={{ padding: "24px", width: "100%" }}>
             <div style={headerStyle}>
                 <h2 style={{ margin: 0 }}>التقرير المالي الشهري</h2>
                 <button onClick={() => navigate("/financial")} style={backBtn}>
@@ -270,9 +270,9 @@ const filterBox = {
 
 const cardsGrid = {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: "12px",
-    marginBottom: "16px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: "14px",
+    marginBottom: "28px",
 };
 
 const layoutGrid = {
@@ -285,8 +285,8 @@ const layoutGrid = {
 const card = {
     background: "#fff",
     border: "1px solid #ddd",
-    borderRadius: "8px",
-    padding: "12px",
+    borderRadius: "10px",
+    padding: "16px",
     textAlign: "center",
 };
 
@@ -333,8 +333,10 @@ const btnSecondary = {
     background: "#424443",
     color: "#fff",
     border: "none",
-    padding: "8px 14px",
+    padding: "8px 16px",
     borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
 };
 
 const table = {

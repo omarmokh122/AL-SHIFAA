@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { exportStyledExcel, exportStyledPDF } from "../utils/exportUtils";
 
 export default function MonthlyDonationsReport() {
     const navigate = useNavigate();
@@ -80,48 +77,31 @@ export default function MonthlyDonationsReport() {
     const netLBP = inLBP - outLBP;
 
     /* ===== EXPORT ===== */
-    const exportExcel = () => {
-        const wb = XLSX.utils.book_new();
+    const exportExcel = async () => {
+        const title = "تقرير التبرعات والمصاريف الشهري";
+        const subtitle = `شهر ${month} سنة ${year}`;
+        const medicName = user.name || user.username || "غير محدد";
+        const headers = ["التاريخ", "الفرع", "النوع", "المتبرع / البيان", "المبلغ", "العملة", "ملاحظات"];
 
-        // Sheet 1: Incoming
-        const wsIn = XLSX.utils.json_to_sheet(incoming.map(r => ({
-            "التاريخ": r[1], "الفرع": r[2], "المتبرع": r[3], "النوع": r[4],
-            "المبلغ": r[6], "العملة": r[7], "عيني": r[8], "الكمية": r[9]
-        })));
-        XLSX.utils.book_append_sheet(wb, wsIn, "الواردات");
+        // Merge incoming and outgoing for a single cohesive report
+        const inRows = incoming.map(r => [r[1], r[2], "واردات", r[3] || "غير محدد", r[6], r[7] || "", r[12] || ""]);
+        const outRows = outgoing.map(r => [r[1], r[2], "مصروفات", r[10] || "غير محدد", r[6], r[7] || "", r[12] || ""]);
+        const rows = [...inRows, ...outRows];
 
-        // Sheet 2: Outgoing
-        const wsOut = XLSX.utils.json_to_sheet(outgoing.map(r => ({
-            "التاريخ": r[1], "الفرع": r[2], "بيان الصرف": r[10],
-            "المبلغ": r[6], "العملة": r[7], "ملاحظات": r[12]
-        })));
-        XLSX.utils.book_append_sheet(wb, wsOut, "المصروفات");
-
-        // Save
-        const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-        saveAs(blob, `تقرير_مالي_تبرعات_${month}_${year}.xlsx`);
+        await exportStyledExcel(title, subtitle, medicName, headers, rows, `تقرير_تبرعات_${month}_${year}.xlsx`);
     };
 
-    const exportPDF = () => {
-        const doc = new jsPDF();
-        doc.text(`تقرير التبرعات والمصاريف - ${month}/${year}`, 10, 10);
+    const exportPDF = async () => {
+        const title = "تقرير التبرعات والمصاريف الشهري";
+        const subtitle = `شهر ${month} سنة ${year}`;
+        const medicName = user.name || user.username || "غير محدد";
+        const headers = [["التاريخ", "الفرع", "النوع", "المتبرع / البيان", "المبلغ", "العملة", "ملاحظات"]];
 
-        doc.text("الواردات:", 10, 20);
-        doc.autoTable({
-            startY: 25,
-            head: [['التاريخ', 'المتبرع', 'المبلغ', 'العملة']],
-            body: incoming.map(r => [r[1], r[3], r[6], r[7]])
-        });
+        const inRows = incoming.map(r => [r[1], r[2], "واردات", r[3] || "غير محدد", r[6], r[7] || "", r[12] || ""]);
+        const outRows = outgoing.map(r => [r[1], r[2], "مصروفات", r[10] || "غير محدد", r[6], r[7] || "", r[12] || ""]);
+        const rows = [...inRows, ...outRows];
 
-        doc.text("المصروفات:", 10, doc.lastAutoTable.finalY + 10);
-        doc.autoTable({
-            startY: doc.lastAutoTable.finalY + 15,
-            head: [['التاريخ', 'بيان الصرف', 'المبلغ', 'العملة']],
-            body: outgoing.map(r => [r[1], r[10], r[6], r[7]])
-        });
-
-        doc.save(`تقرير_مالي_تبرعات_${month}_${year}.pdf`);
+        await exportStyledPDF(title, subtitle, medicName, headers, rows, `تقرير_تبرعات_${month}_${year}.pdf`);
     };
 
     return (

@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { exportStyledExcel, exportStyledPDF } from "../utils/exportUtils";
 
 const CASE_TYPES = [
     "حالات طارئة",
@@ -122,31 +119,24 @@ export default function MonthlyCasesReport() {
         applyTypeFilter(base, v);
     };
 
-    const exportExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(filtered.map(c => ({
-            "التاريخ": c[1],
-            "الفرع": c[4],
-            "الجنس": c[5],
-            "نوع الحالة": c[6],
-            "ملاحظات": c[7] || ""
-        })));
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Cases");
-        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-        const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-        saveAs(data, `تقرير_الحالات_${month}_${year}.xlsx`);
+    const exportExcel = async () => {
+        const title = "تقرير الحالات الطبية";
+        const subtitle = `شهر ${month} سنة ${year}`;
+        const medicName = user.name || user.username || "غير محدد";
+        const headers = ["التاريخ", "الفرع", "الجنس", "نوع الحالة", "ملاحظات"];
+        const rows = filtered.map(c => [c[1], c[4], c[5], c[6], c[7] || ""]);
+
+        await exportStyledExcel(title, subtitle, medicName, headers, rows, `تقرير_الحالات_${month}_${year}.xlsx`);
     };
 
-    const exportPDF = () => {
-        const doc = new jsPDF();
-        doc.text(`تقرير الحالات الطبية - شهر ${month} سنة ${year}`, 10, 10);
-        doc.autoTable({
-            head: [['التاريخ', 'الفرع', 'الجنس', 'نوع الحالة', 'ملاحظات']],
-            body: filtered.map(c => [c[1], c[4], c[5], c[6], c[7] || ""]),
-            startY: 20,
-            styles: { font: "Amiri", direction: 'rtl' } // Assuming a font for Arabic if needed, or stick to simple
-        });
-        doc.save(`تقرير_الحالات_${month}_${year}.pdf`);
+    const exportPDF = async () => {
+        const title = "تقرير الحالات الطبية";
+        const subtitle = `شهر ${month} سنة ${year}`;
+        const medicName = user.name || user.username || "غير محدد";
+        const headers = [['التاريخ', 'الفرع', 'الجنس', 'نوع الحالة', 'ملاحظات']];
+        const rows = filtered.map(c => [c[1], c[4], c[5], c[6], c[7] || ""]);
+
+        await exportStyledPDF(title, subtitle, medicName, headers, rows, `تقرير_الحالات_${month}_${year}.pdf`);
     };
 
     /* ================= UI ================= */

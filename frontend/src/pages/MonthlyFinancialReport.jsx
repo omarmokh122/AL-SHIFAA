@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { exportStyledExcel, exportStyledPDF } from "../utils/exportUtils";
 
 export default function MonthlyFinancialReport() {
     const navigate = useNavigate();
@@ -63,32 +60,24 @@ export default function MonthlyFinancialReport() {
         categoryTotals[category] = (categoryTotals[category] || 0) + amount;
     });
 
-    const exportExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(filtered.map(r => ({
-            "التاريخ": r[1],
-            "الفئة": r[2],
-            "نوع المصروف": r[3],
-            "المبلغ": r[15],
-            "العملة": r[14],
-            "الفرع": r[17],
-            "الفاتورة": r[16]
-        })));
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Financial");
-        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-        const blobData = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-        saveAs(blobData, `تقرير_مالي_${month}_${year}.xlsx`);
+    const exportExcel = async () => {
+        const title = "التقرير المالي الشهري";
+        const subtitle = `شهر ${month} سنة ${year}`;
+        const medicName = user.name || user.username || "غير محدد";
+        const headers = ["التاريخ", "الفئة", "نوع المصروف", "المبلغ", "العملة", "الفرع", "الفاتورة"];
+        const rows = filtered.map(r => [r[1], r[2], r[3], r[15], r[14], r[17], r[16] ? "يوجد" : "لا يوجد"]);
+
+        await exportStyledExcel(title, subtitle, medicName, headers, rows, `تقرير_مالي_${month}_${year}.xlsx`);
     };
 
-    const exportPDF = () => {
-        const doc = new jsPDF();
-        doc.text(`التقرير المالي - شهر ${month} سنة ${year}`, 10, 10);
-        doc.autoTable({
-            head: [['التاريخ', 'الفئة', 'النوع', 'المبلغ', 'العملة']],
-            body: filtered.map(r => [r[1], r[2], r[3], r[15], r[14]]),
-            startY: 20
-        });
-        doc.save(`تقرير_مالي_${month}_${year}.pdf`);
+    const exportPDF = async () => {
+        const title = "التقرير المالي الشهري";
+        const subtitle = `شهر ${month} سنة ${year}`;
+        const medicName = user.name || user.username || "غير محدد";
+        const headers = [['التاريخ', 'الفئة', 'النوع', 'المبلغ', 'العملة']];
+        const rows = filtered.map(r => [r[1], r[2], r[3], r[15], r[14]]);
+
+        await exportStyledPDF(title, subtitle, medicName, headers, rows, `تقرير_مالي_${month}_${year}.pdf`);
     };
 
     /* ================= DRIVE PREVIEW ================= */

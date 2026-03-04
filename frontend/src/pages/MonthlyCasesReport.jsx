@@ -42,6 +42,7 @@ export default function MonthlyCasesReport() {
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
     const [selectedType, setSelectedType] = useState("ALL");
+    const [selectedBranch, setSelectedBranch] = useState("All");
 
     const [stats, setStats] = useState({
         total: 0,
@@ -76,11 +77,13 @@ export default function MonthlyCasesReport() {
         }
 
         const base = cases.filter((c) => {
-            return (
-                c[2] === month &&
-                String(c[3]) === String(year) &&
-                (user.role === "super" || (c[4] || "").includes(user.branch))
-            );
+            const matchMonth = c[2] === month;
+            const matchYear = String(c[3]) === String(year);
+            const matchBranch = user.role === "super"
+                ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
+                : (c[4] || "").includes(user.branch);
+
+            return matchMonth && matchYear && matchBranch;
         });
 
         applyTypeFilter(base, selectedType);
@@ -109,13 +112,14 @@ export default function MonthlyCasesReport() {
 
     const handleTypeChange = (v) => {
         setSelectedType(v);
-        // We filter from the already month-filtered 'cases' logic if we want to be correct
         const base = cases.filter((c) => {
-            return (
-                c[2] === month &&
-                String(c[3]) === String(year) &&
-                (user.role === "super" || (c[4] || "").includes(user.branch))
-            );
+            const matchMonth = c[2] === month;
+            const matchYear = String(c[3]) === String(year);
+            const matchBranch = user.role === "super"
+                ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
+                : (c[4] || "").includes(user.branch);
+
+            return matchMonth && matchYear && matchBranch;
         });
         applyTypeFilter(base, v);
     };
@@ -125,7 +129,11 @@ export default function MonthlyCasesReport() {
             alert("يرجى إنشاء التقرير أولاً");
             return;
         }
-        await exportMonthlyCasesTemplateExcel(year, month, user.role === "super" ? "كل الفروع" : user.branch, cases, `تقرير_الحالات_${month}_${year}.xlsx`);
+        const branchName = user.role === "super"
+            ? (selectedBranch === "All" ? "كل الفروع" : selectedBranch)
+            : user.branch;
+
+        await exportMonthlyCasesTemplateExcel(year, month, branchName, cases, `تقرير_الحالات_${month}_${year}.xlsx`);
     };
 
     const exportYearlyExcel = async () => {
@@ -133,7 +141,11 @@ export default function MonthlyCasesReport() {
             alert("يرجى اختيار السنة لتصدير التقرير السنوي");
             return;
         }
-        await exportYearlyCasesTemplateExcel(year, user.role === "super" ? "كل الفروع" : user.branch, cases, `التقرير_السنوي_للحالات_${year}.xlsx`);
+        const branchName = user.role === "super"
+            ? (selectedBranch === "All" ? "كل الفروع" : selectedBranch)
+            : user.branch;
+
+        await exportYearlyCasesTemplateExcel(year, branchName, cases, `التقرير_السنوي_للحالات_${year}.xlsx`);
     };
 
     const exportPDF = async () => {
@@ -178,6 +190,14 @@ export default function MonthlyCasesReport() {
                     ))}
                 </select>
 
+                {user.role === "super" && (
+                    <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}>
+                        <option value="All">كل الفروع</option>
+                        <option value="البقاع الأوسط">البقاع الأوسط</option>
+                        <option value="بعلبك">بعلبك</option>
+                    </select>
+                )}
+
                 <button onClick={generateReport} style={primaryBtn}>
                     إنشاء التقرير
                 </button>
@@ -203,7 +223,7 @@ export default function MonthlyCasesReport() {
                             يعرض هذا التقرير الحالات الطبية المسجّلة خلال شهر{" "}
                             <strong>{month}</strong> من سنة{" "}
                             <strong>{year}</strong> في{" "}
-                            <strong>{user.role === "super" ? "جميع الفروع" : user.branch}</strong>.
+                            <strong>{user.role === "super" ? (selectedBranch === "All" ? "جميع الفروع" : selectedBranch) : user.branch}</strong>.
                         </p>
                         <p><strong>إجمالي الحالات:</strong> {stats.total}</p>
                     </div>

@@ -126,7 +126,13 @@ export default function MonthlyCasesReport() {
         const headers = ["التاريخ", "الفرع", "الجنس", "نوع الحالة", "ملاحظات"];
         const rows = filtered.map(c => [c[1], c[4], c[5], c[6], c[7] || ""]);
 
-        await exportStyledExcel(title, subtitle, medicName, headers, rows, `تقرير_الحالات_${month}_${year}.xlsx`);
+        const summaryData = [
+            { label: "إجمالي الحالات:", value: stats.total },
+            { label: "ذكور:", value: stats.male },
+            { label: "إناث:", value: stats.female },
+        ];
+
+        await exportStyledExcel(title, subtitle, medicName, headers, rows, `تقرير_الحالات_${month}_${year}.xlsx`, summaryData);
     };
 
     const exportPDF = async () => {
@@ -136,7 +142,13 @@ export default function MonthlyCasesReport() {
         const headers = [['التاريخ', 'الفرع', 'الجنس', 'نوع الحالة', 'ملاحظات']];
         const rows = filtered.map(c => [c[1], c[4], c[5], c[6], c[7] || ""]);
 
-        await exportStyledPDF(title, subtitle, medicName, headers, rows, `تقرير_الحالات_${month}_${year}.pdf`);
+        const summaryData = [
+            { label: "إجمالي الحالات:", value: stats.total },
+            { label: "ذكور:", value: stats.male },
+            { label: "إناث:", value: stats.female },
+        ];
+
+        await exportStyledPDF(title, subtitle, medicName, headers, rows, `تقرير_الحالات_${month}_${year}.pdf`, summaryData);
     };
 
     /* ================= UI ================= */

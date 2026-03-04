@@ -26,8 +26,9 @@ async function getBase64ImageFromUrl(imageUrl) {
  * @param {Array} headers Columns (e.g., [['التاريخ', 'الفرع', ...]])
  * @param {Array} rows Data rows (e.g., [[c[1], c[4], ...]])
  * @param {string} filename Output file name
+ * @param {Array} summaryData Optional summary data (e.g., [{label: "Total", value: 10}])
  */
-export async function exportStyledPDF(title, subtitle, medicName, headers, rows, filename) {
+export async function exportStyledPDF(title, subtitle, medicName, headers, rows, filename, summaryData = []) {
     const doc = new jsPDF();
 
     // 1. Add Logo if reachable
@@ -61,6 +62,19 @@ export async function exportStyledPDF(title, subtitle, medicName, headers, rows,
         margin: { top: 45 },
     });
 
+    if (summaryData && summaryData.length > 0) {
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+
+        let currentY = finalY;
+        summaryData.forEach(item => {
+            // Right-aligned RTL text
+            doc.text(`${item.label} ${item.value}`, 200, currentY, { align: 'right' });
+            currentY += 8;
+        });
+    }
+
     doc.save(filename);
 }
 
@@ -72,8 +86,9 @@ export async function exportStyledPDF(title, subtitle, medicName, headers, rows,
  * @param {Array} headers Columns (e.g., ['التاريخ', 'الفرع', ...])
  * @param {Array} rows Object mapping or array of arrays based on preference. Here we expect an array of arrays matching headers.
  * @param {string} filename Output file name
+ * @param {Array} summaryData Optional summary data (e.g., [{label: "Total", value: 10}])
  */
-export async function exportStyledExcel(title, subtitle, medicName, headers, rows, filename) {
+export async function exportStyledExcel(title, subtitle, medicName, headers, rows, filename, summaryData = []) {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet(title, { views: [{ rightToLeft: true }] }); // Set standard RTL
 
@@ -147,6 +162,17 @@ export async function exportStyledExcel(title, subtitle, medicName, headers, row
     sheet.columns.forEach(column => {
         column.width = 20;
     });
+
+    // 5. Add Summary Data
+    if (summaryData && summaryData.length > 0) {
+        sheet.addRow([]); // empty row
+        summaryData.forEach(item => {
+            const sumRow = sheet.addRow([item.label, item.value]);
+            sumRow.getCell(1).font = { bold: true };
+            sumRow.getCell(1).alignment = { horizontal: 'right', vertical: 'middle' };
+            sumRow.getCell(2).alignment = { horizontal: 'right', vertical: 'middle' };
+        });
+    }
 
     // Generate output
     const buffer = await workbook.xlsx.writeBuffer();

@@ -218,13 +218,19 @@ export async function exportYearlyCasesTemplateExcel(year, branch, cases, filena
     // cases format: [id, date, month, year, branch, gender, type, notes]
     // Filter cases for the given year and validate branch
     const yearlyCases = cases.filter(c => {
-        if (String(c[3]) !== String(year)) return false;
+        const d = new Date(c[1]);
+        const rowYear = !isNaN(d.getTime()) ? String(d.getFullYear()) : "";
+        if (rowYear !== String(year)) return false;
         if (branch === "كل الفروع" || branch === "All") return true;
         return (c[4] || "").includes(branch);
     });
 
     const getCount = (monthIdx, filterFn) => {
-        return yearlyCases.filter(c => c[2] === monthNamesDB[monthIdx] && filterFn(c)).length;
+        return yearlyCases.filter(c => {
+            const d = new Date(c[1]);
+            const rowMonth = !isNaN(d.getTime()) ? monthNamesDB[d.getMonth()] : "";
+            return rowMonth === monthNamesDB[monthIdx] && filterFn(c);
+        }).length;
     };
 
     const getMonthTotals = (filterFn) => {
@@ -454,7 +460,12 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
 
     // Filter cases for the given year and month, and validate branch
     const monthlyCases = cases.filter(c => {
-        if (String(c[3]) !== String(year) || c[2] !== month) return false;
+        const d = new Date(c[1]);
+        const monthNames = ["كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران", "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"];
+        const rowMonth = !isNaN(d.getTime()) ? monthNames[d.getMonth()] : "";
+        const rowYear = !isNaN(d.getTime()) ? String(d.getFullYear()) : "";
+
+        if (rowYear !== String(year) || rowMonth !== month) return false;
         if (branch === "كل الفروع" || branch === "All") return true;
         return (c[4] || "").includes(branch);
     });

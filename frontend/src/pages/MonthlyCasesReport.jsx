@@ -61,14 +61,15 @@ export default function MonthlyCasesReport() {
         }
 
         const base = cases.filter((c) => {
+            if (!c[1]) return false;
             const d = new Date(c[1]);
             const monthNames = [
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
-            const rowMonth = (c[2] && c[2].trim()) ? c[2] : (d && !isNaN(d) ? monthNames[d.getMonth()] : "");
-            const rowYear = (c[3] && c[3].trim()) ? String(c[3]) : (d && !isNaN(d) ? String(d.getFullYear()) : "");
+            const rowMonth = !isNaN(d.getTime()) ? monthNames[d.getMonth()] : "";
+            const rowYear = !isNaN(d.getTime()) ? String(d.getFullYear()) : "";
 
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
@@ -114,14 +115,15 @@ export default function MonthlyCasesReport() {
     const handleTypeChange = (v) => {
         setSelectedType(v);
         const base = cases.filter((c) => {
+            if (!c[1]) return false;
             const d = new Date(c[1]);
             const monthNames = [
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
-            const rowMonth = (c[2] && c[2].trim()) ? c[2] : (d && !isNaN(d) ? monthNames[d.getMonth()] : "");
-            const rowYear = (c[3] && c[3].trim()) ? String(c[3]) : (d && !isNaN(d) ? String(d.getFullYear()) : "");
+            const rowMonth = !isNaN(d.getTime()) ? monthNames[d.getMonth()] : "";
+            const rowYear = !isNaN(d.getTime()) ? String(d.getFullYear()) : "";
 
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
@@ -197,14 +199,14 @@ export default function MonthlyCasesReport() {
                 </button>
 
                 {generated && (
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <>
                         <button onClick={exportExcel} style={secondaryBtn}>
                             تقرير شهري
                         </button>
                         <button onClick={exportYearlyExcel} style={secondaryBtn}>
                             تقرير سنوي
                         </button>
-                    </div>
+                    </>
                 )}
             </div>
 
@@ -308,6 +310,8 @@ const filterBox = {
     background: "#fff",
     padding: "12px",
     borderRadius: "8px",
+    alignItems: "center",
+    flexWrap: "wrap",
 };
 
 const typeFilter = {

@@ -169,8 +169,8 @@ export default function Cases() {
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
-            const m = filterMonth ? (c[2] === filterMonth || monthNames[d.getMonth()] === filterMonth) : true;
-            const y = filterYear ? (String(c[3]) === String(filterYear) || String(d.getFullYear()) === String(filterYear)) : true;
+            const m = filterMonth ? (monthNames[d.getMonth()] === filterMonth) : true;
+            const y = filterYear ? (String(d.getFullYear()) === String(filterYear)) : true;
             matchDate = m && y;
         }
 

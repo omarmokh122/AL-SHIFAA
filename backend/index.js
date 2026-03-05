@@ -362,6 +362,7 @@ app.post("/cases", async (req, res) => {
       الجنس,
       نوع_الحالة,
       ملاحظات,
+      الفئة_العمرية,
     } = req.body;
 
     const row = [
@@ -372,6 +373,7 @@ app.post("/cases", async (req, res) => {
       نوع_الحالة,
       ملاحظات || "",
       new Date().toISOString(),   // created_at
+      الفئة_العمرية || "غير محدد",
     ];
 
     await addCase(row);
@@ -396,7 +398,8 @@ app.put("/cases/:id", async (req, res) => {
       الجنس,
       نوع_الحالة,
       ملاحظات,
-      CreatedAt
+      CreatedAt,
+      الفئة_العمرية,
     } = req.body;
 
     const row = [
@@ -407,7 +410,10 @@ app.put("/cases/:id", async (req, res) => {
       نوع_الحالة,
       ملاحظات || "",
       CreatedAt || new Date().toISOString(),
-      ""                          // Status
+      "",                         // Status
+      "",                         // Spare for Month (handled in sheets.js)
+      "",                         // Spare for Year (handled in sheets.js)
+      الفئة_العمرية || "غير محدد",
     ];
 
     await updateCase(id, row);

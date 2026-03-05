@@ -29,31 +29,41 @@ const SPREADSHEET_ID =
 // =====================
 export async function getCases() {
     try {
-        // Fetch exclusively from Cases_Raw_Data (Direct Form Responses)
-        // Headers: [0: Timestamp, 1: التاريخ, 2: الشهر, 3: السنة, 4: الفرع, 5: الجنس, 6: نوع الحالة, 7: ملاحظات, 8: Status]
+        // Fetch from Cases_Raw_Data
+        // Headers: [0: Timestamp, 1: التاريخ, 2: الشهر, 3: السنة, 4: الفرع, 5: الجنس, 6: نوع الحالة, 7: ملاحظات, 8: الفئة العمرية للحالة, 9: Status]
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: "Cases_Raw_Data!A2:I",
+            range: "Cases_Raw_Data!A2:J",
         });
         const entries = res.data.values || [];
 
-        // Standard: [ID, Date, Month, Year, Branch, Gender, Type, Notes, CreatedAt, Status]
-        // Raw headers: [0: Timestamp, 1: التاريخ, 2: الشهر, 3: السنة, 4: الفرع, 5: الجنس, 6: نوع الحالة, 7: ملاحظات, 8: Status]
+        let mapped = entries.map(r => {
+            const dateVal = r[1] ? new Date(r[1]) : null;
+            const monthNames = [
+                "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+                "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+            ];
 
-        let mapped = entries.map(r => [
-            r[0],       // ID (Timestamp)
-            r[1],       // التاريخ
-            r[2],       // الشهر (String label)
-            r[3],       // السنة (String/Int)
-            r[4],       // الفرع
-            r[5],       // الجنس
-            r[6],       // نوع الحالة
-            r[7] || "", // ملاحظات
-            r[0],       // CreatedAt (using timestamp)
-            r[8] || ""  // Status (Soft Delete flag)
-        ]);
+            // Derive month/year from Date if columns are empty
+            const derivedMonth = (r[2] && r[2].trim()) ? r[2] : (dateVal && !isNaN(dateVal) ? monthNames[dateVal.getMonth()] : "");
+            const derivedYear = (r[3] && r[3].trim()) ? r[3] : (dateVal && !isNaN(dateVal) ? dateVal.getFullYear() : "");
 
-        // Filter out soft-deleted records
+            return [
+                r[0],       // ID (Timestamp)
+                r[1],       // التاريخ
+                derivedMonth, // الشهر
+                derivedYear,  // السنة
+                r[4],       // الفرع
+                r[5],       // الجنس
+                r[6],       // نوع الحالة
+                r[7] || "", // ملاحظات
+                r[0],       // CreatedAt
+                r[9] || "",  // Status (Soft Delete flag at col J)
+                r[8] || ""   // Age Group at col I (appended to end if needed or handled specifically)
+            ];
+        });
+
+        // Filter out soft-deleted records (index 9)
         mapped = mapped.filter(r => r[9] !== "Deleted");
 
         // Sort by date (descending)
@@ -64,45 +74,42 @@ export async function getCases() {
     }
 }
 
+// Write to Cases_Raw_Data
+// Frontend provides: [Date.now(), التاريخ, الفرع, الجنس, نوع_الحالة, ملاحظات, CreatedAt, الفئة_العمرية]
 export async function addCase(row) {
-    // Write only to Cases_Raw_Data to maintain one source of truth
-    // Frontend provides: [Date.now(), التاريخ, الفرع, الجنس, نوع_الحالة, ملاحظات, CreatedAt]
-    // Raw Sheet expects: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع الحالة, ملاحظات, Status]
-
     const dateObj = new Date(row[1]);
     const monthNames = [
         "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
         "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
     ];
-    // Use Arabic strings like in the sample if Date is valid
     const month = isNaN(dateObj) ? "" : monthNames[dateObj.getMonth()];
     const year = isNaN(dateObj) ? "" : dateObj.getFullYear();
 
     const rawRow = [
         row[0],     // Timestamp
         row[1],     // التاريخ
-        month,      // الشهر
-        year,       // السنة
+        month,      // الشهر (Automatic)
+        year,       // السنة (Automatic)
         row[2],     // الفرع
         row[3],     // الجنس
         row[4],     // نوع الحالة
         row[5],     // ملاحظات
-        ""          // Status (Soft Delete)
+        row[7] || "", // الفئة العمرية (index 8 in sheet)
+        ""          // Status (index 9 in sheet)
     ];
 
     await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Cases_Raw_Data!A:I",
+        range: "Cases_Raw_Data!A:J",
         valueInputOption: "USER_ENTERED",
         requestBody: { values: [rawRow] },
     });
 }
 
 export async function updateCase(id, updatedRow) {
-    // 1. Get all data to find the row index based on ID
     const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Cases_Raw_Data!A:I",
+        range: "Cases_Raw_Data!A:J",
     });
 
     const rows = res.data.values || [];
@@ -118,9 +125,7 @@ export async function updateCase(id, updatedRow) {
     const month = isNaN(dateObj) ? "" : monthNames[dateObj.getMonth()];
     const year = isNaN(dateObj) ? "" : dateObj.getFullYear();
 
-    // Map updatedRow back to Raw Format
-    // App Format: [ID, Date, Branch, Gender, Type, Notes, CreatedAt, Status]
-    // Raw Format: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع الحالة, ملاحظات, Status]
+    // Raw Format: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع الحالة, ملاحظات, الفئة العمرية, Status]
     const rawRow = [
         updatedRow[0],     // Timestamp
         updatedRow[1],     // التاريخ
@@ -130,15 +135,15 @@ export async function updateCase(id, updatedRow) {
         updatedRow[3],     // الجنس
         updatedRow[4],     // نوع الحالة
         updatedRow[5],     // ملاحظات
-        updatedRow[7] || "" // Status
+        updatedRow[10] || "", // الفئة العمرية (index 10 in app row)
+        updatedRow[7] || ""   // Status (index 9 in raw, index 7 in app)
     ];
 
-    const sheetRowNumber = rowIndex + 1; // 1-indexed
+    const sheetRowNumber = rowIndex + 1;
 
-    // 2. Update the specific row
     await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
-        range: `Cases_Raw_Data!A${sheetRowNumber}:I${sheetRowNumber}`,
+        range: `Cases_Raw_Data!A${sheetRowNumber}:J${sheetRowNumber}`,
         valueInputOption: "USER_ENTERED",
         requestBody: {
             values: [rawRow],

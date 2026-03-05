@@ -4,31 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { exportStyledExcel, exportYearlyCasesTemplateExcel, exportMonthlyCasesTemplateExcel } from "../utils/exportUtils";
 
 const CASE_TYPES = [
-    "كسور",
-    "حادث",
-    "أمراض قلبية",
-    "جهاز تنفسي",
-    "حالات طبية",
-    "جراحة",
-    "جثة",
-    "حروق",
-    "جروح",
-    "كورونا",
-    "متابعة",
-    "دفاع مدني",
-    "حالات عصبية",
-    "حالات طارئة",
-    "نقل إصابات وجرحى",
-    "نقل شهداء",
-    "علاج ميداني",
-    "تأمين نازحين (عوائل)",
-    "توزيع أدوية",
-    "تأمين معدات طبية",
-    "توزيع حليب",
-    "توزيع حفاضات",
-    "تلبية استهدافات",
-    "انتخابات – نقل ناخبين من ذوي الاحتياجات الخاصة",
-    "متابعة منزلية للمرضى"
+    "كسور", "حادث", "أمراض قلبية", "جهاز تنفسي", "حالات طبية", "جراحة", "جثة", "حروق", "جروح", "كورونا", "متابعة",
+    "دفاع مدني", "حالات عصبية", "حالات طارئة", "نقل إصابات وجرحى", "نقل شهداء", "علاج ميداني", "تأمين نازحين (عوائل)",
+    "توزيع أدوية", "تأمين معدات طبية", "توزيع حليب", "توزيع حفاضات", "تلبية استهدافات", "انتخابات – نقل ناخبين من ذوي الاحتياجات الخاصة", "متابعة منزلية للمرضى"
+];
+
+const AGE_GROUPS = [
+    "رضيع (أقل من سنة)", "طفل (1 – 5 سنوات)", "طفل (6 – 12 سنة)", "مراهق (13 – 17 سنة)", "شاب (18 – 35 سنة)", "بالغ (36 – 60 سنة)", "مسن (أكثر من 60 سنة)", "غير محدد"
 ];
 
 export default function MonthlyCasesReport() {
@@ -43,12 +25,14 @@ export default function MonthlyCasesReport() {
     const [year, setYear] = useState("");
     const [selectedType, setSelectedType] = useState("ALL");
     const [selectedBranch, setSelectedBranch] = useState("All");
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const [stats, setStats] = useState({
         total: 0,
         male: 0,
         female: 0,
         types: {},
+        ages: {},
     });
 
     /* ================= LOAD DATA ================= */
@@ -77,8 +61,17 @@ export default function MonthlyCasesReport() {
         }
 
         const base = cases.filter((c) => {
-            const matchMonth = c[2] === month;
-            const matchYear = String(c[3]) === String(year);
+            const d = new Date(c[1]);
+            const monthNames = [
+                "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+                "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+            ];
+
+            const rowMonth = (c[2] && c[2].trim()) ? c[2] : (d && !isNaN(d) ? monthNames[d.getMonth()] : "");
+            const rowYear = (c[3] && c[3].trim()) ? String(c[3]) : (d && !isNaN(d) ? String(d.getFullYear()) : "");
+
+            const matchMonth = rowMonth === month;
+            const matchYear = rowYear === String(year);
             const matchBranch = user.role === "super"
                 ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
                 : (c[4] || "").includes(user.branch);
@@ -97,8 +90,15 @@ export default function MonthlyCasesReport() {
         const femaleCases = result.filter((c) => c[5] === "أنثى").length;
 
         const types = {};
+        const ages = {};
+
         data.forEach((c) => {
             types[c[6]] = (types[c[6]] || 0) + 1;
+        });
+
+        result.forEach((c) => {
+            const ageKey = c[10] || "غير محدد";
+            ages[ageKey] = (ages[ageKey] || 0) + 1;
         });
 
         setFiltered(result);
@@ -107,14 +107,24 @@ export default function MonthlyCasesReport() {
             male: maleCases,
             female: femaleCases,
             types,
+            ages,
         });
     };
 
     const handleTypeChange = (v) => {
         setSelectedType(v);
         const base = cases.filter((c) => {
-            const matchMonth = c[2] === month;
-            const matchYear = String(c[3]) === String(year);
+            const d = new Date(c[1]);
+            const monthNames = [
+                "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+                "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+            ];
+
+            const rowMonth = (c[2] && c[2].trim()) ? c[2] : (d && !isNaN(d) ? monthNames[d.getMonth()] : "");
+            const rowYear = (c[3] && c[3].trim()) ? String(c[3]) : (d && !isNaN(d) ? String(d.getFullYear()) : "");
+
+            const matchMonth = rowMonth === month;
+            const matchYear = rowYear === String(year);
             const matchBranch = user.role === "super"
                 ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
                 : (c[4] || "").includes(user.branch);
@@ -185,6 +195,17 @@ export default function MonthlyCasesReport() {
                 <button onClick={generateReport} style={primaryBtn}>
                     إنشاء التقرير
                 </button>
+
+                {generated && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={exportExcel} style={secondaryBtn}>
+                            تقرير شهري
+                        </button>
+                        <button onClick={exportYearlyExcel} style={secondaryBtn}>
+                            تقرير سنوي
+                        </button>
+                    </div>
+                )}
             </div>
 
             {generated && (
@@ -215,50 +236,54 @@ export default function MonthlyCasesReport() {
                             <div style={statPill}><strong>إناث:</strong> {stats.female}</div>
                         </div>
 
-                        {Object.keys(stats.types).length > 0 && (
-                            <div style={{ marginTop: '14px' }}>
-                                <strong style={{ fontSize: '13px', color: '#555', display: 'block', marginBottom: '8px' }}>توزيع الحالات:</strong>
+                        {Object.keys(stats.ages).length > 0 && (
+                            <div style={{ marginTop: '14px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                                <strong style={{ fontSize: '13px', color: '#555', display: 'block', marginBottom: '8px' }}>توزيع الفئات العمرية:</strong>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                    {Object.entries(stats.types).filter(([, v]) => v > 0).map(([k, v]) => (
-                                        <span key={k} style={typeBadge}>{k} <strong style={{ color: '#C22129' }}>{v}</strong></span>
+                                    {Object.entries(stats.ages).filter(([, v]) => v > 0).map(([k, v]) => (
+                                        <span key={k} style={{ ...typeBadge, background: '#f8f9fa' }}>{k} <strong style={{ color: '#28a745' }}>{v}</strong></span>
                                     ))}
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Table */}
-                    <div style={tableBox}>
-                        <table style={table}>
-                            <thead>
-                                <tr>
-                                    <th>التاريخ</th>
-                                    <th>الفرع</th>
-                                    <th>الجنس</th>
-                                    <th>نوع الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filtered.map((c, i) => (
-                                    <tr key={i}>
-                                        <td>{c[1]}</td>
-                                        <td>{c[4]}</td>
-                                        <td>{c[5]}</td>
-                                        <td>{c[6]}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    {/* Table Header with Expand Toggle */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px' }}>
+                        <h4 style={{ margin: 0 }}>تفاصيل الحالات</h4>
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            style={{ ...secondaryBtn, background: "#C22129" }}
+                        >
+                            {isExpanded ? "إخفاء التفاصيل ▲" : "عرض التفاصيل ▼"}
+                        </button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <button onClick={exportExcel} style={primaryBtn}>
-                            تقرير شهري
-                        </button>
-                        <button onClick={exportYearlyExcel} style={secondaryBtn}>
-                            تقرير سنوي
-                        </button>
-                    </div>
+                    {/* Table */}
+                    {isExpanded && (
+                        <div style={tableBox}>
+                            <table style={table}>
+                                <thead>
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>الفرع</th>
+                                        <th>الجنس</th>
+                                        <th>نوع الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.map((c, i) => (
+                                        <tr key={i}>
+                                            <td>{c[1]}</td>
+                                            <td>{c[4]}</td>
+                                            <td>{c[5]}</td>
+                                            <td>{c[6]}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </>
             )}
         </div>
@@ -350,6 +375,7 @@ const secondaryBtn = {
     borderRadius: "8px",
     cursor: "pointer",
     fontSize: "14px",
+    whiteSpace: "nowrap",
 };
 
 const header = {

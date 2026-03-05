@@ -31,6 +31,17 @@ const CASE_TYPES = [
     "متابعة منزلية للمرضى"
 ];
 
+const AGE_GROUPS = [
+    "رضيع (أقل من سنة)",
+    "طفل (1 – 5 سنوات)",
+    "طفل (6 – 12 سنة)",
+    "مراهق (13 – 17 سنة)",
+    "شاب (18 – 35 سنة)",
+    "بالغ (36 – 60 سنة)",
+    "مسن (أكثر من 60 سنة)",
+    "غير محدد"
+];
+
 const MONTHS = [
     { v: "كانون الثاني", l: "كانون الثاني" }, { v: "شباط", l: "شباط" },
     { v: "آذار", l: "آذار" }, { v: "نيسان", l: "نيسان" },
@@ -55,6 +66,7 @@ export default function Cases() {
         الجنس: "",
         نوع_الحالة: "",
         ملاحظات: "",
+        الفئة_العمرية: "غير محدد",
     });
 
     /* ===== Fetch Cases ===== */
@@ -97,6 +109,7 @@ export default function Cases() {
                 الجنس: "",
                 نوع_الحالة: "",
                 ملاحظات: "",
+                الفئة_العمرية: "غير محدد",
             });
         } catch (err) {
             console.error(err);
@@ -113,7 +126,8 @@ export default function Cases() {
             الجنس: caseData[5],
             نوع_الحالة: caseData[6],
             ملاحظات: caseData[7] || "",
-            CreatedAt: caseData[8] // preserve the original created diff timing
+            CreatedAt: caseData[8],
+            الفئة_العمرية: caseData[10] || "غير محدد"
         });
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -150,8 +164,13 @@ export default function Cases() {
 
         let matchDate = true;
         if (filterMonth || filterYear) {
-            const m = filterMonth ? c[2] === filterMonth : true;
-            const y = filterYear ? String(c[3]) === String(filterYear) : true;
+            const d = new Date(c[1]);
+            const monthNames = [
+                "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+                "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+            ];
+            const m = filterMonth ? (c[2] === filterMonth || monthNames[d.getMonth()] === filterMonth) : true;
+            const y = filterYear ? (String(c[3]) === String(filterYear) || String(d.getFullYear()) === String(filterYear)) : true;
             matchDate = m && y;
         }
 
@@ -300,6 +319,19 @@ export default function Cases() {
                             ))}
                         </select>
 
+                        <select
+                            name="الفئة_العمرية"
+                            value={form.الفئة_العمرية}
+                            onChange={handleChange}
+                            required
+                            style={inputStyle}
+                        >
+                            <option value="">الفئة العمرية</option>
+                            {AGE_GROUPS.map((g) => (
+                                <option key={g} value={g}>{g}</option>
+                            ))}
+                        </select>
+
                         <input
                             name="ملاحظات"
                             placeholder="ملاحظات"
@@ -323,6 +355,7 @@ export default function Cases() {
                                             الجنس: "",
                                             نوع_الحالة: "",
                                             ملاحظات: "",
+                                            الفئة_العمرية: "غير محدد",
                                         });
                                     }}
                                     style={{ ...submitBtn, background: "#6c757d", width: "auto" }}
@@ -360,6 +393,7 @@ export default function Cases() {
                                     <th>السنة</th>
                                     <th>الفرع</th>
                                     <th>الجنس</th>
+                                    <th>الفئة العمرية</th>
                                     <th>نوع الحالة</th>
                                     <th>ملاحظات</th>
                                     <th>إجراءات</th>
@@ -377,6 +411,7 @@ export default function Cases() {
                                             <td>{c[3]}</td>
                                             <td>{c[4]}</td>
                                             <td>{c[5]}</td>
+                                            <td>{c[10] || "غير محدد"}</td>
                                             <td>{c[6]}</td>
                                             <td>{c[7]}</td>
                                             <td>

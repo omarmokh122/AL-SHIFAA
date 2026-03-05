@@ -405,6 +405,37 @@ export async function exportYearlyCasesTemplateExcel(year, branch, cases, filena
         });
     });
 
+    // Row 15+: Age Groups
+    const AGE_GROUPS = [
+        "رضيع (أقل من سنة)", "طفل (1 – 5 سنوات)", "طفل (6 – 12 سنة)", "مراهق (13 – 17 سنة)", "شاب (18 – 35 سنة)", "بالغ (36 – 60 سنة)", "مسن (أكثر من 60 سنة)", "غير محدد"
+    ];
+
+    const startAgeRow = 13 + CASE_TYPES.length;
+    sheet.getRow(startAgeRow).height = 10;
+    for (let c = 1; c <= 14; c++) {
+        const cell = sheet.getCell(startAgeRow, c);
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
+        setBorders(cell);
+    }
+
+    const ageLabelRow = startAgeRow + 1;
+    sheet.mergeCells(`A${ageLabelRow}:A${ageLabelRow + AGE_GROUPS.length - 1}`);
+    const ageLabelCell = sheet.getCell(`A${ageLabelRow}`);
+    ageLabelCell.value = "الفئات العمرية"; centerAlign(ageLabelCell); boldFont(ageLabelCell); setBorders(ageLabelCell);
+
+    AGE_GROUPS.forEach((age, aIdx) => {
+        const rIdx = ageLabelRow + aIdx;
+        const c2 = sheet.getCell(rIdx, 2);
+        c2.value = age; centerAlign(c2); boldFont(c2); setBorders(c2);
+
+        const ageTotals = getMonthTotals((c) => (c[10] || "غير محدد") === age);
+        ageTotals.forEach((val, idx) => {
+            const cell = sheet.getCell(rIdx, 3 + idx);
+            cell.value = val; centerAlign(cell); boldFont(cell); setBorders(cell);
+            if (highlightCols[idx]) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+        });
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     saveAs(blob, filename);
@@ -580,6 +611,35 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         const cellType = sheet.getCell(rIdx, 3);
         cellType.value = typeTotal; centerAlign(cellType); boldFont(cellType); setBorders(cellType);
         if (typeTotal > 0) cellType.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    });
+
+    // Row 15+: Age Groups
+    const AGE_GROUPS = [
+        "رضيع (أقل من سنة)", "طفل (1 – 5 سنوات)", "طفل (6 – 12 سنة)", "مراهق (13 – 17 سنة)", "شاب (18 – 35 سنة)", "بالغ (36 – 60 سنة)", "مسن (أكثر من 60 سنة)", "غير محدد"
+    ];
+
+    const startAgeRow = 13 + CASE_TYPES.length;
+    sheet.getRow(startAgeRow).height = 10;
+    for (let c = 1; c <= 3; c++) {
+        const cell = sheet.getCell(startAgeRow, c);
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
+        setBorders(cell);
+    }
+
+    const ageLabelRow = startAgeRow + 1;
+    sheet.mergeCells(`A${ageLabelRow}:A${ageLabelRow + AGE_GROUPS.length - 1}`);
+    const ageLabelCell = sheet.getCell(`A${ageLabelRow}`);
+    ageLabelCell.value = "الفئات العمرية"; centerAlign(ageLabelCell); boldFont(ageLabelCell); setBorders(ageLabelCell);
+
+    AGE_GROUPS.forEach((age, aIdx) => {
+        const rIdx = ageLabelRow + aIdx;
+        const c2 = sheet.getCell(rIdx, 2);
+        c2.value = age; centerAlign(c2); boldFont(c2); setBorders(c2);
+
+        const ageTotal = getCount((c) => (c[10] || "غير محدد") === age);
+        const cellAge = sheet.getCell(rIdx, 3);
+        cellAge.value = ageTotal; centerAlign(cellAge); boldFont(cellAge); setBorders(cellAge);
+        if (ageTotal > 0) cellAge.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
     });
 
     const buffer = await workbook.xlsx.writeBuffer();

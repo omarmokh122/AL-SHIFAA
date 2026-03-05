@@ -81,16 +81,30 @@ export default function MonthlyFinancialReport() {
     /* ================= CALCULATIONS ================= */
     let totalUSD = 0;
     let totalLBP = 0;
-    const categoryTotals = {};
+    const categoryUSD = {}; // per-category USD amount
+    const categoryLBP = {}; // per-category LBP amount
 
     filtered.forEach((row) => {
         const amount = Number(row[15]) || 0;
         const currency = row[14] || "";
         const category = row[2];
-        if (currency.includes("دولار")) totalUSD += amount;
-        else totalLBP += amount;
-        categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+        const isUSD = currency.includes("دولار");
+        if (isUSD) {
+            totalUSD += amount;
+            categoryUSD[category] = (categoryUSD[category] || 0) + amount;
+        } else {
+            totalLBP += amount;
+            categoryLBP[category] = (categoryLBP[category] || 0) + amount;
+        }
     });
+
+    // Merge categories and compute unified $ per category
+    const allCats = new Set([...Object.keys(categoryUSD), ...Object.keys(categoryLBP)]);
+    const categoryTotalsUSD = {};
+    allCats.forEach(cat => {
+        categoryTotalsUSD[cat] = (categoryUSD[cat] || 0) + (categoryLBP[cat] || 0) / LBP_RATE;
+    });
+
 
     const monthLabel = ARABIC_MONTHS.find(m => m.v === Number(month))?.l || month;
     const branchLabel = user.role === "super" ? (selectedBranch === "All" ? "كل الفروع" : selectedBranch) : (user.branch || "");
@@ -188,12 +202,14 @@ export default function MonthlyFinancialReport() {
                         </div>
                     </div>
 
-                    {Object.keys(categoryTotals).length > 0 && (
+                    {Object.keys(categoryTotalsUSD).length > 0 && (
                         <div style={{ background: '#fff', padding: '14px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #eee' }}>
-                            <strong style={{ fontSize: '13px', color: '#555', display: 'block', marginBottom: '8px' }}>توزيع حسب الفئة:</strong>
+                            <strong style={{ fontSize: '13px', color: '#555', display: 'block', marginBottom: '8px' }}>توزيع حسب الفئة (موحد $):</strong>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {Object.entries(categoryTotals).map(([k, v]) => (
-                                    <span key={k} style={catBadge}>{k} <strong style={{ color: '#C22129' }}>{v.toLocaleString()}</strong></span>
+                                {Object.entries(categoryTotalsUSD).map(([k, v]) => (
+                                    <span key={k} style={catBadge}>
+                                        {k} <strong style={{ color: '#C22129' }}>{v.toFixed(2)} $</strong>
+                                    </span>
                                 ))}
                             </div>
                         </div>

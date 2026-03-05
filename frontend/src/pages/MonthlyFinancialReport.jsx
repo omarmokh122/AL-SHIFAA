@@ -150,24 +150,32 @@ export default function MonthlyFinancialReport() {
 
             {filtered.length > 0 && (
                 <>
-                    {/* ===== COMPACT SUMMARY PILLS ===== */}
-                    <div style={summaryBox}>
-                        <div style={pillsRow}>
-                            <span style={pill}><strong>إجمالي بالدولار:</strong> {totalUSD.toLocaleString()} $</span>
-                            <span style={pill}><strong>إجمالي بالليرة:</strong> {totalLBP.toLocaleString()} ل.ل</span>
-                            <span style={pill}><strong>عدد العمليات:</strong> {filtered.length}</span>
+                    {/* ===== SUMMARY CARDS ===== */}
+                    <div style={cardsGrid}>
+                        <div style={card}>
+                            <div style={{ fontSize: '13px', color: '#555' }}>إجمالي بالدولار</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{totalUSD.toLocaleString()} $</div>
                         </div>
-                        {Object.keys(categoryTotals).length > 0 && (
-                            <div style={{ marginTop: "10px" }}>
-                                <strong style={{ fontSize: "13px", color: "#555", display: "block", marginBottom: "6px" }}>توزيع حسب الفئة:</strong>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                                    {Object.entries(categoryTotals).map(([k, v]) => (
-                                        <span key={k} style={catBadge}>{k} <strong style={{ color: "#C22129" }}>{v.toLocaleString()}</strong></span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <div style={card}>
+                            <div style={{ fontSize: '13px', color: '#555' }}>إجمالي بالليرة</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{totalLBP.toLocaleString()} ل.ل</div>
+                        </div>
+                        <div style={card}>
+                            <div style={{ fontSize: '13px', color: '#555' }}>عدد العمليات</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{filtered.length}</div>
+                        </div>
                     </div>
+
+                    {Object.keys(categoryTotals).length > 0 && (
+                        <div style={{ background: '#fff', padding: '14px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #eee' }}>
+                            <strong style={{ fontSize: '13px', color: '#555', display: 'block', marginBottom: '8px' }}>توزيع حسب الفئة:</strong>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {Object.entries(categoryTotals).map(([k, v]) => (
+                                    <span key={k} style={catBadge}>{k} <strong style={{ color: '#C22129' }}>{v.toLocaleString()}</strong></span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* ===== TABLE + PREVIEW ===== */}
                     <div style={layoutGrid}>
@@ -242,9 +250,8 @@ export default function MonthlyFinancialReport() {
 
 /* ================= STYLES ================= */
 const filterBox = { display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap", alignItems: "center" };
-const summaryBox = { background: "#fff", padding: "16px", borderRadius: "10px", marginBottom: "20px", border: "1px solid #eee" };
-const pillsRow = { display: "flex", gap: "12px", flexWrap: "wrap" };
-const pill = { background: "#f4f6f8", padding: "7px 16px", borderRadius: "20px", fontSize: "14px", color: "#333", border: "1px solid #e1e4e8" };
+const cardsGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '16px' };
+const card = { background: '#fff', border: '1px solid #ddd', borderRadius: '10px', padding: '16px', textAlign: 'center' };
 const catBadge = { background: "#fff", border: "1px solid #ddd", borderRadius: "12px", padding: "4px 12px", fontSize: "13px", color: "#444", display: "inline-flex", gap: "6px", alignItems: "center" };
 const layoutGrid = { display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px", marginTop: "20px" };
 const previewBox = { background: "#fff", border: "1px solid #ddd", borderRadius: "10px", padding: "12px" };

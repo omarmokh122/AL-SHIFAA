@@ -586,3 +586,163 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     saveAs(blob, filename);
 }
+
+export async function exportMonthlyFinancialExcel(monthName, year, branch, rows, filename) {
+    // rows format: [Timestamp, التاريخ, فئة المصروف, نوع المصروف, ..., المبلغ المدفوع(14), المبلغ(15), فاتورة(16), الفرع(17)]
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet(`تقرير مالي ${monthName} ${year}`, { views: [{ rightToLeft: true }] });
+
+    sheet.columns = [
+        { width: 22 }, // A: Category
+        { width: 30 }, // B: Type
+        { width: 14 }, // C: Amount
+        { width: 14 }, // D: Currency
+        { width: 16 }, // E: Date
+        { width: 20 }, // F: Branch
+    ];
+
+    const RED = 'FFC22129';
+    const WHITE = 'FFFFFFFF';
+    const GREY_LIGHT = 'FFF4F6F8';
+
+    const setBorders = (cell) => {
+        cell.border = {
+            top: { style: 'thin' }, left: { style: 'thin' },
+            bottom: { style: 'thin' }, right: { style: 'thin' }
+        };
+    };
+    const center = (cell) => { cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }; };
+    const bold = (cell) => { cell.font = { bold: true, size: 12 }; };
+    const redHeader = (cell, text) => {
+        cell.value = text;
+        cell.font = { bold: true, size: 12, color: { argb: WHITE } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: RED } };
+        center(cell); setBorders(cell);
+    };
+
+    // === HEADER ROWS ===
+    sheet.getRow(1).height = 30;
+    sheet.getRow(2).height = 20;
+    sheet.getRow(3).height = 20;
+
+    // Title
+    sheet.mergeCells('A1:F1');
+    const titleCell = sheet.getCell('A1');
+    titleCell.value = `التقرير المالي الشهري — ${monthName} ${year}`;
+    titleCell.font = { bold: true, size: 16 };
+    center(titleCell);
+
+    // Logo
+    try {
+        const logoBase64 = await getBase64ImageFromUrl(logoPng);
+        const imageId = workbook.addImage({ base64: logoBase64, extension: 'png' });
+        sheet.addImage(imageId, { tl: { col: 5, row: 0 }, ext: { width: 70, height: 70 } });
+    } catch (e) { console.warn("Logo error", e); }
+
+    // Branch + Organization
+    sheet.mergeCells('A2:C2');
+    const orgCell = sheet.getCell('A2');
+    orgCell.value = 'الشِفاء للخدمات الطبية والإنسانية';
+    orgCell.font = { bold: true, size: 12 };
+    center(orgCell);
+
+    sheet.mergeCells('A3:C3');
+    const branchCell = sheet.getCell('A3');
+    branchCell.value = `الفرع: ${branch || 'كل الفروع'}`;
+    branchCell.font = { size: 11 };
+    center(branchCell);
+
+    // Separator
+    const sep = sheet.getRow(4);
+    sep.height = 8;
+    for (let c = 1; c <= 6; c++) {
+        const cell = sheet.getCell(4, c);
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: RED } };
+    }
+
+    // === COLUMN HEADERS ===
+    sheet.getRow(5).height = 22;
+    redHeader(sheet.getCell('A5'), 'فئة المصروف');
+    redHeader(sheet.getCell('B5'), 'نوع المصروف');
+    redHeader(sheet.getCell('C5'), 'المبلغ');
+    redHeader(sheet.getCell('D5'), 'العملة');
+    redHeader(sheet.getCell('E5'), 'التاريخ');
+    redHeader(sheet.getCell('F5'), 'الفرع');
+
+    // === DATA ROWS grouped by category ===
+    const grouped = {};
+    rows.forEach(r => {
+        const cat = r[2] || 'أخرى';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(r);
+    });
+
+    let rowIdx = 6;
+    let totalUSD = 0;
+    let totalLBP = 0;
+
+    Object.entries(grouped).forEach(([category, items]) => {
+        // Category header
+        sheet.mergeCells(rowIdx, 1, rowIdx, 6);
+        const catCell = sheet.getCell(rowIdx, 1);
+        catCell.value = category;
+        catCell.font = { bold: true, size: 12, color: { argb: WHITE } };
+        catCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF424443' } };
+        center(catCell); setBorders(catCell);
+        sheet.getRow(rowIdx).height = 20;
+        rowIdx++;
+
+        // Item rows
+        items.forEach((r, i) => {
+            const amount = Number(r[15]) || 0;
+            const currency = r[14] || '';
+            if (currency.includes('دولار')) totalUSD += amount;
+            else totalLBP += amount;
+
+            const dr = sheet.getRow(rowIdx);
+            dr.height = 18;
+            const bg = i % 2 === 0 ? GREY_LIGHT : WHITE;
+
+            [r[2], r[3], r[15], r[14], r[1], r[17]].forEach((val, ci) => {
+                const cell = sheet.getCell(rowIdx, ci + 1);
+                cell.value = val || '';
+                center(cell); setBorders(cell);
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+            });
+            rowIdx++;
+        });
+    });
+
+    // === TOTALS ROW ===
+    const sep2 = sheet.getRow(rowIdx);
+    sep2.height = 8;
+    for (let c = 1; c <= 6; c++) {
+        sheet.getCell(rowIdx, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: RED } };
+    }
+    rowIdx++;
+
+    sheet.mergeCells(rowIdx, 1, rowIdx, 2);
+    const tot1 = sheet.getCell(rowIdx, 1);
+    tot1.value = `الإجمالي بالدولار: ${totalUSD.toLocaleString()} $`;
+    tot1.font = { bold: true, size: 12 };
+    center(tot1); setBorders(tot1);
+    tot1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY_LIGHT } };
+
+    sheet.mergeCells(rowIdx, 3, rowIdx, 4);
+    const tot2 = sheet.getCell(rowIdx, 3);
+    tot2.value = `الإجمالي بالليرة: ${totalLBP.toLocaleString()} ل.ل`;
+    tot2.font = { bold: true, size: 12 };
+    center(tot2); setBorders(tot2);
+    tot2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY_LIGHT } };
+
+    sheet.mergeCells(rowIdx, 5, rowIdx, 6);
+    const tot3 = sheet.getCell(rowIdx, 5);
+    tot3.value = `عدد العمليات: ${rows.length}`;
+    tot3.font = { bold: true, size: 12 };
+    center(tot3); setBorders(tot3);
+    tot3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY_LIGHT } };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blob, filename);
+}

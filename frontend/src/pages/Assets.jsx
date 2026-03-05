@@ -501,6 +501,17 @@ const submitBtn = {
     gridColumn: "1 / -1",
 };
 
+const reportBtn = {
+    padding: "8px 16px",
+    background: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "bold",
+};
+
 const select = {
     width: "100%",
     padding: "10px",

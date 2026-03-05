@@ -214,6 +214,17 @@ export default function MonthlyCasesReport() {
                             <div style={statPill}><strong>ذكور:</strong> {stats.male}</div>
                             <div style={statPill}><strong>إناث:</strong> {stats.female}</div>
                         </div>
+
+                        {Object.keys(stats.types).length > 0 && (
+                            <div style={{ marginTop: '14px' }}>
+                                <strong style={{ fontSize: '13px', color: '#555', display: 'block', marginBottom: '8px' }}>توزيع الحالات:</strong>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    {Object.entries(stats.types).filter(([, v]) => v > 0).map(([k, v]) => (
+                                        <span key={k} style={typeBadge}>{k} <strong style={{ color: '#C22129' }}>{v}</strong></span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Table */}
@@ -293,6 +304,18 @@ const statPill = {
     color: "#333",
     border: "1px solid #e1e4e8",
     display: "flex",
+    gap: "6px",
+    alignItems: "center",
+};
+
+const typeBadge = {
+    background: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: "12px",
+    padding: "4px 12px",
+    fontSize: "13px",
+    color: "#444",
+    display: "inline-flex",
     gap: "6px",
     alignItems: "center",
 };

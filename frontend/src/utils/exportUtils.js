@@ -879,13 +879,17 @@ export async function exportFinancialTemplateExcel(monthName, year, branch, supe
                 const isUSD = (item[14] || '').includes('دولار');
                 const bg = idx % 2 === 0 ? W : LT;
 
+                // Build detailed description: نوع المصروف + any specific sub-type from cols 4-13
+                const subType = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(i => item[i] || '').filter(Boolean).join(' – ');
+                const fullDesc = [item[3] || '', subType].filter(Boolean).join(': ');
+
                 ws.getRow(ri).height = 18;
                 for (let ci = 1; ci <= 6; ci++) {
                     const cell = ws.getCell(ri, ci);
                     fill(cell, bg); bd(cell);
-                    if (ci === 1) { cell.value = ''; ctr(cell); }
+                    if (ci === 1) { cell.value = item[1] || ''; cell.font = { size: 9 }; ctr(cell); } // date
                     if (ci === 2) { cell.value = ''; rgt(cell); }
-                    if (ci === 3) { cell.value = item[3] || ''; rgt(cell); }
+                    if (ci === 3) { cell.value = fullDesc; rgt(cell); }
                     if (ci === 4) { cell.value = isUSD ? '' : amt; ctr(cell); }
                     if (ci === 5) { cell.value = isUSD ? amt : ''; ctr(cell); }
                     if (ci === 6) { cell.value = ''; }
@@ -910,7 +914,9 @@ export async function exportFinancialTemplateExcel(monthName, year, branch, supe
     totUSDcell.value = `${totalUSD.toLocaleString()} $`;
     bfont(totUSDcell, 11); fill(totUSDcell, GR); ctr(totUSDcell); bd(totUSDcell);
 
-    const totN = ws.getCell(ri, 6); fill(totN, GR); bd(totN);
+    const totN = ws.getCell(ri, 6);
+    totN.value = `الموحد ($): ${unifiedUSD.toFixed(2)}`;
+    bfont(totN, 10, R); fill(totN, GN); ctr(totN); bd(totN);
     ri++;
 
     // ── SUMMARY BLOCK (4 rows) ──────────────────────────────────────────────

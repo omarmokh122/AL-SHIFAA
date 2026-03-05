@@ -47,6 +47,7 @@ export default function Cases() {
     const [cases, setCases] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingCaseId, setEditingCaseId] = useState(null);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const [form, setForm] = useState({
         التاريخ: "",
@@ -334,62 +335,75 @@ export default function Cases() {
                 </div>
             </section>
 
-            {loading ? (
-                <p>جاري التحميل...</p>
-            ) : (
-                <div className="table-container">
-                    <table style={table}>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>التاريخ</th>
-                                <th>الشهر</th>
-                                <th>السنة</th>
-                                <th>الفرع</th>
-                                <th>الجنس</th>
-                                <th>نوع الحالة</th>
-                                <th>ملاحظات</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {visibleCases.length === 0 ? (
-                                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
-                            ) : (
-                                visibleCases.map((c, i) => (
-                                    <tr key={i}>
-                                        <td>{i + 1}</td>
-                                        <td>{c[1]}</td>
-                                        <td>{c[2]}</td>
-                                        <td>{c[3]}</td>
-                                        <td>{c[4]}</td>
-                                        <td>{c[5]}</td>
-                                        <td>{c[6]}</td>
-                                        <td>{c[7]}</td>
-                                        <td>
-                                            <div style={{ display: "flex", gap: "6px" }}>
-                                                <button
-                                                    onClick={() => handleEdit(c)}
-                                                    style={{ ...actionBtn, background: "#007bff" }}
-                                                    title="تعديل"
-                                                >
-                                                    ✏️
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(c[0])}
-                                                    style={{ ...actionBtn, background: "#dc3545" }}
-                                                    title="حذف"
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            {/* ===== TABLE SECTION ===== */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px' }}>
+                <h4 style={{ margin: 0 }}>الحالات المسجلة</h4>
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    style={{ ...reportBtn, background: "#C22129" }}
+                >
+                    {isExpanded ? "إخفاء التفاصيل ▲" : "عرض التفاصيل ▼"}
+                </button>
+            </div>
+
+            {isExpanded && (
+                loading ? (
+                    <p>جاري التحميل...</p>
+                ) : (
+                    <div className="table-container">
+                        <table style={table}>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>التاريخ</th>
+                                    <th>الشهر</th>
+                                    <th>السنة</th>
+                                    <th>الفرع</th>
+                                    <th>الجنس</th>
+                                    <th>نوع الحالة</th>
+                                    <th>ملاحظات</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {visibleCases.length === 0 ? (
+                                    <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
+                                ) : (
+                                    visibleCases.map((c, i) => (
+                                        <tr key={i}>
+                                            <td>{i + 1}</td>
+                                            <td>{c[1]}</td>
+                                            <td>{c[2]}</td>
+                                            <td>{c[3]}</td>
+                                            <td>{c[4]}</td>
+                                            <td>{c[5]}</td>
+                                            <td>{c[6]}</td>
+                                            <td>{c[7]}</td>
+                                            <td>
+                                                <div style={{ display: "flex", gap: "10px", justifyContent: 'center' }}>
+                                                    <button
+                                                        onClick={() => handleEdit(c)}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}
+                                                        title="تعديل"
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(c[0])}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#dc3545', fontWeight: 'bold' }}
+                                                        title="حذف"
+                                                    >
+                                                        ❌
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )
             )}
         </div>
     );

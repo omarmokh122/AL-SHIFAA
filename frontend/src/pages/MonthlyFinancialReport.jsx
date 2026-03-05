@@ -25,9 +25,12 @@ export default function MonthlyFinancialReport() {
     const [data, setData] = useState([]);
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
+    const [selectedBranch, setSelectedBranch] = useState("All");
     const [filtered, setFiltered] = useState([]);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [fullscreen, setFullscreen] = useState(false);
+
+    const LBP_RATE = 89000; // 1$ = 89,000 ل.ل
 
     /* ================= FETCH ================= */
     useEffect(() => {
@@ -61,7 +64,12 @@ export default function MonthlyFinancialReport() {
             if (!date || isNaN(date.getTime())) return false;
             const matchMonth = date.getMonth() + 1 === Number(month);
             const matchYear = date.getFullYear() === Number(year);
-            const matchBranch = user.role === "super" ? true : (row[17] || "").includes(user.branch);
+            let matchBranch;
+            if (user.role === "super") {
+                matchBranch = selectedBranch === "All" ? true : (row[17] || "").includes(selectedBranch);
+            } else {
+                matchBranch = (row[17] || "").includes(user.branch);
+            }
             return matchMonth && matchYear && matchBranch;
         });
 
@@ -85,8 +93,9 @@ export default function MonthlyFinancialReport() {
     });
 
     const monthLabel = ARABIC_MONTHS.find(m => m.v === Number(month))?.l || month;
-    const branchLabel = user.role === "super" ? "كل الفروع" : (user.branch || "");
+    const branchLabel = user.role === "super" ? (selectedBranch === "All" ? "كل الفروع" : selectedBranch) : (user.branch || "");
     const supervisorName = user.name || user.username || "";
+    const totalUSD_unified = totalUSD + totalLBP / LBP_RATE;
 
     const exportMonthlyTemplate = async () => {
         if (!month || !year) { alert("اختر الشهر والسنة"); return; }
@@ -139,6 +148,14 @@ export default function MonthlyFinancialReport() {
                     ))}
                 </select>
 
+                {user.role === "super" && (
+                    <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}>
+                        <option value="All">كل الفروع</option>
+                        <option value="البقاع الأوسط">البقاع الأوسط</option>
+                        <option value="بعلبك">بعلبك</option>
+                    </select>
+                )}
+
                 <button onClick={generateReport} style={btnPrimary}>إنشاء التقرير</button>
                 <button onClick={exportMonthlyTemplate} style={{ ...btnSecondary, background: "#0d6efd" }}>
                     تصدير التقرير الشهري (قالب)
@@ -163,6 +180,11 @@ export default function MonthlyFinancialReport() {
                         <div style={card}>
                             <div style={{ fontSize: '13px', color: '#555' }}>عدد العمليات</div>
                             <div style={{ fontSize: '18px', fontWeight: 'bold' }}>{filtered.length}</div>
+                        </div>
+                        <div style={{ ...card, borderColor: '#C22129', borderWidth: '2px' }}>
+                            <div style={{ fontSize: '12px', color: '#C22129', fontWeight: 'bold' }}>المجموع الموحد ($)</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#C22129' }}>{totalUSD_unified.toFixed(2)} $</div>
+                            <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>(سعر الصرف: 1$ = 89,000 ل.ل)</div>
                         </div>
                     </div>
 
@@ -205,7 +227,12 @@ export default function MonthlyFinancialReport() {
                                             <td>{r[1]}</td>
                                             <td>{r[2]}</td>
                                             <td>{r[3]}</td>
-                                            <td>{r[15]}</td>
+                                            <td>
+                                                {Number(r[15]).toLocaleString()}
+                                                <span style={{ fontSize: '11px', color: '#888', marginRight: '4px' }}>
+                                                    {(r[14] || '').includes('دولار') ? ' $' : ' ل.ل'}
+                                                </span>
+                                            </td>
                                             <td>{r[14]}</td>
                                             <td>{r[17]}</td>
                                             <td style={{ color: "#C22129", fontWeight: "bold" }}>

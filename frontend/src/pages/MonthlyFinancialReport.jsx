@@ -22,6 +22,20 @@ export default function MonthlyFinancialReport() {
     }, []);
 
     /* ================= FILTER ================= */
+    function parseDate(dateStr) {
+        if (!dateStr) return null;
+        // Handle DD/MM/YYYY
+        if (dateStr.includes("/")) {
+            const parts = dateStr.split("/");
+            if (parts.length === 3) {
+                // Could be DD/MM/YYYY or MM/DD/YYYY — assume DD/MM/YYYY
+                return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`);
+            }
+        }
+        // Handle YYYY-MM-DD or ISO
+        return new Date(dateStr);
+    }
+
     function generateReport() {
         if (!month || !year) {
             alert("اختر الشهر والسنة");
@@ -29,13 +43,12 @@ export default function MonthlyFinancialReport() {
         }
 
         const result = data.filter((row) => {
-            const date = new Date(row[1]);
+            const date = parseDate(row[1]);
+            if (!date || isNaN(date.getTime())) return false;
             const matchMonth = date.getMonth() + 1 === Number(month);
             const matchYear = date.getFullYear() === Number(year);
-
             const matchBranch =
                 user.role === "super" ? true : (row[17] || "").includes(user.branch);
-
             return matchMonth && matchYear && matchBranch;
         });
 
@@ -112,10 +125,21 @@ export default function MonthlyFinancialReport() {
             <div style={filterBox}>
                 <select value={month} onChange={(e) => setMonth(e.target.value)}>
                     <option value="">الشهر</option>
-                    {[...Array(12)].map((_, i) => (
-                        <option key={i} value={i + 1}>
-                            {i + 1}
-                        </option>
+                    {[
+                        { v: 1, l: "كانون الثاني" },
+                        { v: 2, l: "شباط" },
+                        { v: 3, l: "آذار" },
+                        { v: 4, l: "نيسان" },
+                        { v: 5, l: "أيار" },
+                        { v: 6, l: "حزيران" },
+                        { v: 7, l: "تموز" },
+                        { v: 8, l: "آب" },
+                        { v: 9, l: "أيلول" },
+                        { v: 10, l: "تشرين الأول" },
+                        { v: 11, l: "تشرين الثاني" },
+                        { v: 12, l: "كانون الأول" },
+                    ].map(({ v, l }) => (
+                        <option key={v} value={v}>{l}</option>
                     ))}
                 </select>
 

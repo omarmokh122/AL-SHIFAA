@@ -200,22 +200,6 @@ export default function Cases() {
                 <StatCard title="إناث" value={female} />
             </div>
 
-            {/* ===== CASE TYPES ===== */}
-            <section style={section}>
-                <h4 style={sectionTitle}>توزيع أنواع الحالات (المفلترة)</h4>
-                <div style={typeGrid}>
-                    {Object.keys(typeStats).length === 0 ? (
-                        <p>لا توجد بيانات</p>
-                    ) : (
-                        Object.entries(typeStats).map(([k, v]) => (
-                            <div key={k} style={typeCard}>
-                                <div>{k}</div>
-                                <div style={typeValue}>{v}</div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </section>
 
             {/* ===== ADD/EDIT CASE ===== */}
             <section style={section}>

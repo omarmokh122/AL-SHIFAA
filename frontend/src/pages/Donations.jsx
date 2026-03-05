@@ -16,6 +16,7 @@ export default function Donations() {
     const [activeTab, setActiveTab] = useState("incoming"); // "incoming" or "outgoing"
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     // Form State
     const [form, setForm] = useState(initialFormState(user));
@@ -366,88 +367,103 @@ export default function Donations() {
                 </div>
             )}
 
-            {/* Table */}
-            <div className="table-container" style={tableBox}>
-                <table style={table}>
-                    <thead>
-                        {activeTab === "incoming" ? (
-                            <tr>
-                                <th>#</th>
-                                <th>التاريخ</th>
-                                <th>الفرع</th>
-                                <th>اسم المتبرع</th>
-                                <th>النوع</th>
-                                <th>المبلغ</th>
-                                <th>العملة</th>
-                                <th>عيني</th>
-                                <th>الكمية</th>
-                                <th>ملاحظات</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        ) : (
-                            <tr>
-                                <th>#</th>
-                                <th>التاريخ</th>
-                                <th>الفرع</th>
-                                <th>بيان الصرف</th>
-                                <th>المبلغ المصروف</th>
-                                <th>العملة</th>
-                                <th>ملاحظات</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        )}
-                    </thead>
-                    <tbody>
-                        {visible.length === 0 ? (
-                            <tr><td colSpan="11" style={{ textAlign: "center", padding: "20px" }}>لا توجد بيانات</td></tr>
-                        ) : (
-                            visible.map((r, i) => (
-                                <tr key={i}>
-                                    <td>{i + 1}</td>
-                                    <td>{r[1]}</td>
-                                    <td>{r[2]}</td>
-                                    {activeTab === "incoming" ? (
-                                        <>
-                                            <td>{r[3]}</td>
-                                            <td>{r[4]}</td>
-                                            <td>{r[6]}</td>
-                                            <td>{r[7]}</td>
-                                            <td>{r[8]}</td>
-                                            <td>{r[9]}</td>
-                                            <td>{r[12]}</td>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <td>{r[10]}</td>
-                                            <td style={{ color: "#dc3545", fontWeight: "bold" }}>{r[6]}</td>
-                                            <td>{r[7]}</td>
-                                            <td>{r[12]}</td>
-                                        </>
-                                    )}
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '5px' }}>
-                                            <button
-                                                onClick={() => handleEdit(r)}
-                                                title="تعديل"
-                                                style={{ ...btnAction, color: "#007bff", fontSize: "1.2em" }}
-                                            >
-                                                ✏️
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(r[0], r[4])}
-                                                title="حذف"
-                                                style={{ ...btnAction, color: "#dc3545", fontSize: "1.2em" }}
-                                            >
-                                                🗑️
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+            {/* Expand Toggle */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px' }}>
+                <h4 style={{ margin: 0 }}>
+                    {activeTab === "incoming" ? "سجل التبرعات الواردة" : "سجل استخدام التبرعات"}
+                </h4>
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    style={{ ...btnSecondary, background: "#C22129" }}
+                >
+                    {isExpanded ? "إخفاء السجل ▲" : "عرض السجل ▼"}
+                </button>
             </div>
+
+            {/* Table */}
+            {isExpanded && (
+                <div className="table-container" style={tableBox}>
+                    <table style={table}>
+                        <thead>
+                            {activeTab === "incoming" ? (
+                                <tr>
+                                    <th>#</th>
+                                    <th>التاريخ</th>
+                                    <th>الفرع</th>
+                                    <th>اسم المتبرع</th>
+                                    <th>النوع</th>
+                                    <th>المبلغ</th>
+                                    <th>العملة</th>
+                                    <th>عيني</th>
+                                    <th>الكمية</th>
+                                    <th>ملاحظات</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            ) : (
+                                <tr>
+                                    <th>#</th>
+                                    <th>التاريخ</th>
+                                    <th>الفرع</th>
+                                    <th>بيان الصرف</th>
+                                    <th>المبلغ المصروف</th>
+                                    <th>العملة</th>
+                                    <th>ملاحظات</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            )}
+                        </thead>
+                        <tbody>
+                            {visible.length === 0 ? (
+                                <tr><td colSpan="11" style={{ textAlign: "center", padding: "20px" }}>لا توجد بيانات</td></tr>
+                            ) : (
+                                visible.map((r, i) => (
+                                    <tr key={i}>
+                                        <td>{i + 1}</td>
+                                        <td>{r[1]}</td>
+                                        <td>{r[2]}</td>
+                                        {activeTab === "incoming" ? (
+                                            <>
+                                                <td>{r[3]}</td>
+                                                <td>{r[4]}</td>
+                                                <td>{r[6]}</td>
+                                                <td>{r[7]}</td>
+                                                <td>{r[8]}</td>
+                                                <td>{r[9]}</td>
+                                                <td>{r[12]}</td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td>{r[10]}</td>
+                                                <td style={{ color: "#dc3545", fontWeight: "bold" }}>{r[6]}</td>
+                                                <td>{r[7]}</td>
+                                                <td>{r[12]}</td>
+                                            </>
+                                        )}
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                                                <button
+                                                    onClick={() => handleEdit(r)}
+                                                    title="تعديل"
+                                                    style={{ ...btnAction, fontSize: "1.2em" }}
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(r[0], r[4])}
+                                                    title="حذف"
+                                                    style={{ ...btnAction, color: "#dc3545", fontSize: "1.2em", fontWeight: "bold" }}
+                                                >
+                                                    ❌
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 }

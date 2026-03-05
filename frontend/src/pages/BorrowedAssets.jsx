@@ -36,6 +36,7 @@ export default function BorrowedAssets() {
     const [isSavingInventory, setIsSavingInventory] = useState(false);
     const [filterMonth, setFilterMonth] = useState("");
     const [filterYear, setFilterYear] = useState("");
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const [form, setForm] = useState({
         الفرع: user.branch || "",
@@ -356,103 +357,92 @@ export default function BorrowedAssets() {
 
             {/* Borrowed Assets Table */}
             <section style={section}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px' }}>
                     <h4 style={{ margin: 0 }}>سجل الإعارات ({filteredBorrowedAssets.length})</h4>
-                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                        <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
-                            <option value="">كل الأشهر</option>
-                            {Array.from({ length: 12 }, (_, i) => (
-                                <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleDateString('ar', { month: 'long' })}</option>
-                            ))}
-                        </select>
-                        <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
-                            <option value="">كل السنوات</option>
-                            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                                <option key={year} value={year}>{year}</option>
-                            ))}
-                        </select>
-                        <button
-                            onClick={() => navigate("/reports/borrowed-assets")}
-                            style={reportBtn}
-                        >
-                            📊 تقرير شهري
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        style={{ ...reportBtn, background: "#C22129" }}
+                    >
+                        {isExpanded ? "إخفاء السجل ▲" : "عرض السجل ▼"}
+                    </button>
                 </div>
-                <div className="table-container">
-                    <table style={table}>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>الفرع</th>
-                                <th>اسم الأصل</th>
-                                <th>لمن (المستلم)</th>
-                                <th>الموقع (أين)</th>
-                                <th>التاريخ</th>
-                                <th>الكمية</th>
-                                <th>الحالة</th>
-                                <th>ملاحظات</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredBorrowedAssets.length === 0 ? (
+
+                {isExpanded && (
+                    <div className="table-container">
+                        <table style={table}>
+                            <thead>
                                 <tr>
-                                    <td colSpan="10" style={{ textAlign: "center", padding: "20px", color: "#999" }}>
-                                        لا توجد إعارات مسجلة
-                                    </td>
+                                    <th>#</th>
+                                    <th>الفرع</th>
+                                    <th>اسم الأصل</th>
+                                    <th>لمن (المستلم)</th>
+                                    <th>الموقع (أين)</th>
+                                    <th>التاريخ</th>
+                                    <th>الكمية</th>
+                                    <th>الحالة</th>
+                                    <th>ملاحظات</th>
+                                    <th>إجراءات</th>
                                 </tr>
-                            ) : (
-                                filteredBorrowedAssets.map((a, i) => (
-                                    <tr key={i} style={a[7] === "مرتجع" ? returnedRowStyle : {}}>
-                                        <td>{i + 1}</td>
-                                        <td>{a[1]}</td>
-                                        <td>{a[4]}</td>
-                                        <td>{a[5]}</td>
-                                        <td>{a[10]}</td>
-                                        <td>{a[3]}</td>
-                                        <td>{a[6]}</td>
-                                        <td>
-                                            <span style={a[7] === "مرتجع" ? returnedBadge : activeBadge}>
-                                                {a[7] || "معار"}
-                                            </span>
-                                        </td>
-                                        <td>{a[13]}</td>
-                                        <td>
-                                            <div style={{ display: "flex", gap: "6px" }}>
-                                                {a[7] !== "مرتجع" && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => markAsReturned(a)}
-                                                            style={{ ...actionBtn, background: "#17a2b8" }}
-                                                            title="تسجيل الاسترجاع"
-                                                        >
-                                                            ✓
-                                                        </button>
-                                                        <button
-                                                            onClick={() => updateQuantity(a)}
-                                                            style={{ ...actionBtn, background: "#28a745" }}
-                                                            title="تعديل الكمية"
-                                                        >
-                                                            🔢
-                                                        </button>
-                                                    </>
-                                                )}
-                                                <button
-                                                    onClick={() => deleteAsset(a[0])}
-                                                    style={{ ...actionBtn, background: "#dc3545" }}
-                                                    title="حذف"
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </div>
+                            </thead>
+                            <tbody>
+                                {filteredBorrowedAssets.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="10" style={{ textAlign: "center", padding: "20px", color: "#999" }}>
+                                            لا توجد إعارات مسجلة
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                ) : (
+                                    filteredBorrowedAssets.map((a, i) => (
+                                        <tr key={i} style={a[7] === "مرتجع" ? returnedRowStyle : {}}>
+                                            <td>{i + 1}</td>
+                                            <td>{a[1]}</td>
+                                            <td>{a[4]}</td>
+                                            <td>{a[5]}</td>
+                                            <td>{a[10]}</td>
+                                            <td>{a[3]}</td>
+                                            <td>{a[6]}</td>
+                                            <td>
+                                                <span style={a[7] === "مرتجع" ? returnedBadge : activeBadge}>
+                                                    {a[7] || "معار"}
+                                                </span>
+                                            </td>
+                                            <td>{a[13]}</td>
+                                            <td>
+                                                <div style={{ display: "flex", gap: "10px", justifyContent: 'center' }}>
+                                                    {a[7] !== "مرتجع" && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => markAsReturned(a)}
+                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#17a2b8' }}
+                                                                title="تسجيل الاسترجاع"
+                                                            >
+                                                                ✓
+                                                            </button>
+                                                            <button
+                                                                onClick={() => updateQuantity(a)}
+                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}
+                                                                title="تعديل الكمية"
+                                                            >
+                                                                🔢
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    <button
+                                                        onClick={() => deleteAsset(a[0])}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#dc3545', fontWeight: 'bold' }}
+                                                        title="حذف"
+                                                    >
+                                                        ❌
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </section>
         </div>
     );

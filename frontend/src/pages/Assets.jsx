@@ -54,6 +54,7 @@ export default function Assets() {
     const [assets, setAssets] = useState([]);
     const [assetType, setAssetType] = useState("");
     const [selectedAmbulance, setSelectedAmbulance] = useState("");
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const [form, setForm] = useState({
         الفرع: user.branch || "",
@@ -313,93 +314,69 @@ export default function Assets() {
 
             {/* ===== ASSETS TABLE ===== */}
             <section style={section}>
-                <h4 style={sectionTitle}>سجل الأصول</h4>
-
-                {/* Search & Filter */}
-                <div style={filterBar} className="form-grid-mobile">
-                    <input
-                        type="text"
-                        placeholder="بحث في الاسم، رقم السيارة، أو الملاحظات..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={searchBox}
-                    />
-                    <select
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                        style={filterSelect}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px' }}>
+                    <h4 style={{ margin: 0 }}>سجل الأصول</h4>
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        style={{ ...reportBtn, background: "#C22129" }}
                     >
-                        <option value="">كل أنواع الأصول</option>
-                        <option value="مركز">أصول المركز</option>
-                        <option value="سيارة إسعاف">سيارات إسعاف</option>
-                        <option value="محتويات سيارة إسعاف">محتويات سيارة إسعاف</option>
-                    </select>
-
-                    <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
-                        <option value="">كل الأشهر</option>
-                        {Array.from({ length: 12 }, (_, i) => (
-                            <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleDateString('ar', { month: 'long' })}</option>
-                        ))}
-                    </select>
-                    <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
-                        <option value="">كل السنوات</option>
-                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                            <option key={year} value={year}>{year}</option>
-                        ))}
-                    </select>
+                        {isExpanded ? "إخفاء السجل ▲" : "عرض السجل ▼"}
+                    </button>
                 </div>
 
-                <div className="table-container">
-                    <table style={table}>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>الفرع</th>
-                                <th>نوع الأصل</th>
-                                <th>اسم الأصل</th>
-                                <th>الكمية</th>
-                                <th>الحالة</th>
-                                <th>رقم السيارة</th>
-                                <th>الموقع</th>
-                                <th>ملاحظات</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {regularAssets.map((a, i) => (
-                                <tr key={i}>
-                                    <td>{i + 1}</td>
-                                    <td>{a[1]}</td>
-                                    <td>{a[2]}</td>
-                                    <td>{a[4]}</td>
-                                    <td>{a[6]}</td>
-                                    <td>{a[7]}</td>
-                                    <td>{a[8]}</td>
-                                    <td>{a[10]}</td>
-                                    <td>{a[13]}</td>
-                                    <td>
-                                        <div style={{ display: "flex", gap: "6px" }}>
-                                            <button
-                                                onClick={() => updateQuantity(a)}
-                                                style={{ ...actionBtn, background: "#28a745" }}
-                                                title="تعديل الكمية"
-                                            >
-                                                🔢
-                                            </button>
-                                            <button
-                                                onClick={() => deleteAsset(a[0])}
-                                                style={{ ...actionBtn, background: "#dc3545" }}
-                                                title="حذف"
-                                            >
-                                                🗑️
-                                            </button>
-                                        </div>
-                                    </td>
+                {isExpanded && (
+                    <div className="table-container">
+                        <table style={table}>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>الفرع</th>
+                                    <th>نوع الأصل</th>
+                                    <th>اسم الأصل</th>
+                                    <th>الكمية</th>
+                                    <th>الحالة</th>
+                                    <th>رقم السيارة</th>
+                                    <th>الموقع</th>
+                                    <th>ملاحظات</th>
+                                    <th>إجراءات</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {regularAssets.map((a, i) => (
+                                    <tr key={i}>
+                                        <td>{i + 1}</td>
+                                        <td>{a[1]}</td>
+                                        <td>{a[2]}</td>
+                                        <td>{a[4]}</td>
+                                        <td>{a[6]}</td>
+                                        <td>{a[7]}</td>
+                                        <td>{a[8]}</td>
+                                        <td>{a[10]}</td>
+                                        <td>{a[13]}</td>
+                                        <td>
+                                            <div style={{ display: "flex", gap: "10px", justifyContent: 'center' }}>
+                                                <button
+                                                    onClick={() => updateQuantity(a)}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}
+                                                    title="تعديل الكمية"
+                                                >
+                                                    🔢
+                                                </button>
+                                                <button
+                                                    onClick={() => deleteAsset(a[0])}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#dc3545', fontWeight: 'bold' }}
+                                                    title="حذف"
+                                                >
+                                                    ❌
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </section>
 
             {/* ===== BORROWED ASSETS NAVIGATION ===== */}

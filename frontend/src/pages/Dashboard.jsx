@@ -201,7 +201,7 @@ export default function Dashboard() {
             <BarChart data={chartData} barSize={32} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" />
-              <YAxis width={50} tick={{ dx: -8, textAnchor: 'end' }} />
+              <YAxis width={60} tick={{ dx: -20, textAnchor: 'end' }} />
               <Tooltip />
               <Legend formatter={(value) => <span style={{ marginRight: '8px', marginLeft: '4px' }}>{value}</span>} />
               <Bar dataKey="cases" name="عدد الحالات" fill="#C22129" radius={[4, 4, 0, 0]} />

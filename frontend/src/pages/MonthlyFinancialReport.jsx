@@ -17,25 +17,30 @@ export default function MonthlyFinancialReport() {
     /* ================= FETCH ================= */
     useEffect(() => {
         api.get("/financial")
-            .then((res) => setData(res.data.data || []))
+            .then((res) => {
+                const rows = res.data.data || [];
+                console.log("Sample financial rows (col B = التاريخ):", rows.slice(0, 3).map(r => r[1]));
+                setData(rows);
+            })
             .catch(() => alert("خطأ في جلب البيانات المالية"));
     }, []);
 
     /* ================= FILTER ================= */
     function parseDate(dateStr) {
-        if (!dateStr) return null;
-        // Handle MM/DD/YYYY (format used in Financial_Raw_Data)
-        if (dateStr.includes("/")) {
-            const parts = dateStr.split("/");
-            if (parts.length === 3) {
-                const month = parts[0].padStart(2, '0');
-                const day = parts[1].padStart(2, '0');
-                const year = parts[2];
-                return new Date(`${year}-${month}-${day}`);
-            }
+        if (!dateStr || typeof dateStr !== "string") return null;
+        const raw = dateStr.trim();
+
+        // Handle M/D/YYYY or MM/DD/YYYY — potentially with time component "3/15/2025 14:30:00"
+        const slashMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (slashMatch) {
+            const m = slashMatch[1].padStart(2, "0");
+            const d = slashMatch[2].padStart(2, "0");
+            const y = slashMatch[3];
+            return new Date(`${y}-${m}-${d}`);
         }
+
         // Handle YYYY-MM-DD or ISO
-        return new Date(dateStr);
+        return new Date(raw);
     }
 
     function generateReport() {
@@ -45,7 +50,8 @@ export default function MonthlyFinancialReport() {
         }
 
         const result = data.filter((row) => {
-            const date = parseDate(row[1]);
+            const dateStr = row[1]; // Column B = التاريخ
+            const date = parseDate(dateStr);
             if (!date || isNaN(date.getTime())) return false;
             const matchMonth = date.getMonth() + 1 === Number(month);
             const matchYear = date.getFullYear() === Number(year);

@@ -911,14 +911,43 @@ export async function exportFinancialTemplateExcel(monthName, year, branch, supe
     border(sheet.getCell(rowIdx, 6));
     rowIdx++;
 
-    // USD GRAND TOTAL ROW (green)
-    sheet.getRow(rowIdx).height = 22;
+    // === SUMMARY BLOCK ===
+    rowIdx++;
+    const LBP_RATE = 89000;
+    const unifiedUSD = totalUSD + totalLBP / LBP_RATE;
+
+    const summaryRows = [
+        { label: `إجمالي بالدولار`, value: `${totalUSD.toLocaleString()} $`, bg: 'FFFFFFFF' },
+        { label: `إجمالي بالليرة`, value: `${totalLBP.toLocaleString()} ل.ل`, bg: 'FFFFFFFF' },
+        { label: `عدد العمليات`, value: `${rows.length}`, bg: 'FFFFFFFF' },
+        { label: `المجموع الموحد ($)`, value: `${unifiedUSD.toFixed(2)} $`, bg: GREEN },
+    ];
+
+    summaryRows.forEach(({ label, value, bg }) => {
+        sheet.getRow(rowIdx).height = 22;
+        sheet.mergeCells(rowIdx, 1, rowIdx, 3);
+        const lCell = sheet.getCell(rowIdx, 1);
+        lCell.value = label;
+        lCell.font = { bold: true, size: 12, color: { argb: label.includes('الموحد') ? RED : 'FF333333' } };
+        lCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg === GREEN ? GREEN : 'FFF4F6F8' } };
+        right(lCell); border(lCell);
+
+        sheet.mergeCells(rowIdx, 4, rowIdx, 6);
+        const vCell = sheet.getCell(rowIdx, 4);
+        vCell.value = value;
+        vCell.font = { bold: true, size: 12, color: { argb: label.includes('الموحد') ? RED : 'FF111111' } };
+        vCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg === GREEN ? GREEN : 'FFF4F6F8' } };
+        cent(vCell); border(vCell);
+        rowIdx++;
+    });
+
+    // Exchange rate note row
+    sheet.getRow(rowIdx).height = 18;
     sheet.mergeCells(rowIdx, 1, rowIdx, 6);
-    const usdGrand = sheet.getCell(rowIdx, 1);
-    usdGrand.value = `المجموع العام بالدولار: ${totalUSD}`;
-    usdGrand.font = { bold: true, size: 13 };
-    usdGrand.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN } };
-    cent(usdGrand); border(usdGrand);
+    const rateNote = sheet.getCell(rowIdx, 1);
+    rateNote.value = 'سعر الصرف المعتمد: 1$ = 89,000 ل.ل';
+    rateNote.font = { italic: true, size: 10, color: { argb: 'FF888888' } };
+    rateNote.alignment = { vertical: 'middle', horizontal: 'center' };
     rowIdx++;
 
     // NOTE

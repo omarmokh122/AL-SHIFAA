@@ -492,23 +492,23 @@ const sectionTitle = {
 
 const cardsContainer = {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-    gap: "16px",
+    gridTemplateColumns: "repeat(6, 1fr)",
+    gap: "12px",
 };
 
 const inventoryCard = {
     background: "#fff",
     border: "2px solid #C22129",
     borderRadius: "12px",
-    padding: "24px",
+    padding: "16px 8px",
     textAlign: "center",
     boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
     transition: "transform 0.2s",
 };
 
 const cardIcon = {
-    fontSize: "32px",
-    marginBottom: "8px",
+    fontSize: "24px",
+    marginBottom: "4px",
 };
 
 const cardTitle = {
@@ -519,10 +519,10 @@ const cardTitle = {
 };
 
 const cardCount = {
-    fontSize: "36px",
+    fontSize: "28px",
     fontWeight: "bold",
     color: "#C22129",
-    marginBottom: "5px",
+    marginBottom: "2px",
 };
 
 const cardLabel = {

@@ -23,6 +23,26 @@ const MARITAL_STATUS = ["أعزب", "متزوج", "مطلق", "أرمل"];
 
 const YES_NO = ["نعم", "لا"];
 
+/* ===== Reusable Card Component ===== */
+function TeamMemberCard({ m, user, navigate }) {
+    return (
+        <div
+            style={card}
+            onClick={() => navigate("/medical-profile", { state: { member: m } })}
+        >
+            <img
+                src={m[13] || DEFAULT_IMG}
+                alt="member"
+                style={image}
+                onError={(e) => (e.target.src = DEFAULT_IMG)}
+            />
+            <div style={name}>{m[1]}</div>
+            <div style={roleStyle}>{m[3]}</div>
+            {user.role === "super" && <div style={{ fontSize: '11px', color: '#999' }}>{m[2]}</div>}
+        </div>
+    );
+}
+
 export default function MedicalTeam() {
     console.log("API BaseURL:", api.defaults.baseURL);
     const navigate = useNavigate();
@@ -256,32 +276,23 @@ export default function MedicalTeam() {
                 )}
             </div>
 
-            {/* ===== TEAM GRID ===== */}
-            <div style={grid}>
-                {filteredTeam.length === 0 ? (
-                    <p style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>لا توجد نتائج مطابقة</p>
-                ) : (
-                    filteredTeam.map((m, i) => (
-                        <div
-                            key={i}
-                            style={card}
-                            onClick={() =>
-                                navigate("/medical-profile", { state: { member: m } })
-                            }
-                        >
-                            <img
-                                src={m[13] || DEFAULT_IMG}
-                                alt="member"
-                                style={image}
-                                onError={(e) => (e.target.src = DEFAULT_IMG)}
-                            />
+            {/* ===== TEAM CAROUSEL ===== */}
+            <div style={carouselWrapper}>
+                <div className="marquee-container">
+                    {/* First Set */}
+                    {filteredTeam.length > 0 ? (
+                        filteredTeam.map((m, i) => (
+                            <TeamMemberCard key={`set1-${i}`} m={m} user={user} navigate={navigate} />
+                        ))
+                    ) : (
+                        <p style={{ padding: '40px', color: '#888' }}>لا توجد نتائج مطابقة</p>
+                    )}
 
-                            <div style={name}>{m[1]}</div>
-                            <div style={roleStyle}>{m[3]}</div>
-                            {user.role === "super" && <div style={{ fontSize: '11px', color: '#999' }}>{m[2]}</div>}
-                        </div>
-                    ))
-                )}
+                    {/* Duplicate Set for Loop (Only if there are enough items) */}
+                    {filteredTeam.length > 0 && filteredTeam.map((m, i) => (
+                        <TeamMemberCard key={`set2-${i}`} m={m} user={user} navigate={navigate} />
+                    ))}
+                </div>
             </div>
         </div >
     );
@@ -300,19 +311,27 @@ const desc = {
     marginBottom: "26px",
 };
 
-const grid = {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-    gap: "20px",
+const carouselWrapper = {
+    width: "100%",
+    overflow: "hidden",
+    padding: "10px 0",
+    background: "#fdfdfd",
+    borderRadius: "12px",
+    border: "1px solid #eee",
 };
 
 const card = {
     background: "#fff",
     border: "1px solid #ddd",
-    borderRadius: "10px",
+    borderRadius: "12px",
     padding: "16px",
     textAlign: "center",
     cursor: "pointer",
+    width: "220px",
+    margin: "0 10px",
+    flexShrink: 0,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+    transition: "transform 0.2s",
 };
 
 const image = {

@@ -10,15 +10,19 @@ export default function LoginPage() {
 
   function login() {
     const users = {
-      super: { role: "super", branch: null },
-      bekaa: { role: "admin", branch: "البقاع الأوسط" },
-      baalbeck: { role: "admin", branch: "بعلبك" },
+      omar: { role: "super", branch: null, name: "Omar Mokhtar", password: "omar_shifaa_2026" },
+      bekaa: { role: "admin", branch: "البقاع الأوسط", name: "Bekaa Admin", password: "bekaa_shifaa_2026" },
+      baalback: { role: "admin", branch: "بعلبك", name: "Baalback Admin", password: "baalback_shifaa_2026" },
     };
 
-    if (users[username] && password === `${username}123`) {
+    const foundUser = users[username];
+
+    if (foundUser && password === foundUser.password) {
       localStorage.setItem("user", JSON.stringify({
         username,
-        ...users[username]
+        role: foundUser.role,
+        branch: foundUser.branch,
+        name: foundUser.name
       }));
       navigate("/dashboard");
     } else {

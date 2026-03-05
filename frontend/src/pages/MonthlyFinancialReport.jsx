@@ -1,7 +1,9 @@
+// v3.2 - flat-table financial export with unified $ total
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 import { exportFinancialTemplateExcel, exportAnnualFinancialExcel } from "../utils/exportUtils";
+
 
 const ARABIC_MONTHS = [
     { v: 1, l: "كانون الثاني" },

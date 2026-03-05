@@ -193,9 +193,56 @@ export default function Cases() {
                 </button>
             </div>
 
+
+            {/* ===== SEARCH & FILTER ===== */}
+            <section style={section}>
+                <h4 style={sectionTitle}>البحث والتصفية</h4>
+                <div style={filterBar} className="form-grid-mobile">
+                    <input
+                        type="text"
+                        placeholder="بحث في الملاحظات أو نوع الحالة..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={searchBox}
+                    />
+                    {user.role === "super" && (
+                        <select
+                            value={branchFilter}
+                            onChange={(e) => setBranchFilter(e.target.value)}
+                            style={{ ...filterSelect, borderColor: '#C22129', fontWeight: 'bold' }}
+                        >
+                            <option value="">كل الفروع</option>
+                            <option value="البقاع الأوسط">البقاع الأوسط</option>
+                            <option value="بعلبك">بعلبك</option>
+                        </select>
+                    )}
+                    <select
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value)}
+                        style={filterSelect}
+                    >
+                        <option value="">كل الأنواع</option>
+                        {CASE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+
+                    <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
+                        <option value="">كل الأشهر</option>
+                        {MONTHS.map(m => (
+                            <option key={m.v} value={m.v}>{m.l}</option>
+                        ))}
+                    </select>
+                    <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
+                        <option value="">كل السنوات</option>
+                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
+                    </select>
+                </div>
+            </section>
+
             {/* ===== STAT CARDS ===== */}
             <div style={statsGrid}>
-                <StatCard title="إجمالي الحالات (المفلترة)" value={visibleCases.length} />
+                <StatCard title="إجمالي الحالات" value={visibleCases.length} />
                 <StatCard title="ذكور" value={male} />
                 <StatCard title="إناث" value={female} />
             </div>
@@ -287,111 +334,63 @@ export default function Cases() {
                 </div>
             </section>
 
-            {/* ===== SEARCH & FILTER ===== */}
-            <section style={section}>
-                <h4 style={sectionTitle}>البحث والتصفية</h4>
-                <div style={filterBar} className="form-grid-mobile">
-                    <input
-                        type="text"
-                        placeholder="بحث في الملاحظات أو نوع الحالة..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={searchBox}
-                    />
-                    {user.role === "super" && (
-                        <select
-                            value={branchFilter}
-                            onChange={(e) => setBranchFilter(e.target.value)}
-                            style={{ ...filterSelect, borderColor: '#C22129', fontWeight: 'bold' }}
-                        >
-                            <option value="">كل الفروع</option>
-                            <option value="البقاع الأوسط">البقاع الأوسط</option>
-                            <option value="بعلبك">بعلبك</option>
-                        </select>
-                    )}
-                    <select
-                        value={typeFilter}
-                        onChange={(e) => setTypeFilter(e.target.value)}
-                        style={filterSelect}
-                    >
-                        <option value="">كل الأنواع</option>
-                        {CASE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-
-                    <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
-                        <option value="">كل الأشهر</option>
-                        {MONTHS.map(m => (
-                            <option key={m.v} value={m.v}>{m.l}</option>
-                        ))}
-                    </select>
-                    <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
-                        <option value="">كل السنوات</option>
-                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                            <option key={year} value={year}>{year}</option>
-                        ))}
-                    </select>
+            {loading ? (
+                <p>جاري التحميل...</p>
+            ) : (
+                <div className="table-container">
+                    <table style={table}>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>التاريخ</th>
+                                <th>الشهر</th>
+                                <th>السنة</th>
+                                <th>الفرع</th>
+                                <th>الجنس</th>
+                                <th>نوع الحالة</th>
+                                <th>ملاحظات</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {visibleCases.length === 0 ? (
+                                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
+                            ) : (
+                                visibleCases.map((c, i) => (
+                                    <tr key={i}>
+                                        <td>{i + 1}</td>
+                                        <td>{c[1]}</td>
+                                        <td>{c[2]}</td>
+                                        <td>{c[3]}</td>
+                                        <td>{c[4]}</td>
+                                        <td>{c[5]}</td>
+                                        <td>{c[6]}</td>
+                                        <td>{c[7]}</td>
+                                        <td>
+                                            <div style={{ display: "flex", gap: "6px" }}>
+                                                <button
+                                                    onClick={() => handleEdit(c)}
+                                                    style={{ ...actionBtn, background: "#007bff" }}
+                                                    title="تعديل"
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(c[0])}
+                                                    style={{ ...actionBtn, background: "#dc3545" }}
+                                                    title="حذف"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-
-                {loading ? (
-                    <p>جاري التحميل...</p>
-                ) : (
-                    <div className="table-container">
-                        <table style={table}>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>التاريخ</th>
-                                    <th>الشهر</th>
-                                    <th>السنة</th>
-                                    <th>الفرع</th>
-                                    <th>الجنس</th>
-                                    <th>نوع الحالة</th>
-                                    <th>ملاحظات</th>
-                                    <th>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {visibleCases.length === 0 ? (
-                                    <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
-                                ) : (
-                                    visibleCases.map((c, i) => {
-                                        return (
-                                            <tr key={i}>
-                                                <td>{i + 1}</td>
-                                                <td>{c[1]}</td>
-                                                <td>{c[2]}</td>
-                                                <td>{c[3]}</td>
-                                                <td>{c[4]}</td>
-                                                <td>{c[5]}</td>
-                                                <td>{c[6]}</td>
-                                                <td>{c[7]}</td>
-                                                <td>
-                                                    <div style={{ display: "flex", gap: "6px" }}>
-                                                        <button
-                                                            onClick={() => handleEdit(c)}
-                                                            style={{ ...actionBtn, background: "#007bff" }}
-                                                            title="تعديل"
-                                                        >
-                                                            ✏️
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(c[0])}
-                                                            style={{ ...actionBtn, background: "#dc3545" }}
-                                                            title="حذف"
-                                                        >
-                                                            🗑️
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </section>
+            )}
         </div>
     );
 }

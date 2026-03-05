@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import { exportMonthlyFinancialExcel } from "../utils/exportUtils";
+import { exportFinancialTemplateExcel, exportAnnualFinancialExcel } from "../utils/exportUtils";
 
 const ARABIC_MONTHS = [
     { v: 1, l: "كانون الثاني" },
@@ -84,16 +84,25 @@ export default function MonthlyFinancialReport() {
         categoryTotals[category] = (categoryTotals[category] || 0) + amount;
     });
 
-    /* ================= EXPORT ================= */
     const monthLabel = ARABIC_MONTHS.find(m => m.v === Number(month))?.l || month;
-    const branchLabel = user.role === "super" ? "كل الفروع" : user.branch;
+    const branchLabel = user.role === "super" ? "كل الفروع" : (user.branch || "");
+    const supervisorName = user.name || user.username || "";
 
-    const exportExcel = async () => {
+    const exportMonthlyTemplate = async () => {
+        if (!month || !year) { alert("اختر الشهر والسنة"); return; }
         if (!filtered.length) { alert("لا توجد بيانات للتصدير"); return; }
-        await exportMonthlyFinancialExcel(
-            monthLabel, year, branchLabel,
+        await exportFinancialTemplateExcel(
+            monthLabel, year, branchLabel, supervisorName,
             filtered,
-            `تقرير_مالي_${monthLabel}_${year}.xlsx`
+            `مصاريف_الاسعاف_${monthLabel}_${year}.xlsx`
+        );
+    };
+
+    const exportAnnualTemplate = async () => {
+        if (!year) { alert("اختر السنة أولاً"); return; }
+        await exportAnnualFinancialExcel(
+            year, branchLabel, data,
+            `مصاريف_سنوي_${year}.xlsx`
         );
     };
 
@@ -131,7 +140,12 @@ export default function MonthlyFinancialReport() {
                 </select>
 
                 <button onClick={generateReport} style={btnPrimary}>إنشاء التقرير</button>
-                <button onClick={exportExcel} style={btnSecondary}>تصدير Excel (قالب)</button>
+                <button onClick={exportMonthlyTemplate} style={{ ...btnSecondary, background: "#0d6efd" }}>
+                    تصدير التقرير الشهري (قالب)
+                </button>
+                <button onClick={exportAnnualTemplate} style={{ ...btnSecondary, background: "#198754" }}>
+                    تصدير التقرير السنوي (قالب)
+                </button>
             </div>
 
             {filtered.length > 0 && (

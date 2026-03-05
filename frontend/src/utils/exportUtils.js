@@ -746,3 +746,310 @@ export async function exportMonthlyFinancialExcel(monthName, year, branch, rows,
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     saveAs(blob, filename);
 }
+
+// ================================
+// FINANCIAL TEMPLATE EXCEL
+// Matches the official Al-Shifaa format image
+// ================================
+export async function exportFinancialTemplateExcel(monthName, year, branch, supervisorName, rows, filename) {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet(`مصاريف ${monthName} ${year}`, { views: [{ rightToLeft: true }] });
+
+    sheet.columns = [
+        { width: 6 }, // A: م (row number)
+        { width: 20 }, // B: الحساب (category)
+        { width: 30 }, // C: البيان (description)
+        { width: 20 }, // D: المبلغ بالليرة
+        { width: 18 }, // E: المبلغ بالدولار
+        { width: 22 }, // F: ملاحظات
+    ];
+
+    const RED = 'FFC22129', WHITE = 'FFFFFFFF', GREY = 'FFD9D9D9';
+    const GREEN = 'FFE2EFDA', DARK = 'FF2F2F2F', LIGHT = 'FFF4F6F8';
+
+    const border = (cell) => { cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }; };
+    const cent = (cell) => { cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }; };
+    const right = (cell) => { cell.alignment = { vertical: 'middle', horizontal: 'right', wrapText: true }; };
+
+    // ROW 1: Logo + Title
+    sheet.getRow(1).height = 55;
+    try {
+        const logoBase64 = await getBase64ImageFromUrl(logoPng);
+        const imageId = workbook.addImage({ base64: logoBase64, extension: 'png' });
+        sheet.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: 90, height: 55 } });
+    } catch (e) { }
+
+    sheet.mergeCells('C1:F1');
+    const titleCell = sheet.getCell('C1');
+    titleCell.value = `مصاريف الاسعاف – ${branch || ''}`;
+    titleCell.font = { bold: true, size: 18, color: { argb: RED } };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'right' };
+
+    // ROW 2: Info row (region | date | supervisor)
+    sheet.getRow(2).height = 22;
+    sheet.mergeCells('A2:B2');
+    const region = sheet.getCell('A2');
+    region.value = `المنطقة: ${branch || 'كل الفروع'}`;
+    region.font = { bold: true, size: 11 }; right(region); border(region);
+
+    sheet.mergeCells('C2:D2');
+    const dateC = sheet.getCell('C2');
+    dateC.value = `التاريخ: ${monthName} / ${year}`;
+    dateC.font = { bold: true, size: 11 }; cent(dateC); border(dateC);
+
+    sheet.mergeCells('E2:F2');
+    const supC = sheet.getCell('E2');
+    supC.value = `المشرف: ${supervisorName || ''}`;
+    supC.font = { bold: true, size: 11 }; right(supC); border(supC);
+
+    // ROW 3: Column headers
+    sheet.getRow(3).height = 28;
+    [['A', 'م'], ['B', 'الحساب'], ['C', 'البيان'], ['D', 'المبلغ المدفوع بالليرة'], ['E', 'المبلغ المدفوع بالدولار'], ['F', 'ملاحظات']].forEach(([col, label]) => {
+        const cell = sheet.getCell(`${col}3`);
+        cell.value = label;
+        cell.font = { bold: true, size: 11, color: { argb: WHITE } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: DARK } };
+        cent(cell); border(cell);
+    });
+
+    // Group rows by category
+    const CATS = ['صيانة', 'ضيافة', 'محروقات', 'اتصالات / إنترنت', 'إعلاميات', 'إيجارات', 'كهرباء', 'لوازم إسعافات', 'تنظيفات / غسيل سيارة', 'أخرى'];
+    const grouped = {};
+    CATS.forEach(cat => { grouped[cat] = []; });
+    rows.forEach(row => {
+        const cat = row[2] || 'أخرى';
+        const key = CATS.find(c => cat.includes(c.split(' ')[0])) || 'أخرى';
+        grouped[key].push(row);
+    });
+
+    let rowIdx = 4, catNum = 1, totalLBP = 0, totalUSD = 0;
+
+    CATS.forEach(category => {
+        const items = grouped[category];
+        const startRow = rowIdx;
+
+        const renderRow = (item, isFirst, altBg) => {
+            sheet.getRow(rowIdx).height = 18;
+            const amount = Number((item || {})[15]) || 0;
+            const currency = (item || {})[14] || '';
+            const isUSD = currency.includes('دولار') || currency.includes('dollar') || currency.toLowerCase().includes('usd');
+            if (item) { isUSD ? (totalUSD += amount) : (totalLBP += amount); }
+
+            const bg = altBg ? LIGHT : WHITE;
+
+            // م
+            const numCell = sheet.getCell(rowIdx, 1);
+            if (isFirst) { numCell.value = catNum; }
+            cent(numCell); border(numCell);
+
+            // الحساب
+            const catCell = sheet.getCell(rowIdx, 2);
+            if (isFirst) { catCell.value = category; catCell.font = { bold: true, size: 11 }; }
+            right(catCell); border(catCell);
+
+            // البيان
+            const byanCell = sheet.getCell(rowIdx, 3);
+            byanCell.value = item ? (item[3] || '') : '';
+            byanCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+            right(byanCell); border(byanCell);
+
+            // LBP
+            const lbpCell = sheet.getCell(rowIdx, 4);
+            lbpCell.value = item && !isUSD ? amount : '';
+            lbpCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+            cent(lbpCell); border(lbpCell);
+
+            // USD
+            const usdCell = sheet.getCell(rowIdx, 5);
+            usdCell.value = item && isUSD ? amount : '';
+            usdCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+            cent(usdCell); border(usdCell);
+
+            // Notes
+            border(sheet.getCell(rowIdx, 6));
+            rowIdx++;
+        };
+
+        if (items.length === 0) {
+            renderRow(null, true, false);
+        } else {
+            items.forEach((item, i) => renderRow(item, i === 0, i % 2 === 1));
+        }
+
+        // Merge category cells for 2+ rows
+        if (items.length > 1) {
+            sheet.mergeCells(startRow, 2, rowIdx - 1, 2);
+            const merged = sheet.getCell(startRow, 2);
+            merged.value = category;
+            merged.font = { bold: true, size: 11 };
+            merged.alignment = { vertical: 'middle', horizontal: 'right', wrapText: true };
+            border(merged);
+        }
+        catNum++;
+    });
+
+    // TOTALS ROW (grey)
+    sheet.getRow(rowIdx).height = 22;
+    sheet.mergeCells(rowIdx, 1, rowIdx, 3);
+    const totLabel = sheet.getCell(rowIdx, 1);
+    totLabel.value = 'المجموع';
+    totLabel.font = { bold: true, size: 13 };
+    totLabel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY } };
+    cent(totLabel); border(totLabel);
+
+    const totLBP = sheet.getCell(rowIdx, 4);
+    totLBP.value = totalLBP;
+    totLBP.font = { bold: true, size: 12 };
+    totLBP.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY } };
+    cent(totLBP); border(totLBP);
+
+    const totUSDCell = sheet.getCell(rowIdx, 5);
+    totUSDCell.value = totalUSD;
+    totUSDCell.font = { bold: true, size: 12 };
+    totUSDCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY } };
+    cent(totUSDCell); border(totUSDCell);
+    border(sheet.getCell(rowIdx, 6));
+    rowIdx++;
+
+    // USD GRAND TOTAL ROW (green)
+    sheet.getRow(rowIdx).height = 22;
+    sheet.mergeCells(rowIdx, 1, rowIdx, 6);
+    const usdGrand = sheet.getCell(rowIdx, 1);
+    usdGrand.value = `المجموع العام بالدولار: ${totalUSD}`;
+    usdGrand.font = { bold: true, size: 13 };
+    usdGrand.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREEN } };
+    cent(usdGrand); border(usdGrand);
+    rowIdx++;
+
+    // NOTE
+    rowIdx++;
+    sheet.getRow(rowIdx).height = 28;
+    sheet.mergeCells(rowIdx, 1, rowIdx, 6);
+    const noteCell = sheet.getCell(rowIdx, 1);
+    noteCell.value = 'ملاحظة: كل مبلغ لا يتضمن فاتورة موقعة من المشرف لن يتم صرفه';
+    noteCell.font = { bold: true, size: 13, color: { argb: RED } };
+    noteCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    rowIdx++;
+
+    // SIGNATURE
+    rowIdx++;
+    sheet.mergeCells(rowIdx, 1, rowIdx, 3);
+    const sigCell = sheet.getCell(rowIdx, 1);
+    sigCell.value = `توقيع المشرف: ${supervisorName || ''}`;
+    sigCell.font = { bold: true, size: 11 };
+    sigCell.alignment = { vertical: 'middle', horizontal: 'right' };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blob, filename);
+}
+
+// ================================
+// ANNUAL FINANCIAL TEMPLATE EXCEL
+// ================================
+export async function exportAnnualFinancialExcel(year, branch, rows, filename) {
+    const SHORT_MONTHS = ["ك2", "شباط", "اذار", "نيسان", "ايار", "حزيران", "تموز", "اب", "ايلول", "ت1", "ت2", "ك1"];
+    const CATS = ['صيانة', 'ضيافة', 'محروقات', 'اتصالات / إنترنت', 'إعلاميات', 'إيجارات', 'كهرباء', 'لوازم إسعافات', 'تنظيفات / غسيل سيارة', 'أخرى'];
+    const RED = 'FFC22129', WHITE = 'FFFFFFFF', GREY = 'FFD9D9D9', LIGHT = 'FFF4F6F8', DARK = 'FF424443';
+
+    function parseDate(s) {
+        if (!s) return null;
+        const m = String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (m) return new Date(`${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`);
+        return new Date(s);
+    }
+
+    const yearRows = rows.filter(r => {
+        const d = parseDate(r[1]);
+        return d && !isNaN(d.getTime()) && d.getFullYear() === Number(year);
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet(`التقرير السنوي ${year}`, { views: [{ rightToLeft: true }] });
+
+    sheet.columns = [
+        { width: 25 },
+        ...SHORT_MONTHS.map(() => ({ width: 10 }))
+    ];
+
+    const b = (cell) => { cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }; };
+    const c = (cell) => { cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }; };
+
+    // Title row
+    sheet.getRow(1).height = 45;
+    sheet.mergeCells(1, 1, 1, 13);
+    const title = sheet.getCell('A1');
+    title.value = `التقرير المالي السنوي ${year} – ${branch || 'كل الفروع'}`;
+    title.font = { bold: true, size: 16, color: { argb: RED } };
+    c(title);
+
+    try {
+        const logoBase64 = await getBase64ImageFromUrl(logoPng);
+        const imageId = workbook.addImage({ base64: logoBase64, extension: 'png' });
+        sheet.addImage(imageId, { tl: { col: 12.5, row: 0 }, ext: { width: 75, height: 50 } });
+    } catch (e) { }
+
+    // Month headers
+    sheet.getRow(2).height = 26;
+    const h0 = sheet.getCell('A2');
+    h0.value = 'الحساب / الشهر';
+    h0.font = { bold: true, size: 11, color: { argb: WHITE } };
+    h0.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: DARK } };
+    c(h0); b(h0);
+
+    SHORT_MONTHS.forEach((m, i) => {
+        const cell = sheet.getCell(2, 2 + i);
+        cell.value = m;
+        cell.font = { bold: true, size: 11, color: { argb: WHITE } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: RED } };
+        c(cell); b(cell);
+    });
+
+    let rowIdx = 3;
+    const monthTotals = Array(12).fill(0);
+
+    CATS.forEach(cat => {
+        sheet.getRow(rowIdx).height = 20;
+        const catCell = sheet.getCell(rowIdx, 1);
+        catCell.value = cat;
+        catCell.font = { bold: true, size: 11 };
+        catCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LIGHT } };
+        b(catCell);
+
+        for (let mi = 0; mi < 12; mi++) {
+            const total = yearRows.filter(r => {
+                const d = parseDate(r[1]);
+                const rowCat = r[2] || 'أخرى';
+                const key = CATS.find(c => rowCat.includes(c.split(' ')[0])) || 'أخرى';
+                return d && d.getMonth() === mi && key === cat;
+            }).reduce((sum, r) => sum + (Number(r[15]) || 0), 0);
+
+            monthTotals[mi] += total;
+            const cell = sheet.getCell(rowIdx, 2 + mi);
+            cell.value = total || '';
+            if (total > 0) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LIGHT } };
+            c(cell); b(cell);
+        }
+        rowIdx++;
+    });
+
+    // Totals row
+    sheet.getRow(rowIdx).height = 24;
+    const totLabel = sheet.getCell(rowIdx, 1);
+    totLabel.value = 'المجموع الشهري';
+    totLabel.font = { bold: true, size: 12, color: { argb: WHITE } };
+    totLabel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: DARK } };
+    b(totLabel);
+
+    monthTotals.forEach((t, i) => {
+        const cell = sheet.getCell(rowIdx, 2 + i);
+        cell.value = t || '';
+        cell.font = { bold: true };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY } };
+        c(cell); b(cell);
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blob, filename);
+}

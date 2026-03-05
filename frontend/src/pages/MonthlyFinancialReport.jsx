@@ -24,12 +24,14 @@ export default function MonthlyFinancialReport() {
     /* ================= FILTER ================= */
     function parseDate(dateStr) {
         if (!dateStr) return null;
-        // Handle DD/MM/YYYY
+        // Handle MM/DD/YYYY (format used in Financial_Raw_Data)
         if (dateStr.includes("/")) {
             const parts = dateStr.split("/");
             if (parts.length === 3) {
-                // Could be DD/MM/YYYY or MM/DD/YYYY — assume DD/MM/YYYY
-                return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`);
+                const month = parts[0].padStart(2, '0');
+                const day = parts[1].padStart(2, '0');
+                const year = parts[2];
+                return new Date(`${year}-${month}-${day}`);
             }
         }
         // Handle YYYY-MM-DD or ISO

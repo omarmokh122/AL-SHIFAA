@@ -173,11 +173,11 @@ export default function MonthlyFinancialReport() {
                 )}
 
                 <button onClick={generateReport} style={btnPrimary}>إنشاء التقرير</button>
-                <button onClick={exportMonthlyTemplate} style={{ ...btnSecondary, background: "#0d6efd" }}>
-                    تصدير التقرير الشهري (قالب)
+                <button onClick={exportMonthlyTemplate} style={btnPrimary}>
+                    📅 تقرير شهري
                 </button>
-                <button onClick={exportAnnualTemplate} style={{ ...btnSecondary, background: "#198754" }}>
-                    تصدير التقرير السنوي (قالب)
+                <button onClick={exportAnnualTemplate} style={{ ...btnSecondary, background: "#424443" }}>
+                    📆 تقرير سنوي
                 </button>
             </div>
 

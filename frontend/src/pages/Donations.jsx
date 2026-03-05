@@ -231,31 +231,33 @@ export default function Donations() {
             {/* Header */}
             <div style={header}>
                 <div>
-                    <h2 style={title}>سجل التبرعات والمصروفات</h2>
-                    <p style={descriptionText}>
-                        متابعة شاملة للواردات المالية وكيفية تخصيصها عبر الفروع
+                    <h2 style={title}>إدارة التبرعات والمصروفات</h2>
+                    <p style={{ color: "#555", fontSize: "16px", marginBottom: "26px", lineHeight: "1.7", width: "100%" }}>
+                        تتبع الواردات من التبرعات وكيفية صرفها
                     </p>
                 </div>
                 <button
                     onClick={() => navigate("/reports/monthly-donations")}
-                    style={reportBtnStyle}
+                    style={btnSecondary}
                 >
-                    التقرير الشهري
+                    📊 تقرير شهري
                 </button>
             </div>
 
             {/* Stats Cards (Simplified) */}
             <div style={cardsGrid} className="dashboard-grid">
                 <Card
-                    title="الرصيد المتاح (تقديري)"
+                    title="الرصيد المتاح (تقديري بالدولار)"
                     value={`${safeAvailable.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
-                    subValue={`نقد: ${safeCashUSD.toLocaleString()} $ | ${safeCashLBP.toLocaleString()} ل.ل`}
-                    color="#C22129"
+                    subValue={`(تفاصيل النقد: ${safeCashUSD.toLocaleString()} $ + ${safeCashLBP.toLocaleString()} ل.ل)`}
+                    color={safeAvailable >= 0 ? "#28a745" : "#dc3545"}
+                    icon="💰"
                 />
                 <Card
-                    title="إجمالي المصروفات"
+                    title="إجمالي المصروفات (بالدولار)"
                     value={`${safeUsed.toLocaleString(undefined, { maximumFractionDigits: 0 })} $`}
-                    color="#444"
+                    color="#ffc107"
+                    icon="📤"
                 />
             </div>
 
@@ -265,20 +267,20 @@ export default function Donations() {
                     style={activeTab === "incoming" ? activeTabStyle : tabStyle}
                     onClick={() => { setActiveTab("incoming"); setShowForm(false); setEditingId(null); }}
                 >
-                    الـواردات
+                    📥 سجل الواردات (التبرعات)
                 </button>
                 <button
                     style={activeTab === "outgoing" ? activeTabStyle : tabStyle}
                     onClick={() => { setActiveTab("outgoing"); setShowForm(false); setEditingId(null); }}
                 >
-                    المصروفات
+                    📤 سجل الصادر (استخدام التبرعات)
                 </button>
             </div>
 
             {/* Actions & Filters */}
             <div style={actionBar}>
                 <button onClick={() => { setShowForm(!showForm); setEditingId(null); setForm(initialFormState(user)); }} style={btnAdd}>
-                    {showForm ? "إغلاق" : (activeTab === "incoming" ? "تسجيل تبرع" : "تسجيل مصروف")}
+                    {showForm ? "إغلاق النموذج" : (activeTab === "incoming" ? "+ تسجيل تبرع جديد" : "+ تسجيل مصروف جديد")}
                 </button>
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -372,9 +374,9 @@ export default function Donations() {
                 </h4>
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    style={toggleHistoryBtn}
+                    style={{ ...btnSecondary, background: "#C22129" }}
                 >
-                    {isExpanded ? "إخفاء السجل" : "عرض السجل"}
+                    {isExpanded ? "إخفاء السجل ▲" : "عرض السجل ▼"}
                 </button>
             </div>
 
@@ -467,12 +469,13 @@ export default function Donations() {
 }
 
 /*Components*/
-function Card({ title, value, subValue, color }) {
+function Card({ title, value, subValue, color, icon }) {
     return (
-        <div style={{ ...card, borderTop: `4px solid ${color}` }}>
-            <div style={cardLabelText}>{title}</div>
-            <div style={{ ...cardValueText, color: color }}>{value}</div>
-            {subValue && <div style={cardSubValueText}>{subValue}</div>}
+        <div style={{ ...card, borderBottom: `4px solid ${color}` }}>
+            <div style={{ fontSize: "24px", marginBottom: "10px" }}>{icon}</div>
+            <div style={{ fontSize: "14px", color: "#555", marginBottom: "8px" }}>{title}</div>
+            <div style={{ fontSize: "18px", fontWeight: "bold", color: "#333" }}>{value}</div>
+            {subValue && <div style={{ fontSize: "11px", color: "#888", marginTop: "4px" }}>{subValue}</div>}
         </div>
     );
 }
@@ -480,64 +483,10 @@ function Card({ title, value, subValue, color }) {
 /*Styles*/
 const container = { padding: "24px", width: "100%", background: "#f8f9fa", minHeight: "100vh" };
 const header = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" };
-const descriptionText = {
-    color: "#666",
-    fontSize: "15px",
-    marginBottom: "20px",
-    lineHeight: "1.6",
-};
-
-const reportBtnStyle = {
-    background: "#fff",
-    color: "#C22129",
-    border: "2px solid #C22129",
-    padding: "10px 24px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "bold",
-    transition: "all 0.2s",
-};
-
-const card = {
-    background: "#fff",
-    padding: "24px 20px",
-    borderRadius: "12px",
-    textAlign: "center",
-    border: "1px solid #eee",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
-};
-
-const cardLabelText = {
-    fontSize: "13px",
-    color: "#888",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    marginBottom: "10px",
-};
-
-const cardValueText = {
-    fontSize: "28px",
-    fontWeight: "900",
-    marginBottom: "4px",
-};
-
-const cardSubValueText = {
-    fontSize: "12px",
-    color: "#666",
-    fontWeight: "500",
-};
-
-const toggleHistoryBtn = {
-    padding: "8px 20px",
-    background: "transparent",
-    color: "#C22129",
-    border: "2px solid #C22129",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "bold",
-};
+const title = { margin: 0, fontSize: "24px", color: "#333", marginBottom: "6px" };
+const btnSecondary = { background: "#424443", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "14px" };
+const cardsGrid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px", marginBottom: "28px" };
+const card = { background: "#fff", padding: "16px", borderRadius: "10px", textAlign: "center", border: "1px solid #ddd" };
 const tabContainer = { display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid #ddd", paddingBottom: "1px" };
 const tabStyle = { padding: "10px 20px", border: "none", background: "none", cursor: "pointer", fontSize: "16px", color: "#666" };
 const activeTabStyle = { ...tabStyle, borderBottom: "3px solid #C22129", fontWeight: "bold", color: "#C22129" };

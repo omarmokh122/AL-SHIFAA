@@ -52,6 +52,23 @@ const MONTHS = [
 ];
 
 export default function Cases() {
+    // Helper to parse date strictly as MM/DD/YYYY if it matches that format
+    const parseSheetDate = (str) => {
+        if (!str) return null;
+        const s = String(str).trim();
+        const parts = s.split("/");
+        if (parts.length === 3) {
+            const m = parseInt(parts[0], 10);
+            const d = parseInt(parts[1], 10);
+            const y = parseInt(parts[2], 10);
+            if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
+                return new Date(y, m - 1, d);
+            }
+        }
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+    };
+
     const user = JSON.parse(localStorage.getItem("user"));
     const navigate = useNavigate();
 
@@ -164,13 +181,13 @@ export default function Cases() {
 
         let matchDate = true;
         if (filterMonth || filterYear) {
-            const d = new Date(c[1]);
+            const d = parseSheetDate(c[1]);
             const monthNames = [
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
-            const m = filterMonth ? (monthNames[d.getMonth()] === filterMonth) : true;
-            const y = filterYear ? (String(d.getFullYear()) === String(filterYear)) : true;
+            const m = filterMonth ? (d && monthNames[d.getMonth()] === filterMonth) : true;
+            const y = filterYear ? (d && String(d.getFullYear()) === String(filterYear)) : true;
             matchDate = m && y;
         }
 

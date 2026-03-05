@@ -27,6 +27,25 @@ const SPREADSHEET_ID =
 // =====================
 // CASES
 // =====================
+// Helper to parse date strictly as MM/DD/YYYY if it matches that format
+function parseSheetDate(str) {
+    if (!str) return null;
+    const s = String(str).trim();
+    // Check for M/D/Y or MM/DD/YYYY
+    const parts = s.split("/");
+    if (parts.length === 3) {
+        const m = parseInt(parts[0], 10);
+        const d = parseInt(parts[1], 10);
+        const y = parseInt(parts[2], 10);
+        if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
+            // JS months are 0-indexed
+            return new Date(y, m - 1, d);
+        }
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+}
+
 export async function getCases() {
     try {
         // Fetch from Cases_Raw_Data
@@ -38,15 +57,15 @@ export async function getCases() {
         const entries = res.data.values || [];
 
         let mapped = entries.map(r => {
-            const dateVal = r[1] ? new Date(r[1]) : null;
+            const dateVal = parseSheetDate(r[1]);
             const monthNames = [
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
             // Derive month/year from Date if columns are empty
-            const derivedMonth = (r[2] && r[2].trim()) ? r[2] : (dateVal && !isNaN(dateVal) ? monthNames[dateVal.getMonth()] : "");
-            const derivedYear = (r[3] && r[3].trim()) ? r[3] : (dateVal && !isNaN(dateVal) ? dateVal.getFullYear() : "");
+            const derivedMonth = (r[2] && r[2].trim()) ? r[2] : (dateVal ? monthNames[dateVal.getMonth()] : "");
+            const derivedYear = (r[3] && r[3].trim()) ? String(r[3]) : (dateVal ? String(dateVal.getFullYear()) : "");
 
             return [
                 r[0],       // ID (Timestamp)
@@ -77,13 +96,13 @@ export async function getCases() {
 // Write to Cases_Raw_Data
 // Frontend provides: [Date.now(), التاريخ, الفرع, الجنس, نوع_الحالة, ملاحظات, CreatedAt, الفئة_العمرية]
 export async function addCase(row) {
-    const dateObj = new Date(row[1]);
+    const dateObj = parseSheetDate(row[1]);
     const monthNames = [
         "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
         "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
     ];
-    const month = isNaN(dateObj) ? "" : monthNames[dateObj.getMonth()];
-    const year = isNaN(dateObj) ? "" : dateObj.getFullYear();
+    const month = !dateObj ? "" : monthNames[dateObj.getMonth()];
+    const year = !dateObj ? "" : dateObj.getFullYear();
 
     const rawRow = [
         row[0],     // Timestamp
@@ -117,13 +136,13 @@ export async function updateCase(id, updatedRow) {
 
     if (rowIndex === -1) throw new Error("Case not found");
 
-    const dateObj = new Date(updatedRow[1]);
+    const dateObj = parseSheetDate(updatedRow[1]);
     const monthNames = [
         "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
         "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
     ];
-    const month = isNaN(dateObj) ? "" : monthNames[dateObj.getMonth()];
-    const year = isNaN(dateObj) ? "" : dateObj.getFullYear();
+    const month = !dateObj ? "" : monthNames[dateObj.getMonth()];
+    const year = !dateObj ? "" : dateObj.getFullYear();
 
     // Raw Format: [Timestamp, التاريخ, الشهر, السنة, الفرع, الجنس, نوع الحالة, ملاحظات, الفئة العمرية, Status]
     const rawRow = [

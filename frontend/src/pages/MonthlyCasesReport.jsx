@@ -53,6 +53,23 @@ export default function MonthlyCasesReport() {
 
     const years = [2024, 2025, 2026, 2027];
 
+    // Helper to parse date strictly as MM/DD/YYYY if it matches that format
+    const parseSheetDate = (str) => {
+        if (!str) return null;
+        const s = String(str).trim();
+        const parts = s.split("/");
+        if (parts.length === 3) {
+            const m = parseInt(parts[0], 10);
+            const d = parseInt(parts[1], 10);
+            const y = parseInt(parts[2], 10);
+            if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
+                return new Date(y, m - 1, d);
+            }
+        }
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+    };
+
     /* ================= GENERATE REPORT ================= */
     const generateReport = () => {
         if (!month || !year) {
@@ -61,15 +78,14 @@ export default function MonthlyCasesReport() {
         }
 
         const base = cases.filter((c) => {
-            if (!c[1]) return false;
-            const d = new Date(c[1]);
+            const d = parseSheetDate(c[1]);
             const monthNames = [
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
-            const rowMonth = !isNaN(d.getTime()) ? monthNames[d.getMonth()] : "";
-            const rowYear = !isNaN(d.getTime()) ? String(d.getFullYear()) : "";
+            const rowMonth = d ? monthNames[d.getMonth()] : "";
+            const rowYear = d ? String(d.getFullYear()) : "";
 
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
@@ -115,15 +131,14 @@ export default function MonthlyCasesReport() {
     const handleTypeChange = (v) => {
         setSelectedType(v);
         const base = cases.filter((c) => {
-            if (!c[1]) return false;
-            const d = new Date(c[1]);
+            const d = parseSheetDate(c[1]);
             const monthNames = [
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
-            const rowMonth = !isNaN(d.getTime()) ? monthNames[d.getMonth()] : "";
-            const rowYear = !isNaN(d.getTime()) ? String(d.getFullYear()) : "";
+            const rowMonth = d ? monthNames[d.getMonth()] : "";
+            const rowYear = d ? String(d.getFullYear()) : "";
 
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
@@ -172,14 +187,14 @@ export default function MonthlyCasesReport() {
 
             {/* Filters */}
             <div style={filterBox}>
-                <select value={month} onChange={(e) => setMonth(e.target.value)}>
+                <select value={month} onChange={(e) => setMonth(e.target.value)} style={selectMini}>
                     <option value="">الشهر</option>
                     {months.map((m) => (
                         <option key={m.v} value={m.v}>{m.l}</option>
                     ))}
                 </select>
 
-                <select value={year} onChange={(e) => setYear(e.target.value)}>
+                <select value={year} onChange={(e) => setYear(e.target.value)} style={selectMini}>
                     <option value="">السنة</option>
                     {years.map((y) => (
                         <option key={y} value={y}>{y}</option>
@@ -187,7 +202,7 @@ export default function MonthlyCasesReport() {
                 </select>
 
                 {user.role === "super" && (
-                    <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}>
+                    <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} style={selectMini}>
                         <option value="All">كل الفروع</option>
                         <option value="البقاع الأوسط">البقاع الأوسط</option>
                         <option value="بعلبك">بعلبك</option>
@@ -306,12 +321,21 @@ const pageTitle = {
 
 const filterBox = {
     display: "flex",
-    gap: "12px",
+    gap: "10px",
     background: "#fff",
     padding: "12px",
     borderRadius: "8px",
     alignItems: "center",
-    flexWrap: "wrap",
+    flexWrap: "nowrap", // Keep them together as requested
+    overflowX: "auto",  // Allow scroll if tiny screen
+};
+
+const selectMini = {
+    padding: "8px",
+    borderRadius: "6px",
+    border: "1px solid #ddd",
+    outline: "none",
+    minWidth: "100px",
 };
 
 const typeFilter = {

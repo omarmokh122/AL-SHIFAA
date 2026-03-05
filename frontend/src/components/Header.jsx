@@ -58,15 +58,15 @@ export default function Header({ onMenuClick, isMobile }) {
         </div>
       </div>
 
-      {/* ===== CENTER: BREADCRUMB ===== */}
-      <div style={{ ...breadcrumb, display: isMobile ? "none" : "block" }}>
-        <span>لوحة التحكم</span>
-        {breadcrumbs.map((b, i) => (
-          <span key={i}>
-            {" "}
-            / <span style={{ fontWeight: "500" }}>{b}</span>
+      {/* ===== CENTER: BRANDING / PAGE TITLE ===== */}
+      <div style={{ ...brandingContainer, display: isMobile ? "none" : "flex" }}>
+        <span style={brandTitle}>AL SHIFAA</span>
+        {breadcrumbs.length > 0 && (
+          <span style={pageIndicator}>
+            <span style={{ margin: "0 10px", color: "#ccc" }}>|</span>
+            {breadcrumbs[breadcrumbs.length - 1]}
           </span>
-        ))}
+        )}
       </div>
 
       {/* ===== LEFT: DATE ===== */}
@@ -100,11 +100,24 @@ const role = {
   color: "#666",
 };
 
-const breadcrumb = {
-  fontSize: "13px",
+const brandingContainer = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "4px",
+};
+
+const brandTitle = {
+  fontSize: "20px",
+  fontWeight: "900",
+  color: "#C22129",
+  letterSpacing: "1px",
+};
+
+const pageIndicator = {
+  fontSize: "18px",
+  fontWeight: "bold",
   color: "#444",
-  textAlign: "center",
-  whiteSpace: "nowrap",
 };
 
 const date = {

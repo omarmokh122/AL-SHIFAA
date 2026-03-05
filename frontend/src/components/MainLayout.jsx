@@ -57,7 +57,7 @@ export default function MainLayout() {
             boxSizing: "border-box",
           }}
         >
-          {!isMobile && <Breadcrumb />}
+
           <Outlet />
         </div>
       </div>

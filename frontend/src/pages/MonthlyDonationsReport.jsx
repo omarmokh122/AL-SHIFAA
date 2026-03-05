@@ -10,6 +10,7 @@ export default function MonthlyDonationsReport() {
     const [data, setData] = useState([]);
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
+    const [selectedBranch, setSelectedBranch] = useState("All");
 
     const ARABIC_MONTHS = [
         { v: "كانون الثاني", l: "كانون الثاني" }, { v: "شباط", l: "شباط" },
@@ -66,7 +67,14 @@ export default function MonthlyDonationsReport() {
 
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
-            const matchBranch = user.role === "super" ? true : (r[2] || "").includes(user.branch);
+
+            let matchBranch = true;
+            if (user.role === "super") {
+                matchBranch = selectedBranch === "All" ? true : (r[2] || "").includes(selectedBranch);
+            } else {
+                matchBranch = (r[2] || "").includes(user.branch);
+            }
+
             return matchMonth && matchYear && matchBranch;
         });
 
@@ -157,6 +165,14 @@ export default function MonthlyDonationsReport() {
                     <option value="">السنة</option>
                     {[2024, 2025, 2026, 2027].map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
+
+                {user.role === "super" && (
+                    <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} style={select}>
+                        <option value="All">كل الفروع</option>
+                        <option value="البقاع الأوسط">البقاع الأوسط</option>
+                        <option value="بعلبك">بعلبك</option>
+                    </select>
+                )}
 
                 <button onClick={generateReport} style={btnPrimary}>
                     إنشاء التقرير

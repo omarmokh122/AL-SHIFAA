@@ -916,32 +916,44 @@ export async function exportFinancialTemplateExcel(monthName, year, branch, supe
     const LBP_RATE = 89000;
     const unifiedUSD = totalUSD + totalLBP / LBP_RATE;
 
-    const summaryRows = [
-        { label: `إجمالي بالدولار`, value: `${totalUSD.toLocaleString()} $`, bg: 'FFFFFFFF' },
-        { label: `إجمالي بالليرة`, value: `${totalLBP.toLocaleString()} ل.ل`, bg: 'FFFFFFFF' },
-        { label: `عدد العمليات`, value: `${rows.length}`, bg: 'FFFFFFFF' },
-        { label: `المجموع الموحد ($)`, value: `${unifiedUSD.toFixed(2)} $`, bg: GREEN },
-    ];
-
-    summaryRows.forEach(({ label, value, bg }) => {
+    const addSummaryRow = (label, value, isHighlight) => {
         sheet.getRow(rowIdx).height = 22;
-        sheet.mergeCells(rowIdx, 1, rowIdx, 3);
         const lCell = sheet.getCell(rowIdx, 1);
         lCell.value = label;
-        lCell.font = { bold: true, size: 12, color: { argb: label.includes('الموحد') ? RED : 'FF333333' } };
-        lCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg === GREEN ? GREEN : 'FFF4F6F8' } };
-        right(lCell); border(lCell);
+        lCell.font = { bold: true, size: 12, color: { argb: isHighlight ? RED : 'FF333333' } };
+        lCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isHighlight ? GREEN : 'FFF4F6F8' } };
+        lCell.alignment = { vertical: 'middle', horizontal: 'right', wrapText: true };
+        lCell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
 
-        sheet.mergeCells(rowIdx, 4, rowIdx, 6);
+        // Span across cols 2 and 3 by setting same value and fill
+        [2, 3].forEach(ci => {
+            const cell = sheet.getCell(rowIdx, ci);
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isHighlight ? GREEN : 'FFF4F6F8' } };
+            cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' } };
+        });
+
         const vCell = sheet.getCell(rowIdx, 4);
         vCell.value = value;
-        vCell.font = { bold: true, size: 12, color: { argb: label.includes('الموحد') ? RED : 'FF111111' } };
-        vCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg === GREEN ? GREEN : 'FFF4F6F8' } };
-        cent(vCell); border(vCell);
-        rowIdx++;
-    });
+        vCell.font = { bold: true, size: 12, color: { argb: isHighlight ? RED : 'FF111111' } };
+        vCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isHighlight ? GREEN : 'FFF4F6F8' } };
+        vCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        vCell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
 
-    // Exchange rate note row
+        [5, 6].forEach(ci => {
+            const cell = sheet.getCell(rowIdx, ci);
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isHighlight ? GREEN : 'FFF4F6F8' } };
+            cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        });
+
+        rowIdx++;
+    };
+
+    addSummaryRow(`إجمالي بالدولار`, `${totalUSD.toLocaleString()} $`, false);
+    addSummaryRow(`إجمالي بالليرة`, `${totalLBP.toLocaleString()} ل.ل`, false);
+    addSummaryRow(`عدد العمليات`, `${rows.length}`, false);
+    addSummaryRow(`المجموع الموحد ($)`, `${unifiedUSD.toFixed(2)} $`, true);
+
+    // Exchange rate note
     sheet.getRow(rowIdx).height = 18;
     sheet.mergeCells(rowIdx, 1, rowIdx, 6);
     const rateNote = sheet.getCell(rowIdx, 1);

@@ -198,12 +198,12 @@ export default function Dashboard() {
         <h3 style={{ marginBottom: "20px", fontSize: "18px" }}>توزيع الحالات الطبية خلال العام</h3>
         <div style={{ width: "100%", height: 350 }}>
           <ResponsiveContainer>
-            <BarChart data={chartData}>
+            <BarChart data={chartData} barSize={32} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Legend />
+              <Legend formatter={(value) => <span style={{ marginRight: '8px', marginLeft: '4px' }}>{value}</span>} />
               <Bar dataKey="cases" name="عدد الحالات" fill="#C22129" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -244,8 +244,8 @@ const selectStyle = {
 
 const cardsGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-  gap: "14px",
+  gridTemplateColumns: "repeat(5, 1fr)",
+  gap: "12px",
   marginBottom: "28px",
 };
 

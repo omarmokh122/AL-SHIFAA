@@ -74,33 +74,3 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-
-/* ===== Slider / Marquee Animation ===== */
-@keyframes slide-right-to-left {
-  0% {
-    transform: translateX(100%);
-  }
-
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-.slider-container {
-  overflow: hidden;
-  white-space: nowrap;
-  width: 100%;
-  padding: 20px 0;
-  position: relative;
-}
-
-.slider-track {
-  display: flex;
-  gap: 20px;
-  animation: slide-right-to-left 40s linear infinite;
-  width: max-content;
-}
-
-.slider-track:hover {
-  animation-play-state: paused;
-}

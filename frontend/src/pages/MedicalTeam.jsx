@@ -256,34 +256,31 @@ export default function MedicalTeam() {
                 )}
             </div>
 
-            {/* ===== TEAM SLIDER ===== */}
-            <div className="slider-container">
+            {/* ===== TEAM GRID ===== */}
+            <div style={grid}>
                 {filteredTeam.length === 0 ? (
-                    <p style={{ textAlign: 'center', padding: '40px', width: '100%' }}>لا توجد نتائج مطابقة</p>
+                    <p style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>لا توجد نتائج مطابقة</p>
                 ) : (
-                    <div className="slider-track">
-                        {/* Render twice for continuous loop effect */}
-                        {[...filteredTeam, ...filteredTeam].map((m, i) => (
-                            <div
-                                key={i}
-                                style={card}
-                                onClick={() =>
-                                    navigate("/medical-profile", { state: { member: m } })
-                                }
-                            >
-                                <img
-                                    src={m[13] || DEFAULT_IMG}
-                                    alt="member"
-                                    style={image}
-                                    onError={(e) => (e.target.src = DEFAULT_IMG)}
-                                />
+                    filteredTeam.map((m, i) => (
+                        <div
+                            key={i}
+                            style={card}
+                            onClick={() =>
+                                navigate("/medical-profile", { state: { member: m } })
+                            }
+                        >
+                            <img
+                                src={m[13] || DEFAULT_IMG}
+                                alt="member"
+                                style={image}
+                                onError={(e) => (e.target.src = DEFAULT_IMG)}
+                            />
 
-                                <div style={name}>{m[1]}</div>
-                                <div style={roleStyle}>{m[3]}</div>
-                                {user.role === "super" && <div style={{ fontSize: '11px', color: '#999' }}>{m[2]}</div>}
-                            </div>
-                        ))}
-                    </div>
+                            <div style={name}>{m[1]}</div>
+                            <div style={roleStyle}>{m[3]}</div>
+                            {user.role === "super" && <div style={{ fontSize: '11px', color: '#999' }}>{m[2]}</div>}
+                        </div>
+                    ))
                 )}
             </div>
         </div >
@@ -316,8 +313,6 @@ const card = {
     padding: "16px",
     textAlign: "center",
     cursor: "pointer",
-    width: "220px",
-    flexShrink: 0,
 };
 
 const image = {

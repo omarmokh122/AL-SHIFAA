@@ -752,236 +752,241 @@ export async function exportMonthlyFinancialExcel(monthName, year, branch, rows,
 // Matches the official Al-Shifaa format image
 // ================================
 export async function exportFinancialTemplateExcel(monthName, year, branch, supervisorName, rows, filename) {
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet(`مصاريف ${monthName} ${year}`, { views: [{ rightToLeft: true }] });
-
-    sheet.columns = [
-        { width: 6 }, // A: م (row number)
-        { width: 20 }, // B: الحساب (category)
-        { width: 30 }, // C: البيان (description)
-        { width: 20 }, // D: المبلغ بالليرة
-        { width: 18 }, // E: المبلغ بالدولار
-        { width: 22 }, // F: ملاحظات
-    ];
-
-    const RED = 'FFC22129', WHITE = 'FFFFFFFF', GREY = 'FFD9D9D9';
-    const GREEN = 'FFE2EFDA', DARK = 'FF2F2F2F', LIGHT = 'FFF4F6F8';
-
-    const border = (cell) => { cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }; };
-    const cent = (cell) => { cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }; };
-    const right = (cell) => { cell.alignment = { vertical: 'middle', horizontal: 'right', wrapText: true }; };
-
-    // ROW 1: Logo + Title
-    sheet.getRow(1).height = 55;
-    try {
-        const logoBase64 = await getBase64ImageFromUrl(logoPng);
-        const imageId = workbook.addImage({ base64: logoBase64, extension: 'png' });
-        sheet.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: 90, height: 55 } });
-    } catch (e) { }
-
-    sheet.mergeCells('C1:F1');
-    const titleCell = sheet.getCell('C1');
-    titleCell.value = `مصاريف الاسعاف – ${branch || ''}`;
-    titleCell.font = { bold: true, size: 18, color: { argb: RED } };
-    titleCell.alignment = { vertical: 'middle', horizontal: 'right' };
-
-    // ROW 2: Info row (region | date | supervisor)
-    sheet.getRow(2).height = 22;
-    sheet.mergeCells('A2:B2');
-    const region = sheet.getCell('A2');
-    region.value = `المنطقة: ${branch || 'كل الفروع'}`;
-    region.font = { bold: true, size: 11 }; right(region); border(region);
-
-    sheet.mergeCells('C2:D2');
-    const dateC = sheet.getCell('C2');
-    dateC.value = `التاريخ: ${monthName} / ${year}`;
-    dateC.font = { bold: true, size: 11 }; cent(dateC); border(dateC);
-
-    sheet.mergeCells('E2:F2');
-    const supC = sheet.getCell('E2');
-    supC.value = `المشرف: ${supervisorName || ''}`;
-    supC.font = { bold: true, size: 11 }; right(supC); border(supC);
-
-    // ROW 3: Column headers
-    sheet.getRow(3).height = 28;
-    [['A', 'م'], ['B', 'الحساب'], ['C', 'البيان'], ['D', 'المبلغ المدفوع بالليرة'], ['E', 'المبلغ المدفوع بالدولار'], ['F', 'ملاحظات']].forEach(([col, label]) => {
-        const cell = sheet.getCell(`${col}3`);
-        cell.value = label;
-        cell.font = { bold: true, size: 11, color: { argb: WHITE } };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: DARK } };
-        cent(cell); border(cell);
-    });
-
-    // Group rows by category
-    const CATS = ['صيانة', 'ضيافة', 'محروقات', 'اتصالات / إنترنت', 'إعلاميات', 'إيجارات', 'كهرباء', 'لوازم إسعافات', 'تنظيفات / غسيل سيارة', 'أخرى'];
-    const grouped = {};
-    CATS.forEach(cat => { grouped[cat] = []; });
-    rows.forEach(row => {
-        const cat = row[2] || 'أخرى';
-        const key = CATS.find(c => cat.includes(c.split(' ')[0])) || 'أخرى';
-        grouped[key].push(row);
-    });
-
-    let rowIdx = 4, catNum = 1, totalLBP = 0, totalUSD = 0;
-
-    CATS.forEach(category => {
-        const items = grouped[category];
-        const startRow = rowIdx;
-
-        const renderRow = (item, isFirst, altBg) => {
-            sheet.getRow(rowIdx).height = 18;
-            const amount = Number((item || {})[15]) || 0;
-            const currency = (item || {})[14] || '';
-            const isUSD = currency.includes('دولار') || currency.includes('dollar') || currency.toLowerCase().includes('usd');
-            if (item) { isUSD ? (totalUSD += amount) : (totalLBP += amount); }
-
-            const bg = altBg ? LIGHT : WHITE;
-
-            // م
-            const numCell = sheet.getCell(rowIdx, 1);
-            if (isFirst) { numCell.value = catNum; }
-            cent(numCell); border(numCell);
-
-            // الحساب
-            const catCell = sheet.getCell(rowIdx, 2);
-            if (isFirst) { catCell.value = category; catCell.font = { bold: true, size: 11 }; }
-            right(catCell); border(catCell);
-
-            // البيان
-            const byanCell = sheet.getCell(rowIdx, 3);
-            byanCell.value = item ? (item[3] || '') : '';
-            byanCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
-            right(byanCell); border(byanCell);
-
-            // LBP
-            const lbpCell = sheet.getCell(rowIdx, 4);
-            lbpCell.value = item && !isUSD ? amount : '';
-            lbpCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
-            cent(lbpCell); border(lbpCell);
-
-            // USD
-            const usdCell = sheet.getCell(rowIdx, 5);
-            usdCell.value = item && isUSD ? amount : '';
-            usdCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
-            cent(usdCell); border(usdCell);
-
-            // Notes
-            border(sheet.getCell(rowIdx, 6));
-            rowIdx++;
-        };
-
-        if (items.length === 0) {
-            renderRow(null, true, false);
-        } else {
-            items.forEach((item, i) => renderRow(item, i === 0, i % 2 === 1));
-        }
-
-        // Merge category cells for 2+ rows
-        if (items.length > 1) {
-            sheet.mergeCells(startRow, 2, rowIdx - 1, 2);
-            const merged = sheet.getCell(startRow, 2);
-            merged.value = category;
-            merged.font = { bold: true, size: 11 };
-            merged.alignment = { vertical: 'middle', horizontal: 'right', wrapText: true };
-            border(merged);
-        }
-        catNum++;
-    });
-
-    // TOTALS ROW (grey)
-    sheet.getRow(rowIdx).height = 22;
-    sheet.mergeCells(rowIdx, 1, rowIdx, 3);
-    const totLabel = sheet.getCell(rowIdx, 1);
-    totLabel.value = 'المجموع';
-    totLabel.font = { bold: true, size: 13 };
-    totLabel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY } };
-    cent(totLabel); border(totLabel);
-
-    const totLBP = sheet.getCell(rowIdx, 4);
-    totLBP.value = totalLBP;
-    totLBP.font = { bold: true, size: 12 };
-    totLBP.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY } };
-    cent(totLBP); border(totLBP);
-
-    const totUSDCell = sheet.getCell(rowIdx, 5);
-    totUSDCell.value = totalUSD;
-    totUSDCell.font = { bold: true, size: 12 };
-    totUSDCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GREY } };
-    cent(totUSDCell); border(totUSDCell);
-    border(sheet.getCell(rowIdx, 6));
-    rowIdx++;
-
-    // === SUMMARY BLOCK ===
-    rowIdx++;
     const LBP_RATE = 89000;
+
+    // ── pre-compute totals ──────────────────────────────────────────────────
+    let totalUSD = 0, totalLBP = 0;
+    rows.forEach(r => {
+        const amt = Number(r[15]) || 0;
+        (r[14] || '').includes('دولار') ? (totalUSD += amt) : (totalLBP += amt);
+    });
     const unifiedUSD = totalUSD + totalLBP / LBP_RATE;
 
-    const addSummaryRow = (label, value, isHighlight) => {
-        sheet.getRow(rowIdx).height = 22;
-        const lCell = sheet.getCell(rowIdx, 1);
-        lCell.value = label;
-        lCell.font = { bold: true, size: 12, color: { argb: isHighlight ? RED : 'FF333333' } };
-        lCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isHighlight ? GREEN : 'FFF4F6F8' } };
-        lCell.alignment = { vertical: 'middle', horizontal: 'right', wrapText: true };
-        lCell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    // ── group by category ───────────────────────────────────────────────────
+    const CATS = ['صيانة', 'ضيافة', 'محروقات', 'اتصالات / إنترنت', 'إعلاميات',
+        'إيجارات', 'كهرباء', 'لوازم إسعافات', 'تنظيفات / غسيل سيارة', 'أخرى'];
+    const grouped = {};
+    CATS.forEach(c => { grouped[c] = []; });
+    rows.forEach(r => {
+        const cat = r[2] || 'أخرى';
+        const key = CATS.find(c => cat.includes(c.split(' ')[0])) || 'أخرى';
+        grouped[key].push(r);
+    });
 
-        // Span across cols 2 and 3 by setting same value and fill
-        [2, 3].forEach(ci => {
-            const cell = sheet.getCell(rowIdx, ci);
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isHighlight ? GREEN : 'FFF4F6F8' } };
-            cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' } };
+    // ── workbook / sheet ────────────────────────────────────────────────────
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet(`مصاريف ${monthName} ${year}`, { views: [{ rightToLeft: true }] });
+
+    ws.columns = [
+        { key: 'no', width: 5 },   // A
+        { key: 'cat', width: 22 },   // B
+        { key: 'desc', width: 30 },   // C
+        { key: 'lbp', width: 20 },   // D
+        { key: 'usd', width: 18 },   // E
+        { key: 'note', width: 18 },   // F
+    ];
+
+    // ── colour / style helpers ──────────────────────────────────────────────
+    const R = 'FFC22129', W = 'FFFFFFFF', GR = 'FFD9D9D9';
+    const GN = 'FFE2EFDA', DK = 'FF2F2F2F', LT = 'FFF4F6F8';
+
+    const fill = (cell, argb) => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb } }; };
+    const bd = (cell) => { cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }; };
+    const ctr = (cell) => { cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }; };
+    const rgt = (cell) => { cell.alignment = { vertical: 'middle', horizontal: 'right', wrapText: true }; };
+    const bfont = (cell, sz = 11, argb = 'FF000000') => { cell.font = { bold: true, size: sz, color: { argb } }; };
+
+    const hdrRow = (ri, ...vals) => {
+        ws.getRow(ri).height = 26;
+        vals.forEach(([ci, v, fg, color]) => {
+            const cell = ws.getCell(ri, ci);
+            cell.value = v;
+            bfont(cell, 11, color || W);
+            fill(cell, fg);
+            ctr(cell); bd(cell);
         });
-
-        const vCell = sheet.getCell(rowIdx, 4);
-        vCell.value = value;
-        vCell.font = { bold: true, size: 12, color: { argb: isHighlight ? RED : 'FF111111' } };
-        vCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isHighlight ? GREEN : 'FFF4F6F8' } };
-        vCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-        vCell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-
-        [5, 6].forEach(ci => {
-            const cell = sheet.getCell(rowIdx, ci);
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isHighlight ? GREEN : 'FFF4F6F8' } };
-            cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-        });
-
-        rowIdx++;
     };
 
-    addSummaryRow(`إجمالي بالدولار`, `${totalUSD.toLocaleString()} $`, false);
-    addSummaryRow(`إجمالي بالليرة`, `${totalLBP.toLocaleString()} ل.ل`, false);
-    addSummaryRow(`عدد العمليات`, `${rows.length}`, false);
-    addSummaryRow(`المجموع الموحد ($)`, `${unifiedUSD.toFixed(2)} $`, true);
+    // ── ROW 1: logo + title ─────────────────────────────────────────────────
+    ws.getRow(1).height = 55;
+    try {
+        const b64 = await getBase64ImageFromUrl(logoPng);
+        const iid = wb.addImage({ base64: b64, extension: 'png' });
+        ws.addImage(iid, { tl: { col: 0, row: 0 }, ext: { width: 90, height: 55 } });
+    } catch (_) { }
 
-    // Exchange rate note
-    sheet.getRow(rowIdx).height = 18;
-    sheet.mergeCells(rowIdx, 1, rowIdx, 6);
-    const rateNote = sheet.getCell(rowIdx, 1);
-    rateNote.value = 'سعر الصرف المعتمد: 1$ = 89,000 ل.ل';
-    rateNote.font = { italic: true, size: 10, color: { argb: 'FF888888' } };
-    rateNote.alignment = { vertical: 'middle', horizontal: 'center' };
-    rowIdx++;
+    // title in C-F merged
+    ws.mergeCells('C1:F1');
+    const t = ws.getCell('C1');
+    t.value = `مصاريف الاسعاف – ${branch || ''}`;
+    t.font = { bold: true, size: 18, color: { argb: R } };
+    t.alignment = { vertical: 'middle', horizontal: 'right' };
 
-    // NOTE
-    rowIdx++;
-    sheet.getRow(rowIdx).height = 28;
-    sheet.mergeCells(rowIdx, 1, rowIdx, 6);
-    const noteCell = sheet.getCell(rowIdx, 1);
-    noteCell.value = 'ملاحظة: كل مبلغ لا يتضمن فاتورة موقعة من المشرف لن يتم صرفه';
-    noteCell.font = { bold: true, size: 13, color: { argb: RED } };
-    noteCell.alignment = { vertical: 'middle', horizontal: 'center' };
-    rowIdx++;
+    // ── ROW 2: info ─────────────────────────────────────────────────────────
+    ws.getRow(2).height = 20;
 
-    // SIGNATURE
-    rowIdx++;
-    sheet.mergeCells(rowIdx, 1, rowIdx, 3);
-    const sigCell = sheet.getCell(rowIdx, 1);
-    sigCell.value = `توقيع المشرف: ${supervisorName || ''}`;
-    sigCell.font = { bold: true, size: 11 };
-    sigCell.alignment = { vertical: 'middle', horizontal: 'right' };
+    ws.mergeCells('A2:B2');
+    const r2a = ws.getCell('A2');
+    r2a.value = `المنطقة: ${branch || 'كل الفروع'}`;
+    bfont(r2a, 11, 'FF000000'); rgt(r2a); bd(r2a);
 
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    ws.mergeCells('C2:D2');
+    const r2c = ws.getCell('C2');
+    r2c.value = `التاريخ: ${monthName} / ${year}`;
+    bfont(r2c, 11, 'FF000000'); ctr(r2c); bd(r2c);
+
+    ws.mergeCells('E2:F2');
+    const r2e = ws.getCell('E2');
+    r2e.value = `المشرف: ${supervisorName || ''}`;
+    bfont(r2e, 11, 'FF000000'); rgt(r2e); bd(r2e);
+
+    // ── ROW 3: column headers ───────────────────────────────────────────────
+    hdrRow(3,
+        [1, 'م', DK], [2, 'الفئة', DK], [3, 'البيان', DK],
+        [4, 'المبلغ بالليرة', DK], [5, 'المبلغ بالدولار', DK], [6, 'ملاحظات', DK]
+    );
+
+    // ── DATA ROWS (flat – no mergeCells) ────────────────────────────────────
+    let ri = 4, catNo = 1;
+
+    CATS.forEach(cat => {
+        const items = grouped[cat];
+
+        // category header row (spans full width via fill, no merge)
+        ws.getRow(ri).height = 18;
+        const catHdr = [1, 2, 3, 4, 5, 6];
+        catHdr.forEach((ci, idx) => {
+            const cell = ws.getCell(ri, ci);
+            fill(cell, DK);
+            cell.border = {
+                top: { style: 'thin' }, bottom: { style: 'thin' },
+                left: idx === 0 ? { style: 'thin' } : { style: 'none' },
+                right: idx === 5 ? { style: 'thin' } : { style: 'none' }
+            };
+            if (ci === 1) { cell.value = catNo; bfont(cell, 10, W); ctr(cell); }
+            if (ci === 2) { cell.value = cat; bfont(cell, 11, W); rgt(cell); }
+        });
+        ri++;
+
+        if (items.length === 0) {
+            // empty placeholder
+            ws.getRow(ri).height = 16;
+            for (let ci = 1; ci <= 6; ci++) { const c = ws.getCell(ri, ci); fill(c, LT); bd(c); }
+            ri++;
+        } else {
+            items.forEach((item, idx) => {
+                const amt = Number(item[15]) || 0;
+                const isUSD = (item[14] || '').includes('دولار');
+                const bg = idx % 2 === 0 ? W : LT;
+
+                ws.getRow(ri).height = 18;
+                for (let ci = 1; ci <= 6; ci++) {
+                    const cell = ws.getCell(ri, ci);
+                    fill(cell, bg); bd(cell);
+                    if (ci === 1) { cell.value = ''; ctr(cell); }
+                    if (ci === 2) { cell.value = ''; rgt(cell); }
+                    if (ci === 3) { cell.value = item[3] || ''; rgt(cell); }
+                    if (ci === 4) { cell.value = isUSD ? '' : amt; ctr(cell); }
+                    if (ci === 5) { cell.value = isUSD ? amt : ''; ctr(cell); }
+                    if (ci === 6) { cell.value = ''; }
+                }
+                ri++;
+            });
+        }
+        catNo++;
+    });
+
+    // ── TOTALS ROW ──────────────────────────────────────────────────────────
+    ws.getRow(ri).height = 22;
+    ws.mergeCells(ri, 1, ri, 3);
+    const totL = ws.getCell(ri, 1); totL.value = 'المجموع';
+    bfont(totL, 12); fill(totL, GR); ctr(totL); bd(totL);
+
+    const totLBPcell = ws.getCell(ri, 4);
+    totLBPcell.value = `${totalLBP.toLocaleString()} ل.ل`;
+    bfont(totLBPcell, 11); fill(totLBPcell, GR); ctr(totLBPcell); bd(totLBPcell);
+
+    const totUSDcell = ws.getCell(ri, 5);
+    totUSDcell.value = `${totalUSD.toLocaleString()} $`;
+    bfont(totUSDcell, 11); fill(totUSDcell, GR); ctr(totUSDcell); bd(totUSDcell);
+
+    const totN = ws.getCell(ri, 6); fill(totN, GR); bd(totN);
+    ri++;
+
+    // ── SUMMARY BLOCK (4 rows) ──────────────────────────────────────────────
+    ri++; // blank separator
+
+    const sumData = [
+        ['إجمالي بالدولار', `${totalUSD.toLocaleString()} $`, LT, false],
+        ['إجمالي بالليرة', `${totalLBP.toLocaleString()} ل.ل`, LT, false],
+        ['عدد العمليات', `${rows.length}`, LT, false],
+        ['المجموع الموحد ($)', `${unifiedUSD.toFixed(2)} $`, GN, true],
+    ];
+
+    sumData.forEach(([label, val, bg, isHighlight]) => {
+        ws.getRow(ri).height = 22;
+        // cols 1-3: label
+        for (let ci = 1; ci <= 3; ci++) {
+            const cell = ws.getCell(ri, ci);
+            fill(cell, bg);
+            cell.border = {
+                top: { style: 'thin' }, bottom: { style: 'thin' },
+                left: ci === 1 ? { style: 'thin' } : { style: 'none' },
+                right: ci === 3 ? { style: 'thin' } : { style: 'none' }
+            };
+            if (ci === 1) {
+                cell.value = label;
+                cell.font = { bold: true, size: 12, color: { argb: isHighlight ? R : 'FF333333' } };
+                rgt(cell);
+            }
+        }
+        // cols 4-6: value
+        for (let ci = 4; ci <= 6; ci++) {
+            const cell = ws.getCell(ri, ci);
+            fill(cell, bg);
+            cell.border = {
+                top: { style: 'thin' }, bottom: { style: 'thin' },
+                left: ci === 4 ? { style: 'thin' } : { style: 'none' },
+                right: ci === 6 ? { style: 'thin' } : { style: 'none' }
+            };
+            if (ci === 4) {
+                cell.value = val;
+                cell.font = { bold: true, size: 12, color: { argb: isHighlight ? R : 'FF111111' } };
+                ctr(cell);
+            }
+        }
+        ri++;
+    });
+
+    // exchange rate note
+    ws.getRow(ri).height = 16;
+    ws.mergeCells(ri, 1, ri, 6);
+    const rn = ws.getCell(ri, 1);
+    rn.value = 'سعر الصرف المعتمد: 1$ = 89,000 ل.ل';
+    rn.font = { italic: true, size: 10, color: { argb: 'FF888888' } };
+    rn.alignment = { vertical: 'middle', horizontal: 'center' };
+    ri++;
+
+    // ── NOTE ────────────────────────────────────────────────────────────────
+    ri++;
+    ws.getRow(ri).height = 28;
+    ws.mergeCells(ri, 1, ri, 6);
+    const note = ws.getCell(ri, 1);
+    note.value = 'ملاحظة: كل مبلغ لا يتضمن فاتورة موقعة من المشرف لن يتم صرفه';
+    note.font = { bold: true, size: 13, color: { argb: R } };
+    note.alignment = { vertical: 'middle', horizontal: 'center' };
+    ri++;
+
+    // ── SIGNATURE ───────────────────────────────────────────────────────────
+    ri++;
+    ws.mergeCells(ri, 1, ri, 3);
+    const sig = ws.getCell(ri, 1);
+    sig.value = `توقيع المشرف: ${supervisorName || ''}`;
+    sig.font = { bold: true, size: 11 };
+    sig.alignment = { vertical: 'middle', horizontal: 'right' };
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     saveAs(blob, filename);
 }
 

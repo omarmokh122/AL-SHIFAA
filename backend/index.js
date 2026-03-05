@@ -23,7 +23,9 @@ import {
   addMedicalTeamMember,
   updateMedicalTeamMember,
   getInventory,
-  updateBranchInventory
+  updateBranchInventory,
+  deleteDonation,
+  updateDonation
 } from "./googleSheets.js";
 
 console.log("✅ index.js loaded");

@@ -253,10 +253,10 @@ export default function MonthlyCasesReport() {
 
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                         <button onClick={exportExcel} style={primaryBtn}>
-                            📅 تقرير شهري
+                            تقرير شهري
                         </button>
                         <button onClick={exportYearlyExcel} style={secondaryBtn}>
-                            📆 تقرير سنوي
+                            تقرير سنوي
                         </button>
                     </div>
                 </>

@@ -11,6 +11,32 @@ export default function MonthlyDonationsReport() {
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
 
+    const ARABIC_MONTHS = [
+        { v: "كانون الثاني", l: "كانون الثاني" }, { v: "شباط", l: "شباط" },
+        { v: "آذار", l: "آذار" }, { v: "نيسان", l: "نيسان" },
+        { v: "أيار", l: "أيار" }, { v: "حزيران", l: "حزيران" },
+        { v: "تموز", l: "تموز" }, { v: "آب", l: "آب" },
+        { v: "أيلول", l: "أيلول" }, { v: "تشرين الأول", l: "تشرين الأول" },
+        { v: "تشرين الثاني", l: "تشرين الثاني" }, { v: "كانون الأول", l: "كانون الأول" },
+    ];
+
+    // Helper to parse date strictly as MM/DD/YYYY if it matches that format
+    const parseSheetDate = (str) => {
+        if (!str) return null;
+        const s = String(str).trim();
+        const parts = s.split("/");
+        if (parts.length === 3) {
+            const m = parseInt(parts[0], 10);
+            const d = parseInt(parts[1], 10);
+            const y = parseInt(parts[2], 10);
+            if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
+                return new Date(y, m - 1, d);
+            }
+        }
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+    };
+
     // Split filtered data
     const [incoming, setIncoming] = useState([]);
     const [outgoing, setOutgoing] = useState([]);
@@ -29,9 +55,17 @@ export default function MonthlyDonationsReport() {
         }
 
         const filtered = data.filter((r) => {
-            const date = new Date(r[1]);
-            const matchMonth = date.getMonth() + 1 === Number(month);
-            const matchYear = date.getFullYear() === Number(year);
+            const date = parseSheetDate(r[1]);
+            if (!date) return false;
+            const monthNames = [
+                "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+                "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+            ];
+            const rowMonth = monthNames[date.getMonth()];
+            const rowYear = String(date.getFullYear());
+
+            const matchMonth = rowMonth === month;
+            const matchYear = rowYear === String(year);
             const matchBranch = user.role === "super" ? true : (r[2] || "").includes(user.branch);
             return matchMonth && matchYear && matchBranch;
         });
@@ -116,7 +150,7 @@ export default function MonthlyDonationsReport() {
             <div style={filterBox}>
                 <select value={month} onChange={(e) => setMonth(e.target.value)} style={select}>
                     <option value="">الشهر</option>
-                    {[...Array(12)].map((_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
+                    {ARABIC_MONTHS.map((m) => <option key={m.v} value={m.v}>{m.l}</option>)}
                 </select>
 
                 <select value={year} onChange={(e) => setYear(e.target.value)} style={select}>

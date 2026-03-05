@@ -32,6 +32,23 @@ export default function MonthlyFinancialReport() {
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [fullscreen, setFullscreen] = useState(false);
 
+    // Helper to parse date strictly as MM/DD/YYYY if it matches that format
+    const parseSheetDate = (str) => {
+        if (!str) return null;
+        const s = String(str).trim();
+        const parts = s.split("/");
+        if (parts.length === 3) {
+            const m = parseInt(parts[0], 10);
+            const d = parseInt(parts[1], 10);
+            const y = parseInt(parts[2], 10);
+            if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
+                return new Date(y, m - 1, d);
+            }
+        }
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+    };
+
     const LBP_RATE = 89000; // 1$ = 89,000 ل.ل
 
     /* ================= FETCH ================= */
@@ -46,25 +63,16 @@ export default function MonthlyFinancialReport() {
             .catch(() => alert("خطأ في جلب البيانات المالية"));
     }, []);
 
-    /* ================= DATE PARSING ================= */
-    function parseDate(dateStr) {
-        if (!dateStr || typeof dateStr !== "string") return null;
-        const raw = dateStr.trim();
-        // MM/DD/YYYY or M/D/YYYY with optional time
-        const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-        if (m) return new Date(`${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`);
-        // YYYY-MM-DD
-        return new Date(raw);
-    }
+
 
     /* ================= FILTER ================= */
     function generateReport() {
         if (!month || !year) { alert("اختر الشهر والسنة"); return; }
 
         const result = data.filter((row) => {
-            const date = parseDate(row[1]); // Column B = التاريخ
-            if (!date || isNaN(date.getTime())) return false;
-            const matchMonth = date.getMonth() + 1 === Number(month);
+            const date = parseSheetDate(row[1]); // Column B = التاريخ
+            if (!date) return false;
+            const matchMonth = (date.getMonth() + 1) === Number(month);
             const matchYear = date.getFullYear() === Number(year);
             let matchBranch;
             if (user.role === "super") {

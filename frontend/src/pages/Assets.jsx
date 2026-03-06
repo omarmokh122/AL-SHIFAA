@@ -473,12 +473,13 @@ const formBox = {
     border: "1px solid #ddd",
     borderRadius: "10px",
     padding: "18px",
-    maxWidth: "600px", // Prevent it from stretching too wide and covering sidebar
+    width: "100%",
+    maxWidth: "100%", // Expanded to allow inputs to be side-by-side
 };
 
 const formGrid = {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", // Slightly smaller min width for more compact side-by-side
     gap: "12px",
     marginTop: "10px",
 };

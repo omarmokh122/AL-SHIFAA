@@ -514,7 +514,7 @@ const reportBtn = {
 };
 
 const select = {
-    width: "240px", // Further minimized as requested
+    width: "200px", // Final minimized width
     padding: "10px",
     marginBottom: "10px",
     border: "1px solid #ddd",

@@ -473,6 +473,7 @@ const formBox = {
     border: "1px solid #ddd",
     borderRadius: "10px",
     padding: "18px",
+    maxWidth: "600px", // Prevent it from stretching too wide and covering sidebar
 };
 
 const formGrid = {
@@ -513,9 +514,11 @@ const reportBtn = {
 };
 
 const select = {
-    width: "100%",
+    width: "320px", // Minimized width as requested
     padding: "10px",
     marginBottom: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
 };
 
 const selectWide = {

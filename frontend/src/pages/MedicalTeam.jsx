@@ -9,6 +9,7 @@ import { compressAndResizeImage } from "../utils/image";
 
 /* ===== DROPDOWN OPTIONS ===== */
 const ROLES = [
+    "مسؤول فريق البقاع",
     "مسؤول منطقة البقاع",
     "مسعف + سايق",
     "مسعف",

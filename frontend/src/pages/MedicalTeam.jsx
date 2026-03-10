@@ -9,14 +9,14 @@ import { compressAndResizeImage } from "../utils/image";
 
 /* ===== DROPDOWN OPTIONS ===== */
 const ROLES = [
+    "مسؤول منطقة البقاع",
+    "مسعف + سايق",
     "مسعف",
     "ممرض",
     "طبيب",
     "سائق إسعاف",
     "إداري",
     "متطوع",
-    "مسؤول منطقة البقاع",
-    "مسعف + سايق",
 ];
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];

@@ -96,6 +96,7 @@ export default function BorrowedAssetsReport() {
             "الفرع": a[1],
             "اسم الأصل": a[4],
             "المستلم": a[5],
+            "رقم الهاتف": a[8],
             "الموقع": a[10],
             "الكمية": a[6],
             "الحالة": a[7] || "معار",
@@ -119,13 +120,14 @@ export default function BorrowedAssetsReport() {
             a[3], // Date
             a[4], // Item Name
             a[5], // Recipient
+            a[8], // Phone number
             a[6], // Qty
             a[7] || "معار", // Status
             a[10] // Location
         ]);
 
         doc.autoTable({
-            head: [['التاريخ', 'اسم الأصل', 'المستلم', 'الكمية', 'الحالة', 'الموقع']],
+            head: [['التاريخ', 'اسم الأصل', 'المستلم', 'رقم الهاتف', 'الكمية', 'الحالة', 'الموقع']],
             body: tableBody,
             startY: 20,
             styles: { font: "helvetica", halign: 'right' }, // Using standard font to avoid issues if custom font not loaded
@@ -215,6 +217,7 @@ export default function BorrowedAssetsReport() {
                                     <th>الفرع</th>
                                     <th>اسم الأصل</th>
                                     <th>المستلم (لمن)</th>
+                                    <th>رقم الهاتف</th>
                                     <th>الموقع</th>
                                     <th>الكمية</th>
                                     <th>الحالة</th>
@@ -233,6 +236,7 @@ export default function BorrowedAssetsReport() {
                                             <td>{a[1]}</td>
                                             <td>{a[4]}</td>
                                             <td>{a[5]}</td>
+                                            <td dir="ltr" style={{ textAlign: "right" }}>{a[8]}</td>
                                             <td>{a[10]}</td>
                                             <td>{a[6]}</td>
                                             <td>

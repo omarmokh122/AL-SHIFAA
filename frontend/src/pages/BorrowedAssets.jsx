@@ -43,6 +43,7 @@ export default function BorrowedAssets() {
         الفرع: user.branch || "",
         اسم_الأصل: "",
         لمن: "",
+        رقم_الهاتف: "",
         الموقع: "",
         التاريخ: "",
         الكمية: "",
@@ -171,7 +172,7 @@ export default function BorrowedAssets() {
                 الوصف: form.لمن, // "لمن" stored in الوصف
                 الكمية: form.الكمية,
                 الحالة: form.الحالة,
-                رقم_السيارة: "",
+                رقم_السيارة: form.رقم_الهاتف,
                 سنة_الصنع: "",
                 الموقع: form.الموقع,
                 ملاحظات: form.ملاحظات,
@@ -181,6 +182,7 @@ export default function BorrowedAssets() {
                 الفرع: user.branch || "",
                 اسم_الأصل: "",
                 لمن: "",
+                رقم_الهاتف: "",
                 الموقع: "",
                 التاريخ: "",
                 الكمية: "",
@@ -344,6 +346,7 @@ export default function BorrowedAssets() {
                         </select>
 
                         <input name="لمن" placeholder="لمن (المستلم) *" value={form.لمن} onChange={handleChange} required style={inputStyle} />
+                        <input name="رقم_الهاتف" placeholder="رقم الهاتف *" value={form.رقم_الهاتف} onChange={handleChange} required style={{ ...inputStyle, direction: "rtl" }} />
                         <input name="الموقع" placeholder="الموقع (أين) *" value={form.الموقع} onChange={handleChange} required style={inputStyle} />
                         <input name="التاريخ" type="date" placeholder="التاريخ *" value={form.التاريخ} onChange={handleChange} required style={inputStyle} />
                         <input name="الكمية" type="number" placeholder="الكمية *" value={form.الكمية} onChange={handleChange} required style={inputStyle} />
@@ -401,6 +404,7 @@ export default function BorrowedAssets() {
                                     <th>الفرع</th>
                                     <th>اسم الأصل</th>
                                     <th>لمن (المستلم)</th>
+                                    <th>رقم الهاتف</th>
                                     <th>الموقع (أين)</th>
                                     <th>التاريخ</th>
                                     <th>الكمية</th>
@@ -423,6 +427,7 @@ export default function BorrowedAssets() {
                                             <td>{a[1]}</td>
                                             <td>{a[4]}</td>
                                             <td>{a[5]}</td>
+                                            <td dir="ltr" style={{ textAlign: "right" }}>{a[8]}</td>
                                             <td>{a[10]}</td>
                                             <td>{a[3]}</td>
                                             <td>{a[6]}</td>

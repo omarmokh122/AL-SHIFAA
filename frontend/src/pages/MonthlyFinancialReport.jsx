@@ -27,7 +27,6 @@ export default function MonthlyFinancialReport() {
     const [data, setData] = useState([]);
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
-    const [day, setDay] = useState("");
     const [selectedBranch, setSelectedBranch] = useState("All");
     const [filtered, setFiltered] = useState([]);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -73,7 +72,6 @@ export default function MonthlyFinancialReport() {
         const result = data.filter((row) => {
             const date = parseSheetDate(row[1]); // Column B = التاريخ
             if (!date) return false;
-            const matchDay = day ? date.getDate() === Number(day) : true;
             const matchMonth = (date.getMonth() + 1) === Number(month);
             const matchYear = date.getFullYear() === Number(year);
             let matchBranch;
@@ -82,7 +80,7 @@ export default function MonthlyFinancialReport() {
             } else {
                 matchBranch = (row[17] || "").includes(user.branch);
             }
-            return matchDay && matchMonth && matchYear && matchBranch;
+            return matchMonth && matchYear && matchBranch;
         });
 
         setFiltered(result.reverse());
@@ -160,12 +158,6 @@ export default function MonthlyFinancialReport() {
 
             {/* ===== FILTERS ===== */}
             <div style={filterBox}>
-                <select value={day} onChange={(e) => setDay(e.target.value)}>
-                    <option value="">اليوم</option>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                        <option key={d} value={d}>{d}</option>
-                    ))}
-                </select>
                 <select value={month} onChange={(e) => setMonth(e.target.value)}>
                     <option value="">الشهر</option>
                     {ARABIC_MONTHS.map(({ v, l }) => (

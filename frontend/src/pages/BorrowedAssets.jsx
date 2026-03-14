@@ -109,7 +109,13 @@ export default function BorrowedAssets() {
         const date = a[3]; // الفئة contains the date
         if (!date) return false;
         const itemDate = new Date(date);
-        const matchDay = filterDay ? itemDate.getDate() === parseInt(filterDay) : true;
+        let dayMatch = true;
+        if (filterDay) {
+            const targetDate = new Date(filterDay);
+            dayMatch = itemDate.getFullYear() === targetDate.getFullYear() &&
+                itemDate.getMonth() === targetDate.getMonth() &&
+                itemDate.getDate() === targetDate.getDate();
+        }
         const matchMonth = filterMonth ? itemDate.getMonth() + 1 === parseInt(filterMonth) : true;
         const matchYear = filterYear ? itemDate.getFullYear() === parseInt(filterYear) : true;
         return matchDay && matchMonth && matchYear;
@@ -374,12 +380,16 @@ export default function BorrowedAssets() {
 
                 {isExpanded && (
                     <div style={{ display: "flex", gap: "12px", marginBottom: "18px", flexWrap: "wrap" }}>
-                        <select value={filterDay} onChange={(e) => setFilterDay(e.target.value)} style={filterSelect}>
-                            <option value="">كل الأيام</option>
-                            {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                                <option key={day} value={day}>{day}</option>
-                            ))}
-                        </select>
+                        <input
+                            type="date"
+                            value={filterDay}
+                            onChange={(e) => {
+                                setFilterDay(e.target.value);
+                                setFilterMonth("");
+                                setFilterYear("");
+                            }}
+                            style={filterSelect}
+                        />
                         <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
                             <option value="">كل الأشهر</option>
                             {Array.from({ length: 12 }, (_, i) => (

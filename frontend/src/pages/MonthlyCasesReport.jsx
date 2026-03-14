@@ -23,7 +23,6 @@ export default function MonthlyCasesReport() {
 
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
-    const [day, setDay] = useState("");
     const [selectedType, setSelectedType] = useState("ALL");
     const [selectedBranch, setSelectedBranch] = useState("All");
     const [isExpanded, setIsExpanded] = useState(false);
@@ -190,11 +189,7 @@ export default function MonthlyCasesReport() {
                 </button>
             </div>
 
-            <div style={filterBox}>
-                <select value={day} onChange={(e) => setDay(e.target.value)} style={selectMini}>
-                    <option value="">اليوم</option>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
+            <div style={filterBox} className="dashboard-grid">
                 <select value={month} onChange={(e) => setMonth(e.target.value)} style={selectMini}>
                     <option value="">الشهر</option>
                     {months.map((m) => (
@@ -209,28 +204,29 @@ export default function MonthlyCasesReport() {
                     ))}
                 </select>
 
-                {user.role === "super" && (
-                    <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} style={selectMini}>
-                        <option value="All">كل الفروع</option>
-                        <option value="البقاع الأوسط">البقاع الأوسط</option>
-                        <option value="بعلبك">بعلبك</option>
-                    </select>
-                )}
+                {
+                    user.role === "super" && (
+                        <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)} style={selectMini}>
+                            <option value="All">كل الفروع</option>
+                            <option value="البقاع الأوسط">البقاع الأوسط</option>
+                            <option value="بعلبك">بعلبك</option>
+                        </select>
+                    )
+                }
 
                 <button onClick={generateReport} style={primaryBtn}>
                     إنشاء التقرير
                 </button>
 
-                {generated && (
-                    <>
-                        <button onClick={exportExcel} style={secondaryBtn}>
-                            تقرير شهري
-                        </button>
-                        <button onClick={exportYearlyExcel} style={secondaryBtn}>
-                            تقرير سنوي
-                        </button>
-                    </>
-                )}
+                {
+                    generated && (
+                        <>
+                            <button onClick={exportExcel} style={secondaryBtn}>
+                                تقرير شهري
+                            </button>
+                        </>
+                    )
+                }
             </div>
 
             {generated && (
@@ -310,8 +306,9 @@ export default function MonthlyCasesReport() {
                         </div>
                     )}
                 </>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }
 

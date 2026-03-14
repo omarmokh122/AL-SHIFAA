@@ -68,11 +68,29 @@ export default function Donations() {
 
         let matchDate = true;
         if (filterMonth || filterYear || filterDay) {
-            const d = new Date(r[1]);
-            const m = filterMonth ? d.getMonth() + 1 === parseInt(filterMonth) : true;
-            const y = filterYear ? d.getFullYear() === parseInt(filterYear) : true;
-            const dayMatch = filterDay ? d.getDate() === parseInt(filterDay) : true;
-            matchDate = m && y && dayMatch;
+            const d = new Date(r[1]); // r[1] is the date
+            if (isNaN(d.getTime())) { // Check if date is valid
+                matchDate = false;
+            } else {
+                let m = true;
+                let y = true;
+                let dayMatch = true;
+
+                if (filterDay) {
+                    const targetDate = new Date(filterDay);
+                    if (isNaN(targetDate.getTime())) {
+                        dayMatch = false;
+                    } else {
+                        dayMatch = d.getFullYear() === targetDate.getFullYear() &&
+                            d.getMonth() === targetDate.getMonth() &&
+                            d.getDate() === targetDate.getDate();
+                    }
+                } else { // Only apply month/year filters if filterDay is not set
+                    m = filterMonth ? d.getMonth() + 1 === parseInt(filterMonth) : true;
+                    y = filterYear ? d.getFullYear() === parseInt(filterYear) : true;
+                }
+                matchDate = m && y && dayMatch;
+            }
         }
 
         return matchBranch && matchDate;
@@ -297,12 +315,16 @@ export default function Donations() {
                             <option value="بعلبك">بعلبك</option>
                         </select>
                     )}
-                    <select value={filterDay} onChange={(e) => setFilterDay(e.target.value)} style={inputStyle}>
-                        <option value="">كل الأيام</option>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                            <option key={day} value={day}>{day}</option>
-                        ))}
-                    </select>
+                    <input
+                        type="date"
+                        value={filterDay}
+                        onChange={(e) => {
+                            setFilterDay(e.target.value);
+                            setFilterMonth("");
+                            setFilterYear("");
+                        }}
+                        style={inputStyle}
+                    />
                     <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={inputStyle}>
                         <option value="">كل الأشهر</option>
                         {Array.from({ length: 12 }, (_, i) => (

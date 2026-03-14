@@ -171,12 +171,18 @@ export default function Assets() {
         const matchBranch = user.role === "super" ? true : a[1] === user.branch;
         const matchType = filter ? a[2] === filter : true;
 
-        let matchDate = true;
         if (filterMonth || filterYear || filterDay) {
             const d = new Date(a[11]); // Index 11 is Added Date
             const m = filterMonth ? d.getMonth() + 1 === parseInt(filterMonth) : true;
             const y = filterYear ? d.getFullYear() === parseInt(filterYear) : true;
-            const dayMatch = filterDay ? d.getDate() === parseInt(filterDay) : true;
+
+            let dayMatch = true;
+            if (filterDay && d) {
+                const targetDate = new Date(filterDay);
+                dayMatch = d.getFullYear() === targetDate.getFullYear() &&
+                    d.getMonth() === targetDate.getMonth() &&
+                    d.getDate() === targetDate.getDate();
+            }
             matchDate = m && y && dayMatch;
         }
 
@@ -340,12 +346,16 @@ export default function Assets() {
                             <option value="سيارة إسعاف">سيارة إسعاف</option>
                             <option value="محتويات سيارة إسعاف">محتويات سيارة إسعاف</option>
                         </select>
-                        <select value={filterDay} onChange={(e) => setFilterDay(e.target.value)} style={filterSelect}>
-                            <option value="">كل الأيام</option>
-                            {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                                <option key={day} value={day}>{day}</option>
-                            ))}
-                        </select>
+                        <input
+                            type="date"
+                            value={filterDay}
+                            onChange={(e) => {
+                                setFilterDay(e.target.value);
+                                setFilterMonth("");
+                                setFilterYear("");
+                            }}
+                            style={filterSelect}
+                        />
                         <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
                             <option value="">كل الأشهر</option>
                             {Array.from({ length: 12 }, (_, i) => (

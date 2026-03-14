@@ -182,14 +182,23 @@ export default function Cases() {
 
         let matchDate = true;
         if (filterMonth || filterYear || filterDay) {
-            const d = parseSheetDate(c[1]);
+            const d = parseSheetDate(c[1]); // c[1] is the date string
+
+            let dayMatch = true;
+            if (filterDay && d) {
+                const targetDate = new Date(filterDay);
+                dayMatch = d.getFullYear() === targetDate.getFullYear() &&
+                    d.getMonth() === targetDate.getMonth() &&
+                    d.getDate() === targetDate.getDate();
+            }
+
             const monthNames = [
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
-            const dayMatch = filterDay ? (d && String(d.getDate()) === String(filterDay)) : true;
             const m = filterMonth ? (d && monthNames[d.getMonth()] === filterMonth) : true;
             const y = filterYear ? (d && String(d.getFullYear()) === String(filterYear)) : true;
+
             matchDate = dayMatch && m && y;
         }
 
@@ -264,12 +273,16 @@ export default function Cases() {
                         {CASE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
 
-                    <select value={filterDay} onChange={(e) => setFilterDay(e.target.value)} style={filterSelect}>
-                        <option value="">كل الأيام</option>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                            <option key={day} value={day}>{day}</option>
-                        ))}
-                    </select>
+                    <input
+                        type="date"
+                        value={filterDay}
+                        onChange={(e) => {
+                            setFilterDay(e.target.value);
+                            setFilterMonth(""); // Clear month/year when exact date is chosen
+                            setFilterYear("");
+                        }}
+                        style={filterSelect}
+                    />
                     <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
                         <option value="">كل الأشهر</option>
                         {MONTHS.map(m => (

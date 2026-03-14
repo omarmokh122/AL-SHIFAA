@@ -10,7 +10,6 @@ export default function MonthlyDonationsReport() {
     const [data, setData] = useState([]);
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
-    const [day, setDay] = useState("");
     const [selectedBranch, setSelectedBranch] = useState("All");
 
     const ARABIC_MONTHS = [
@@ -63,11 +62,9 @@ export default function MonthlyDonationsReport() {
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
-            const rowDay = String(date.getDate());
             const rowMonth = monthNames[date.getMonth()];
             const rowYear = String(date.getFullYear());
 
-            const matchDay = day ? rowDay === String(day) : true;
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
 
@@ -78,7 +75,7 @@ export default function MonthlyDonationsReport() {
                 matchBranch = (r[2] || "").includes(user.branch);
             }
 
-            return matchDay && matchMonth && matchYear && matchBranch;
+            return matchMonth && matchYear && matchBranch;
         });
 
         setIncoming(filtered.filter(r => r[4] !== "صرف"));
@@ -158,11 +155,7 @@ export default function MonthlyDonationsReport() {
                 </button>
             </div>
 
-            <div style={filterBox}>
-                <select value={day} onChange={(e) => setDay(e.target.value)} style={select}>
-                    <option value="">اليوم</option>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
+            <div style={filterBox} className="dashboard-grid">
                 <select value={month} onChange={(e) => setMonth(e.target.value)} style={select}>
                     <option value="">الشهر</option>
                     {ARABIC_MONTHS.map((m) => <option key={m.v} value={m.v}>{m.l}</option>)}

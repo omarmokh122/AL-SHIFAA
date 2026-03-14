@@ -45,7 +45,13 @@ export default function Dashboard() {
     return rows.filter(r => {
       const date = new Date(r[dateIndex]);
 
-      const matchDay = day ? date.getDate() === Number(day) : true;
+      let matchDay = true;
+      if (day) {
+        const targetDate = new Date(day);
+        matchDay = date.getFullYear() === targetDate.getFullYear() &&
+          date.getMonth() === targetDate.getMonth() &&
+          date.getDate() === targetDate.getDate();
+      }
 
       let matchMonth = true;
       if (month) {
@@ -126,7 +132,13 @@ export default function Dashboard() {
 
     const count = cases.filter(c => {
       const d = new Date(c[1]);
-      const matchDay = day ? d.getDate() === Number(day) : true;
+      let matchDay = true;
+      if (day) {
+        const targetDate = new Date(day);
+        matchDay = d.getFullYear() === targetDate.getFullYear() &&
+          d.getMonth() === targetDate.getMonth() &&
+          d.getDate() === targetDate.getDate();
+      }
       const matchYear = year ? d.getFullYear() === Number(year) : true;
 
       let matchBranch = true;
@@ -154,12 +166,16 @@ export default function Dashboard() {
 
       {/* ===== FILTERS ===== */}
       <div style={filterBox} className="form-grid-mobile">
-        <select style={selectStyle} value={day} onChange={e => setDay(e.target.value)}>
-          <option value="">اليوم</option>
-          {[...Array(31)].map((_, i) => (
-            <option key={i} value={i + 1}>{i + 1}</option>
-          ))}
-        </select>
+        <input
+          type="date"
+          style={selectStyle}
+          value={day}
+          onChange={e => {
+            setDay(e.target.value);
+            setMonth(""); // clear month and year
+            setYear("");
+          }}
+        />
 
         <select style={selectStyle} value={month} onChange={e => setMonth(e.target.value)}>
           <option value="">الشهر</option>

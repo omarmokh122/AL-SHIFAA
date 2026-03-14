@@ -201,10 +201,13 @@ export default function Dashboard() {
 
         <button
           onClick={() => { setDay(""); setMonth(""); setYear(""); setSelectedBranch(""); }}
-          style={{ ...selectStyle, background: "#C22129", color: "#fff", cursor: "pointer", border: "none", fontWeight: "bold" }}
+          style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
           title="إلغاء الفلاتر"
         >
-          ❌
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C22129" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
       </div>
 

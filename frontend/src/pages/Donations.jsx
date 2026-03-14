@@ -340,10 +340,13 @@ export default function Donations() {
                             setFilterMonth("");
                             setFilterYear("");
                         }}
-                        style={{ padding: "10px", background: "#C22129", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
+                        style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
                         title="إلغاء الفلاتر"
                     >
-                        ❌
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C22129" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
                     </button>
                 </div>
             </div>

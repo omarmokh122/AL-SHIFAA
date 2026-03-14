@@ -36,6 +36,7 @@ export default function BorrowedAssets() {
     const [isSavingInventory, setIsSavingInventory] = useState(false);
     const [filterMonth, setFilterMonth] = useState("");
     const [filterYear, setFilterYear] = useState("");
+    const [filterDay, setFilterDay] = useState("");
     const [isExpanded, setIsExpanded] = useState(false);
 
     const [form, setForm] = useState({
@@ -101,15 +102,16 @@ export default function BorrowedAssets() {
         };
     });
 
-    // Filter by month/year
+    // Filter by month/year/day
     const filteredBorrowedAssets = borrowedAssets.filter((a) => {
-        if (!filterMonth && !filterYear) return true;
+        if (!filterMonth && !filterYear && !filterDay) return true;
         const date = a[3]; // الفئة contains the date
         if (!date) return false;
         const itemDate = new Date(date);
+        const matchDay = filterDay ? itemDate.getDate() === parseInt(filterDay) : true;
         const matchMonth = filterMonth ? itemDate.getMonth() + 1 === parseInt(filterMonth) : true;
         const matchYear = filterYear ? itemDate.getFullYear() === parseInt(filterYear) : true;
-        return matchMonth && matchYear;
+        return matchDay && matchMonth && matchYear;
     });
 
     function updateInventory(itemName, newTotal) {
@@ -366,6 +368,29 @@ export default function BorrowedAssets() {
                         {isExpanded ? "إخفاء السجل ▲" : "عرض السجل ▼"}
                     </button>
                 </div>
+
+                {isExpanded && (
+                    <div style={{ display: "flex", gap: "12px", marginBottom: "18px", flexWrap: "wrap" }}>
+                        <select value={filterDay} onChange={(e) => setFilterDay(e.target.value)} style={filterSelect}>
+                            <option value="">كل الأيام</option>
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                <option key={day} value={day}>{day}</option>
+                            ))}
+                        </select>
+                        <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
+                            <option value="">كل الأشهر</option>
+                            {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleDateString('ar', { month: 'long' })}</option>
+                            ))}
+                        </select>
+                        <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
+                            <option value="">كل السنوات</option>
+                            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
                 {isExpanded && (
                     <div className="table-container">

@@ -165,17 +165,19 @@ export default function Assets() {
     const [filter, setFilter] = useState("");
     const [filterMonth, setFilterMonth] = useState("");
     const [filterYear, setFilterYear] = useState("");
+    const [filterDay, setFilterDay] = useState("");
 
     const visible = assets.filter((a) => {
         const matchBranch = user.role === "super" ? true : a[1] === user.branch;
         const matchType = filter ? a[2] === filter : true;
 
         let matchDate = true;
-        if (filterMonth || filterYear) {
+        if (filterMonth || filterYear || filterDay) {
             const d = new Date(a[11]); // Index 11 is Added Date
             const m = filterMonth ? d.getMonth() + 1 === parseInt(filterMonth) : true;
             const y = filterYear ? d.getFullYear() === parseInt(filterYear) : true;
-            matchDate = m && y;
+            const dayMatch = filterDay ? d.getDate() === parseInt(filterDay) : true;
+            matchDate = m && y && dayMatch;
         }
 
         const searchStr = `${a[4]} ${a[8]} ${a[13]}`.toLowerCase();
@@ -323,6 +325,41 @@ export default function Assets() {
                         {isExpanded ? "إخفاء السجل ▲" : "عرض السجل ▼"}
                     </button>
                 </div>
+                {isExpanded && (
+                    <div style={filterBar} className="form-grid-mobile">
+                        <input
+                            type="text"
+                            placeholder="بحث..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={searchBox}
+                        />
+                        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={filterSelect}>
+                            <option value="">كل الأنواع</option>
+                            <option value="مركز">أصول المركز</option>
+                            <option value="سيارة إسعاف">سيارة إسعاف</option>
+                            <option value="محتويات سيارة إسعاف">محتويات سيارة إسعاف</option>
+                        </select>
+                        <select value={filterDay} onChange={(e) => setFilterDay(e.target.value)} style={filterSelect}>
+                            <option value="">كل الأيام</option>
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                <option key={day} value={day}>{day}</option>
+                            ))}
+                        </select>
+                        <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
+                            <option value="">كل الأشهر</option>
+                            {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i + 1} value={i + 1}>{new Date(2000, i).toLocaleDateString('ar', { month: 'long' })}</option>
+                            ))}
+                        </select>
+                        <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={filterSelect}>
+                            <option value="">كل السنوات</option>
+                            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
                 {isExpanded && (
                     <div className="table-container">

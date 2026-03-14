@@ -16,6 +16,7 @@ export default function Dashboard() {
 
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
+  const [day, setDay] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("");
 
   const [cases, setCases] = useState([]);
@@ -43,6 +44,9 @@ export default function Dashboard() {
 
     return rows.filter(r => {
       const date = new Date(r[dateIndex]);
+
+      const matchDay = day ? date.getDate() === Number(day) : true;
+
       let matchMonth = true;
       if (month) {
         if (monthIndex !== null && r[monthIndex]) {
@@ -61,7 +65,7 @@ export default function Dashboard() {
         matchBranch = (r[branchIndex] || "").includes(user.branch);
       }
 
-      return matchMonth && matchYear && matchBranch;
+      return matchDay && matchMonth && matchYear && matchBranch;
     });
   }
 
@@ -122,6 +126,7 @@ export default function Dashboard() {
 
     const count = cases.filter(c => {
       const d = new Date(c[1]);
+      const matchDay = day ? d.getDate() === Number(day) : true;
       const matchYear = year ? d.getFullYear() === Number(year) : true;
 
       let matchBranch = true;
@@ -131,7 +136,7 @@ export default function Dashboard() {
         matchBranch = (c[4] || "").includes(user.branch);
       }
 
-      return c[2] === arabicName && matchYear && matchBranch;
+      return c[2] === arabicName && matchDay && matchYear && matchBranch;
     }).length;
     return { name, cases: count };
   });
@@ -149,6 +154,13 @@ export default function Dashboard() {
 
       {/* ===== FILTERS ===== */}
       <div style={filterBox} className="form-grid-mobile">
+        <select style={selectStyle} value={day} onChange={e => setDay(e.target.value)}>
+          <option value="">اليوم</option>
+          {[...Array(31)].map((_, i) => (
+            <option key={i} value={i + 1}>{i + 1}</option>
+          ))}
+        </select>
+
         <select style={selectStyle} value={month} onChange={e => setMonth(e.target.value)}>
           <option value="">الشهر</option>
           {[...Array(12)].map((_, i) => (

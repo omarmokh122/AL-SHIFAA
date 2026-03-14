@@ -11,6 +11,7 @@ export default function Donations() {
     const [branchFilter, setBranchFilter] = useState("");
     const [filterMonth, setFilterMonth] = useState("");
     const [filterYear, setFilterYear] = useState("");
+    const [filterDay, setFilterDay] = useState("");
 
     // UI State
     const [activeTab, setActiveTab] = useState("incoming"); // "incoming" or "outgoing"
@@ -66,11 +67,12 @@ export default function Donations() {
         }
 
         let matchDate = true;
-        if (filterMonth || filterYear) {
+        if (filterMonth || filterYear || filterDay) {
             const d = new Date(r[1]);
             const m = filterMonth ? d.getMonth() + 1 === parseInt(filterMonth) : true;
             const y = filterYear ? d.getFullYear() === parseInt(filterYear) : true;
-            matchDate = m && y;
+            const dayMatch = filterDay ? d.getDate() === parseInt(filterDay) : true;
+            matchDate = m && y && dayMatch;
         }
 
         return matchBranch && matchDate;
@@ -295,6 +297,12 @@ export default function Donations() {
                             <option value="بعلبك">بعلبك</option>
                         </select>
                     )}
+                    <select value={filterDay} onChange={(e) => setFilterDay(e.target.value)} style={inputStyle}>
+                        <option value="">كل الأيام</option>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                            <option key={day} value={day}>{day}</option>
+                        ))}
+                    </select>
                     <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={inputStyle}>
                         <option value="">كل الأشهر</option>
                         {Array.from({ length: 12 }, (_, i) => (

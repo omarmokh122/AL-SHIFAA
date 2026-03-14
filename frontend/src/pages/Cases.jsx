@@ -166,6 +166,7 @@ export default function Cases() {
     const [branchFilter, setBranchFilter] = useState("");
     const [filterMonth, setFilterMonth] = useState("");
     const [filterYear, setFilterYear] = useState("");
+    const [filterDay, setFilterDay] = useState("");
 
     /* ===== Filtering Logic ===== */
     const sortedCases = [...cases].reverse();
@@ -180,15 +181,16 @@ export default function Cases() {
         const matchType = typeFilter ? c[6] === typeFilter : true;
 
         let matchDate = true;
-        if (filterMonth || filterYear) {
+        if (filterMonth || filterYear || filterDay) {
             const d = parseSheetDate(c[1]);
             const monthNames = [
                 "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
+            const dayMatch = filterDay ? (d && String(d.getDate()) === String(filterDay)) : true;
             const m = filterMonth ? (d && monthNames[d.getMonth()] === filterMonth) : true;
             const y = filterYear ? (d && String(d.getFullYear()) === String(filterYear)) : true;
-            matchDate = m && y;
+            matchDate = dayMatch && m && y;
         }
 
         const searchStr = `${c[7]} ${c[6]}`.toLowerCase();
@@ -262,6 +264,12 @@ export default function Cases() {
                         {CASE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
 
+                    <select value={filterDay} onChange={(e) => setFilterDay(e.target.value)} style={filterSelect}>
+                        <option value="">كل الأيام</option>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                            <option key={day} value={day}>{day}</option>
+                        ))}
+                    </select>
                     <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>
                         <option value="">كل الأشهر</option>
                         {MONTHS.map(m => (

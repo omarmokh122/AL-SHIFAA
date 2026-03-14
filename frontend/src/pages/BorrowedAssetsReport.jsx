@@ -16,6 +16,7 @@ export default function BorrowedAssetsReport() {
 
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
+    const [day, setDay] = useState("");
 
     const [stats, setStats] = useState({
         totalTransactions: 0,
@@ -58,6 +59,7 @@ export default function BorrowedAssetsReport() {
             const d = new Date(dateStr);
 
             return (
+                (day ? d.getDate() === Number(day) : true) &&
                 d.getMonth() + 1 === Number(month) &&
                 d.getFullYear() === Number(year) &&
                 (user.role === "super" || (a[1] || "").includes(user.branch))
@@ -144,6 +146,12 @@ export default function BorrowedAssetsReport() {
 
             {/* Filters */}
             <div style={filterBox}>
+                <select value={day} onChange={(e) => setDay(e.target.value)} style={select}>
+                    <option value="">اليوم</option>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                        <option key={d} value={d}>{d}</option>
+                    ))}
+                </select>
                 <select value={month} onChange={(e) => setMonth(e.target.value)} style={select}>
                     <option value="">الشهر</option>
                     {months.map((m) => (

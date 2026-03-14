@@ -23,6 +23,7 @@ export default function MonthlyCasesReport() {
 
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
+    const [day, setDay] = useState("");
     const [selectedType, setSelectedType] = useState("ALL");
     const [selectedBranch, setSelectedBranch] = useState("All");
     const [isExpanded, setIsExpanded] = useState(false);
@@ -84,16 +85,18 @@ export default function MonthlyCasesReport() {
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
+            const rowDay = d ? String(d.getDate()) : "";
             const rowMonth = d ? monthNames[d.getMonth()] : "";
             const rowYear = d ? String(d.getFullYear()) : "";
 
+            const matchDay = day ? rowDay === String(day) : true;
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
             const matchBranch = user.role === "super"
                 ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
                 : (c[4] || "").includes(user.branch);
 
-            return matchMonth && matchYear && matchBranch;
+            return matchDay && matchMonth && matchYear && matchBranch;
         });
 
         applyTypeFilter(base, selectedType);
@@ -137,16 +140,18 @@ export default function MonthlyCasesReport() {
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
+            const rowDay = d ? String(d.getDate()) : "";
             const rowMonth = d ? monthNames[d.getMonth()] : "";
             const rowYear = d ? String(d.getFullYear()) : "";
 
+            const matchDay = day ? rowDay === String(day) : true;
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
             const matchBranch = user.role === "super"
                 ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
                 : (c[4] || "").includes(user.branch);
 
-            return matchMonth && matchYear && matchBranch;
+            return matchDay && matchMonth && matchYear && matchBranch;
         });
         applyTypeFilter(base, v);
     };
@@ -185,8 +190,11 @@ export default function MonthlyCasesReport() {
                 </button>
             </div>
 
-            {/* Filters */}
             <div style={filterBox}>
+                <select value={day} onChange={(e) => setDay(e.target.value)} style={selectMini}>
+                    <option value="">اليوم</option>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
                 <select value={month} onChange={(e) => setMonth(e.target.value)} style={selectMini}>
                     <option value="">الشهر</option>
                     {months.map((m) => (

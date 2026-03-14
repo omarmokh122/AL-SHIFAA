@@ -180,6 +180,20 @@ export default function MonthlyFinancialReport() {
                     </select>
                 )}
 
+                <button
+                    onClick={() => {
+                        setMonth("");
+                        setYear("");
+                        if (user.role === "super") setSelectedBranch("All");
+                        setFiltered([]);
+                        setSelectedInvoice(null);
+                        setFullscreen(false);
+                    }}
+                    title="إلغاء الفلاتر"
+                    style={{ padding: "8px 16px", background: "#C22129", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
+                >
+                    ❌
+                </button>
                 <button onClick={generateReport} style={btnPrimary}>إنشاء التقرير</button>
                 <button onClick={exportMonthlyTemplate} style={btnPrimary}>
                     تقرير شهري

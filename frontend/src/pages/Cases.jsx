@@ -293,6 +293,21 @@ export default function Cases() {
                             <option key={year} value={year}>{year}</option>
                         ))}
                     </select>
+
+                    <button
+                        onClick={() => {
+                            setSearchTerm("");
+                            setTypeFilter("");
+                            setBranchFilter("");
+                            setFilterDay("");
+                            setFilterMonth("");
+                            setFilterYear("");
+                        }}
+                        style={{ padding: "10px", background: "#C22129", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
+                        title="إلغاء الفلاتر"
+                    >
+                        ❌
+                    </button>
                 </div>
             </section>
 

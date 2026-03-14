@@ -198,6 +198,14 @@ export default function Dashboard() {
             <option value="بعلبك">بعلبك</option>
           </select>
         )}
+
+        <button
+          onClick={() => { setDay(""); setMonth(""); setYear(""); setSelectedBranch(""); }}
+          style={{ ...selectStyle, background: "#C22129", color: "#fff", cursor: "pointer", border: "none", fontWeight: "bold" }}
+          title="إلغاء الفلاتر"
+        >
+          ❌
+        </button>
       </div>
 
       {/* ===== SUMMARY CARDS ===== */}

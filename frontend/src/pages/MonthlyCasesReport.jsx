@@ -214,6 +214,18 @@ export default function MonthlyCasesReport() {
                     )
                 }
 
+                <button
+                    onClick={() => {
+                        setMonth("");
+                        setYear("");
+                        if (user.role === "super") setSelectedBranch("All");
+                        setGenerated(false);
+                    }}
+                    title="إلغاء الفلاتر"
+                    style={{ padding: "8px 16px", background: "#C22129", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
+                >
+                    ❌
+                </button>
                 <button onClick={generateReport} style={primaryBtn}>
                     إنشاء التقرير
                 </button>

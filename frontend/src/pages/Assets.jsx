@@ -364,6 +364,19 @@ export default function Assets() {
                                 <option key={year} value={year}>{year}</option>
                             ))}
                         </select>
+                        <button
+                            onClick={() => {
+                                setSearchTerm("");
+                                setFilter("");
+                                setFilterDay("");
+                                setFilterMonth("");
+                                setFilterYear("");
+                            }}
+                            style={{ padding: "8px 16px", background: "#C22129", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}
+                            title="إلغاء الفلاتر"
+                        >
+                            ❌
+                        </button>
                     </div>
                 )}
 

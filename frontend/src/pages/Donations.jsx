@@ -318,11 +318,7 @@ export default function Donations() {
                     <input
                         type="date"
                         value={filterDay}
-                        onChange={(e) => {
-                            setFilterDay(e.target.value);
-                            setFilterMonth("");
-                            setFilterYear("");
-                        }}
+                        onChange={(e) => setFilterDay(e.target.value)}
                         style={inputStyle}
                     />
                     <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={inputStyle}>

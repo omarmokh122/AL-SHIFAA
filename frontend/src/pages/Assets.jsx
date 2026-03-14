@@ -349,11 +349,7 @@ export default function Assets() {
                         <input
                             type="date"
                             value={filterDay}
-                            onChange={(e) => {
-                                setFilterDay(e.target.value);
-                                setFilterMonth("");
-                                setFilterYear("");
-                            }}
+                            onChange={(e) => setFilterDay(e.target.value)}
                             style={filterSelect}
                         />
                         <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>

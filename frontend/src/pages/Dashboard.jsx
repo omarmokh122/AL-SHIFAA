@@ -170,11 +170,7 @@ export default function Dashboard() {
           type="date"
           style={selectStyle}
           value={day}
-          onChange={e => {
-            setDay(e.target.value);
-            setMonth(""); // clear month and year
-            setYear("");
-          }}
+          onChange={e => setDay(e.target.value)}
         />
 
         <select style={selectStyle} value={month} onChange={e => setMonth(e.target.value)}>

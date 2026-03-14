@@ -199,6 +199,8 @@ export default function Cases() {
             const m = filterMonth ? (d && monthNames[d.getMonth()] === filterMonth) : true;
             const y = filterYear ? (d && String(d.getFullYear()) === String(filterYear)) : true;
 
+            // If day is selected, it can override Month/Year visually, but practically let's intersect them or use Day if it's the only one.
+            // If the user selects all three, it must match all three (which inherently matches Day anyway if they are consistent).
             matchDate = dayMatch && m && y;
         }
 
@@ -276,11 +278,7 @@ export default function Cases() {
                     <input
                         type="date"
                         value={filterDay}
-                        onChange={(e) => {
-                            setFilterDay(e.target.value);
-                            setFilterMonth(""); // Clear month/year when exact date is chosen
-                            setFilterYear("");
-                        }}
+                        onChange={(e) => setFilterDay(e.target.value)}
                         style={filterSelect}
                     />
                     <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={filterSelect}>

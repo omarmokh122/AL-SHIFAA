@@ -340,7 +340,7 @@ export default function Cases() {
                 <StatCard title="إجمالي الحالات" value={visibleCases.length} />
                 <StatCard title="إجمالي المصابين" value={totalPatients} />
                 <StatCard title="ذكور" value={male} />
-                <StatCard title="إناث" value={female} />
+                <StatCard title="إناث" value={female} bgColor="#fff" textColor="#C22129" borderColor="#C22129" />
             </div>
 
 
@@ -630,7 +630,7 @@ const statsGrid = {
 
 const statCard = {
     background: "#fff",
-    border: "1px solid #ddd",
+    border: "1px solid #C22129",
     borderRadius: "10px",
     padding: "16px",
     textAlign: "center",

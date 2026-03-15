@@ -339,7 +339,7 @@ export default function Cases() {
             <div style={statsGrid}>
                 <StatCard title="إجمالي الحالات" value={visibleCases.length} />
                 <StatCard title="إجمالي المصابين" value={totalPatients} />
-                <StatCard title="ذكور" value={male} bgColor="#C22129" textColor="#fff" titleColor="#fff" />
+                <StatCard title="ذكور" value={male} />
                 <StatCard title="إناث" value={female} bgColor="#fff" textColor="#C22129" borderColor="#C22129" />
             </div>
 

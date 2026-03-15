@@ -221,8 +221,10 @@ export default function Cases() {
     /* ===== Stats ===== */
     let male = 0;
     let female = 0;
+    let totalPatients = 0;
     visibleCases.forEach((c) => {
         const count = parseInt(c[6]) || 1;
+        totalPatients += count;
         for (let i = 0; i < count; i++) {
             const gender = c[7 + (i * 2)];
             if (gender === "ذكر") male++;
@@ -334,6 +336,7 @@ export default function Cases() {
             {/* ===== STAT CARDS ===== */}
             <div style={statsGrid}>
                 <StatCard title="إجمالي الحالات" value={visibleCases.length} />
+                <StatCard title="إجمالي المصابين" value={totalPatients} />
                 <StatCard title="ذكور" value={male} />
                 <StatCard title="إناث" value={female} />
             </div>
@@ -503,12 +506,10 @@ export default function Cases() {
                                 <tr>
                                     <th>#</th>
                                     <th>التاريخ</th>
-                                    <th>الشهر</th>
-                                    <th>السنة</th>
                                     <th>الفرع</th>
                                     <th>نوع الحالة</th>
-                                    <th>عدد المصابين</th>
-                                    <th>المصاب (الجنس / العمر)</th>
+                                    <th>الجنس</th>
+                                    <th>الفئة العمرية</th>
                                     <th>الإجراء المتخذ</th>
                                     <th>ملاحظات</th>
                                     <th>إجراءات</th>
@@ -516,22 +517,20 @@ export default function Cases() {
                             </thead>
                             <tbody>
                                 {visibleCases.length === 0 ? (
-                                    <tr><td colSpan="11" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
+                                    <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
                                 ) : (
                                     visibleCases.flatMap((c, i) => {
                                         const count = parseInt(c[6]) || 1;
                                         return Array.from({ length: count }).map((_, idx) => (
                                             <tr key={`${i}-${idx}`}>
-                                                {idx === 0 && <td rowSpan={count}>{i + 1}</td>}
-                                                {idx === 0 && <td rowSpan={count}>{c[1]}</td>}
-                                                {idx === 0 && <td rowSpan={count}>{c[2]}</td>}
-                                                {idx === 0 && <td rowSpan={count}>{c[3]}</td>}
-                                                {idx === 0 && <td rowSpan={count}>{c[4]}</td>}
-                                                {idx === 0 && <td rowSpan={count}>{c[5]}</td>}
-                                                {idx === 0 && <td rowSpan={count}>{c[6]}</td>}
-                                                <td>{idx + 1}- {c[7 + (idx * 2)] || "-"} / {c[8 + (idx * 2)] || "-"}</td>
-                                                {idx === 0 && <td rowSpan={count}>{c[17]}</td>}
-                                                {idx === 0 && <td rowSpan={count}>{c[18]}</td>}
+                                                {idx === 0 ? <td rowSpan={count}>{i + 1}</td> : null}
+                                                <td>{c[1]}</td>
+                                                <td>{c[4]}</td>
+                                                <td>{c[5]}</td>
+                                                <td>{c[7 + (idx * 2)] || "-"}</td>
+                                                <td>{c[8 + (idx * 2)] || "-"}</td>
+                                                <td>{c[17]}</td>
+                                                <td>{c[18]}</td>
                                                 {idx === 0 && (
                                                     <td rowSpan={count}>
                                                         <div style={{ display: "flex", gap: "10px", justifyContent: 'center' }}>

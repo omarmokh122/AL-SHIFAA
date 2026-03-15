@@ -76,6 +76,7 @@ export default function Cases() {
     const [loading, setLoading] = useState(true);
     const [editingCaseId, setEditingCaseId] = useState(null);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isFormExpanded, setIsFormExpanded] = useState(false);
 
     const [form, setForm] = useState({
         التاريخ: "",
@@ -157,6 +158,7 @@ export default function Cases() {
             patients: pts.length > 0 ? pts : [{ الجنس: "", الفئة_العمرية: "غير محدد" }],
             CreatedAt: caseData[0],
         });
+        setIsFormExpanded(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -343,10 +345,19 @@ export default function Cases() {
 
 
             {/* ===== ADD/EDIT CASE ===== */}
-            <section style={section}>
-                <h4 style={sectionTitle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px' }}>
+                <h4 style={{ margin: 0 }}>
                     {editingCaseId ? "تعديل الحالة" : "إضافة حالة جديدة"}
                 </h4>
+                <button
+                    onClick={() => setIsFormExpanded(!isFormExpanded)}
+                    style={{ ...reportBtn, background: "#C22129" }}
+                >
+                    {isFormExpanded ? "إخفاء التفاصيل ▲" : "عرض التفاصيل ▼"}
+                </button>
+            </div>
+
+            {isFormExpanded && (
                 <div style={formBox}>
                     <form onSubmit={submitCase} style={formGrid}>
                         <input
@@ -483,7 +494,7 @@ export default function Cases() {
                         </div>
                     </form>
                 </div>
-            </section>
+            )}
 
             {/* ===== TABLE SECTION ===== */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px' }}>

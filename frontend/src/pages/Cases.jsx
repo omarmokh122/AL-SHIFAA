@@ -155,7 +155,7 @@ export default function Cases() {
             الإجراء_المتخذ: caseData[17] || "",
             ملاحظات: caseData[18] || "",
             patients: pts.length > 0 ? pts : [{ الجنس: "", الفئة_العمرية: "غير محدد" }],
-            CreatedAt: caseData[20],
+            CreatedAt: caseData[0],
         });
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -210,12 +210,10 @@ export default function Cases() {
             const m = filterMonth ? (d && monthNames[d.getMonth()] === filterMonth) : true;
             const y = filterYear ? (d && String(d.getFullYear()) === String(filterYear)) : true;
 
-            // If day is selected, it can override Month/Year visually, but practically let's intersect them or use Day if it's the only one.
-            // If the user selects all three, it must match all three (which inherently matches Day anyway if they are consistent).
             matchDate = dayMatch && m && y;
         }
 
-        const searchStr = `${c[18]} ${c[5]}`.toLowerCase();
+        const searchStr = `${c[16]} ${c[5]}`.toLowerCase();
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());
         return matchBranch && matchType && matchSearch && matchDate;
     });

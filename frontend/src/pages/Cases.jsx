@@ -508,7 +508,7 @@ export default function Cases() {
                                     <th>الفرع</th>
                                     <th>نوع الحالة</th>
                                     <th>عدد المصابين</th>
-                                    <th>المصابون (الجنس / العمر)</th>
+                                    <th>المصاب (الجنس / العمر)</th>
                                     <th>الإجراء المتخذ</th>
                                     <th>ملاحظات</th>
                                     <th>إجراءات</th>
@@ -516,48 +516,45 @@ export default function Cases() {
                             </thead>
                             <tbody>
                                 {visibleCases.length === 0 ? (
-                                    <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
+                                    <tr><td colSpan="11" style={{ textAlign: 'center', padding: '20px' }}>لا توجد نتائج مطابقة</td></tr>
                                 ) : (
-                                    visibleCases.map((c, i) => (
-                                        <tr key={i}>
-                                            <td>{i + 1}</td>
-                                            <td>{c[1]}</td>
-                                            <td>{c[2]}</td>
-                                            <td>{c[3]}</td>
-                                            <td>{c[4]}</td>
-                                            <td>{c[5]}</td>
-                                            <td>{c[6]}</td>
-                                            <td>
-                                                <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
-                                                    {Array.from({ length: parseInt(c[6]) || 1 }).map((_, idx) => (
-                                                        <div key={idx}>
-                                                            {idx + 1}- {c[7 + (idx * 2)] || "-"} / {c[8 + (idx * 2)] || "-"}
+                                    visibleCases.flatMap((c, i) => {
+                                        const count = parseInt(c[6]) || 1;
+                                        return Array.from({ length: count }).map((_, idx) => (
+                                            <tr key={`${i}-${idx}`}>
+                                                {idx === 0 && <td rowSpan={count}>{i + 1}</td>}
+                                                {idx === 0 && <td rowSpan={count}>{c[1]}</td>}
+                                                {idx === 0 && <td rowSpan={count}>{c[2]}</td>}
+                                                {idx === 0 && <td rowSpan={count}>{c[3]}</td>}
+                                                {idx === 0 && <td rowSpan={count}>{c[4]}</td>}
+                                                {idx === 0 && <td rowSpan={count}>{c[5]}</td>}
+                                                {idx === 0 && <td rowSpan={count}>{c[6]}</td>}
+                                                <td>{idx + 1}- {c[7 + (idx * 2)] || "-"} / {c[8 + (idx * 2)] || "-"}</td>
+                                                {idx === 0 && <td rowSpan={count}>{c[17]}</td>}
+                                                {idx === 0 && <td rowSpan={count}>{c[18]}</td>}
+                                                {idx === 0 && (
+                                                    <td rowSpan={count}>
+                                                        <div style={{ display: "flex", gap: "10px", justifyContent: 'center' }}>
+                                                            <button
+                                                                onClick={() => handleEdit(c)}
+                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}
+                                                                title="تعديل"
+                                                            >
+                                                                ✏️
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(c[0])}
+                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#dc3545', fontWeight: 'bold' }}
+                                                                title="حذف"
+                                                            >
+                                                                ❌
+                                                            </button>
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            </td>
-                                            <td>{c[17]}</td>
-                                            <td>{c[18]}</td>
-                                            <td>
-                                                <div style={{ display: "flex", gap: "10px", justifyContent: 'center' }}>
-                                                    <button
-                                                        onClick={() => handleEdit(c)}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}
-                                                        title="تعديل"
-                                                    >
-                                                        ✏️
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(c[0])}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#dc3545', fontWeight: 'bold' }}
-                                                        title="حذف"
-                                                    >
-                                                        ❌
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ));
+                                    })
                                 )}
                             </tbody>
                         </table>

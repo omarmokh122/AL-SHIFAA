@@ -53,19 +53,37 @@ export default function MonthlyCasesReport() {
 
     const years = [2024, 2025, 2026, 2027];
 
-    // Helper to parse date strictly as MM/DD/YYYY if it matches that format
+    // Helper to parse date
     const parseSheetDate = (str) => {
         if (!str) return null;
         const s = String(str).trim();
-        const parts = s.split("/");
-        if (parts.length === 3) {
-            const m = parseInt(parts[0], 10);
-            const d = parseInt(parts[1], 10);
-            const y = parseInt(parts[2], 10);
-            if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
-                return new Date(y, m - 1, d);
+
+        // Handle YYYY-MM-DD
+        if (s.includes("-")) {
+            const parts = s.split("-");
+            if (parts.length === 3) {
+                const y = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10);
+                const d = parseInt(parts[2], 10);
+                if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                    return new Date(y, m - 1, d);
+                }
             }
         }
+
+        // Handle MM/DD/YYYY
+        if (s.includes("/")) {
+            const parts = s.split("/");
+            if (parts.length === 3) {
+                const m = parseInt(parts[0], 10);
+                const d = parseInt(parts[1], 10);
+                const y = parseInt(parts[2], 10);
+                if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
+                    return new Date(y, m - 1, d);
+                }
+            }
+        }
+
         const d = new Date(s);
         return isNaN(d.getTime()) ? null : d;
     };
@@ -84,18 +102,16 @@ export default function MonthlyCasesReport() {
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
-            const rowDay = d ? String(d.getDate()) : "";
             const rowMonth = d ? monthNames[d.getMonth()] : "";
             const rowYear = d ? String(d.getFullYear()) : "";
 
-            const matchDay = day ? rowDay === String(day) : true;
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
             const matchBranch = user.role === "super"
                 ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
                 : (c[4] || "").includes(user.branch);
 
-            return matchDay && matchMonth && matchYear && matchBranch;
+            return matchMonth && matchYear && matchBranch;
         });
 
         applyTypeFilter(base, selectedType);
@@ -146,18 +162,16 @@ export default function MonthlyCasesReport() {
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
-            const rowDay = d ? String(d.getDate()) : "";
             const rowMonth = d ? monthNames[d.getMonth()] : "";
             const rowYear = d ? String(d.getFullYear()) : "";
 
-            const matchDay = day ? rowDay === String(day) : true;
             const matchMonth = rowMonth === month;
             const matchYear = rowYear === String(year);
             const matchBranch = user.role === "super"
                 ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
                 : (c[4] || "").includes(user.branch);
 
-            return matchDay && matchMonth && matchYear && matchBranch;
+            return matchMonth && matchYear && matchBranch;
         });
         applyTypeFilter(base, v);
     };

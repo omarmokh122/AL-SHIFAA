@@ -104,6 +104,9 @@ export default function Dashboard() {
     }
   });
 
+  // Total patients
+  const totalPatients = filteredCases.reduce((sum, c) => sum + (parseInt(c[6]) || 1), 0);
+
   const filteredAssets = assets.filter(a => {
     if (user.role === "super") {
       return selectedBranch ? (a[1] || "").includes(selectedBranch) : true;
@@ -214,7 +217,7 @@ export default function Dashboard() {
       {/* ===== SUMMARY CARDS ===== */}
       <div style={cardsGrid} className="dashboard-grid">
         <Card title="عدد الحالات الطبية" value={filteredCases.length} color="#C22129" />
-        <Card title="عدد التبرعات النقدية" value={totalCashCount} color="#2e7d32" />
+        <Card title="عدد المصابين" value={totalPatients} color="#C22129" />
         <Card
           title="إجمالي التبرعات النقدية"
           value={showUSD
@@ -286,11 +289,12 @@ const cardsGrid = {
 
 const card = {
   background: "#fff",
-  border: "1px solid #ddd",
+  border: "1px solid #e8d4d5",
+  borderLeft: "4px solid #C22129",
   borderRadius: "10px",
   padding: "16px",
   textAlign: "center",
-  boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+  boxShadow: "0 2px 10px rgba(194,33,41,0.07)",
   transition: "transform 0.2s ease",
 };
 

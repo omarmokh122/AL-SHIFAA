@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell } from 'recharts';
 
 /* ===== Constants ===== */
 const CASE_TYPES = [
@@ -336,11 +337,36 @@ export default function Cases() {
             </section>
 
             {/* ===== STAT CARDS ===== */}
-            <div style={statsGrid}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
                 <StatCard title="إجمالي الحالات" value={visibleCases.length} />
                 <StatCard title="إجمالي المصابين" value={totalPatients} />
-                <StatCard title="ذكور" value={male} />
-                <StatCard title="إناث" value={female} />
+                <div style={{ ...statCard, gridColumn: 'span 2', padding: '10px 20px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: "14px", color: "#555", marginBottom: '5px' }}>توزيع المصابين حسب الجنس</div>
+                    <div style={{ flex: 1, minHeight: '120px' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={[
+                                { name: "ذكور", count: male, color: '#C22129', stroke: 'none' },
+                                { name: "إناث", count: female, color: '#FFFFFF', stroke: '#C22129' }
+                            ]} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 13 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 13 }} allowDecimals={false} />
+                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={50}>
+                                    {
+                                        [
+                                            { color: '#C22129', stroke: 'none' },
+                                            { color: '#FFFFFF', stroke: '#C22129' }
+                                        ].map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} stroke={entry.stroke} strokeWidth={entry.color === '#FFFFFF' ? 2 : 0} />
+                                        ))
+                                    }
+                                    <LabelList dataKey="count" position="top" style={{ fill: '#C22129', fontSize: 13, fontWeight: 'bold' }} />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
 
 

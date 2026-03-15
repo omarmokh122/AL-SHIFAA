@@ -340,7 +340,7 @@ export default function Cases() {
                 <StatCard title="إجمالي الحالات" value={visibleCases.length} />
                 <StatCard title="إجمالي المصابين" value={totalPatients} />
                 <StatCard title="ذكور" value={male} />
-                <StatCard title="إناث" value={female} bgColor="#fff" textColor="#C22129" borderColor="#C22129" />
+                <StatCard title="إناث" value={female} />
             </div>
 
 
@@ -576,7 +576,7 @@ export default function Cases() {
 }
 
 /* ===== Small Components ===== */
-function StatCard({ title, value, bgColor = "#fff", textColor = "#C22129", titleColor = "#555", borderColor = "#C22129" }) {
+function StatCard({ title, value, bgColor = "#fff", textColor = "#C22129", titleColor = "#555", borderColor = "#ddd" }) {
     return (
         <div style={{ ...statCard, background: bgColor, borderColor: borderColor }}>
             <div style={{ fontSize: "14px", color: titleColor }}>{title}</div>
@@ -630,7 +630,7 @@ const statsGrid = {
 
 const statCard = {
     background: "#fff",
-    border: "1px solid #C22129",
+    border: "1px solid #ddd",
     borderRadius: "10px",
     padding: "16px",
     textAlign: "center",

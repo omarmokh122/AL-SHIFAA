@@ -576,7 +576,7 @@ export default function Cases() {
 }
 
 /* ===== Small Components ===== */
-function StatCard({ title, value, bgColor = "#fff", textColor = "#C22129", titleColor = "#555", borderColor = "#ddd" }) {
+function StatCard({ title, value, bgColor = "#fff", textColor = "#C22129", titleColor = "#555", borderColor = "#C22129" }) {
     return (
         <div style={{ ...statCard, background: bgColor, borderColor: borderColor }}>
             <div style={{ fontSize: "14px", color: titleColor }}>{title}</div>

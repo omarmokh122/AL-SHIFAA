@@ -694,6 +694,55 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         if (ageTotal > 0) cellAge.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
     });
 
+    // ===== SECOND SHEET: Detailed Patient-level Table =====
+    const detailSheet = workbook.addWorksheet(`تفاصيل الحالات`, { views: [{ rightToLeft: true }] });
+
+    detailSheet.columns = [
+        { width: 6 },   // A: #
+        { width: 18 },  // B: التاريخ
+        { width: 20 },  // C: الفرع
+        { width: 25 },  // D: نوع الحالة
+        { width: 12 },  // E: الجنس
+        { width: 25 },  // F: الفئة العمرية
+        { width: 35 },  // G: الإجراء المتخذ
+        { width: 35 },  // H: ملاحظات
+    ];
+
+    // Header row for detail sheet
+    const detailHeaderRow = detailSheet.addRow(["#", "التاريخ", "الفرع", "نوع الحالة", "الجنس", "الفئة العمرية", "الإجراء المتخذ", "ملاحظات"]);
+    detailHeaderRow.eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    });
+    detailHeaderRow.height = 22;
+
+    let rowNum = 1;
+    monthlyCases.forEach(c => {
+        const count = parseInt(c[6]) || 1;
+        for (let idx = 0; idx < count; idx++) {
+            const gender = c[7 + (idx * 2)] || "—";
+            const age = c[8 + (idx * 2)] || "—";
+            const dataRow = detailSheet.addRow([
+                rowNum++,
+                c[1],   // التاريخ
+                c[4],   // الفرع
+                c[5],   // نوع الحالة
+                gender,
+                age,
+                c[17] || "—",  // الإجراء المتخذ
+                c[18] || "—",  // ملاحظات
+            ]);
+            dataRow.eachCell((cell) => {
+                cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                cell.font = { size: 11 };
+            });
+            dataRow.height = 18;
+        }
+    });
+
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     saveAs(blob, filename);

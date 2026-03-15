@@ -606,40 +606,47 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     const cell7_3 = sheet.getCell('C7'); cell7_3.value = totalCases; centerAlign(cell7_3); boldFont(cell7_3); setBorders(cell7_3);
     if (totalCases > 0) cell7_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
 
-    // Row 8: Red Separator
-    const r8 = sheet.getRow(8);
-    r8.height = 10;
+    // Row 7B: Total Patients
+    sheet.mergeCells('A8:B8');
+    const r8c1 = sheet.getCell('A8'); r8c1.value = "اجمالي عدد المصابين"; centerAlign(r8c1); boldFont(r8c1); setBorders(r8c1);
+    const totalPatients = monthlyCases.reduce((sum, c) => sum + (parseInt(c[6]) || 1), 0);
+    const cell8_3 = sheet.getCell('C8'); cell8_3.value = totalPatients; centerAlign(cell8_3); boldFont(cell8_3); setBorders(cell8_3);
+    if (totalPatients > 0) cell8_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+
+    // Row 9: Red Separator
+    const r9sep = sheet.getRow(9);
+    r9sep.height = 10;
     for (let c = 1; c <= 3; c++) {
-        const cell = sheet.getCell(8, c);
+        const cell = sheet.getCell(9, c);
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
         setBorders(cell);
     }
 
-    // Row 9 & 10: Gender
-    sheet.mergeCells('A9:A10');
-    const r9c1 = sheet.getCell('A9'); r9c1.value = "الجنس"; centerAlign(r9c1); boldFont(r9c1); setBorders(r9c1);
-    sheet.getCell('A10').border = { bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+    // Row 10 & 11: Gender
+    sheet.mergeCells('A10:A11');
+    const r10c1 = sheet.getCell('A10'); r10c1.value = "الجنس"; centerAlign(r10c1); boldFont(r10c1); setBorders(r10c1);
+    sheet.getCell('A11').border = { bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
 
     const maleTotal = getCount((c, i) => c[7 + (i * 2)] === "ذكر", true);
-    const r9c2 = sheet.getCell('B9'); r9c2.value = "ذكر"; centerAlign(r9c2); boldFont(r9c2); setBorders(r9c2);
-    const cell9_3 = sheet.getCell('C9'); cell9_3.value = maleTotal; centerAlign(cell9_3); boldFont(cell9_3); setBorders(cell9_3);
-    if (maleTotal > 0) cell9_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    const r10c2 = sheet.getCell('B10'); r10c2.value = "ذكر"; centerAlign(r10c2); boldFont(r10c2); setBorders(r10c2);
+    const cell10_3 = sheet.getCell('C10'); cell10_3.value = maleTotal; centerAlign(cell10_3); boldFont(cell10_3); setBorders(cell10_3);
+    if (maleTotal > 0) cell10_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
 
     const femaleTotal = getCount((c, i) => { const g = c[7 + (i * 2)]; return g === "أنثى" || g === "انثى"; }, true);
-    const r10c2 = sheet.getCell('B10'); r10c2.value = "انثى"; centerAlign(r10c2); boldFont(r10c2); setBorders(r10c2);
-    const cell10_3 = sheet.getCell('C10'); cell10_3.value = femaleTotal; centerAlign(cell10_3); boldFont(cell10_3); setBorders(cell10_3);
-    if (femaleTotal > 0) cell10_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    const r11c2 = sheet.getCell('B11'); r11c2.value = "أنثى"; centerAlign(r11c2); boldFont(r11c2); setBorders(r11c2);
+    const cell11_3 = sheet.getCell('C11'); cell11_3.value = femaleTotal; centerAlign(cell11_3); boldFont(cell11_3); setBorders(cell11_3);
+    if (femaleTotal > 0) cell11_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
 
-    // Row 11: Red Separator
-    const r11 = sheet.getRow(11);
-    r11.height = 10;
+    // Row 12: Red Separator
+    const r12sep = sheet.getRow(12);
+    r12sep.height = 10;
     for (let c = 1; c <= 3; c++) {
-        const cell = sheet.getCell(11, c);
+        const cell = sheet.getCell(12, c);
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
         setBorders(cell);
     }
 
-    // Row 12+: Case Types
+    // Row 13+: Case Types
     const CASE_TYPES = [
         "كسور", "حادث", "أمراض قلبية", "جهاز تنفسي", "حالات طبية", "جراحة", "جثة", "حروق", "جروح", "كورونا", "متابعة",
         "دفاع مدني", "حالات عصبية", "حالات طارئة", "نقل إصابات وجرحى", "نقل شهداء", "علاج ميداني", "تأمين نازحين (عوائل)",
@@ -647,15 +654,15 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         "انتخابات – نقل ناخبين من ذوي الاحتياجات الخاصة", "متابعة منزلية للمرضى"
     ];
 
-    sheet.mergeCells(`A12:A${11 + CASE_TYPES.length}`);
-    const r12c1 = sheet.getCell('A12'); r12c1.value = "نوع الحالات"; centerAlign(r12c1); boldFont(r12c1); setBorders(r12c1);
+    sheet.mergeCells(`A13:A${12 + CASE_TYPES.length}`);
+    const r13c1 = sheet.getCell('A13'); r13c1.value = "نوع الحالات"; centerAlign(r13c1); boldFont(r13c1); setBorders(r13c1);
 
-    for (let i = 12; i <= 11 + CASE_TYPES.length; i++) {
-        sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i === 12 ? { style: 'thin' } : undefined), bottom: (i === 11 + CASE_TYPES.length ? { style: 'thin' } : undefined) };
+    for (let i = 13; i <= 12 + CASE_TYPES.length; i++) {
+        sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i === 13 ? { style: 'thin' } : undefined), bottom: (i === 12 + CASE_TYPES.length ? { style: 'thin' } : undefined) };
     }
 
     CASE_TYPES.forEach((type, tIdx) => {
-        const rIdx = 12 + tIdx;
+        const rIdx = 13 + tIdx;
         const c2 = sheet.getCell(rIdx, 2);
         c2.value = type; centerAlign(c2); boldFont(c2); setBorders(c2);
 
@@ -665,12 +672,12 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         if (typeTotal > 0) cellType.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
     });
 
-    // Row 15+: Age Groups
+    // Age Groups section — matching the short labels from the form/sheet
     const AGE_GROUPS = [
-        "رضيع (أقل من سنة)", "طفل (1 – 5 سنوات)", "طفل (6 – 12 سنة)", "مراهق (13 – 17 سنة)", "شاب (18 – 35 سنة)", "بالغ (36 – 60 سنة)", "مسن (أكثر من 60 سنة)", "غير محدد"
+        "أقل من سنة", "1 – 5", "6 – 12", "13 – 17", "18 – 35", "36 – 60", "أكثر من 60"
     ];
 
-    const startAgeRow = 13 + CASE_TYPES.length;
+    const startAgeRow = 14 + CASE_TYPES.length;
     sheet.getRow(startAgeRow).height = 10;
     for (let c = 1; c <= 3; c++) {
         const cell = sheet.getCell(startAgeRow, c);
@@ -688,7 +695,7 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         const c2 = sheet.getCell(rIdx, 2);
         c2.value = age; centerAlign(c2); boldFont(c2); setBorders(c2);
 
-        const ageTotal = getCount((c, i) => (c[8 + (i * 2)] || "غير محدد") === age, true);
+        const ageTotal = getCount((c, i) => (c[8 + (i * 2)] || "") === age, true);
         const cellAge = sheet.getCell(rIdx, 3);
         cellAge.value = ageTotal; centerAlign(cellAge); boldFont(cellAge); setBorders(cellAge);
         if (ageTotal > 0) cellAge.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };

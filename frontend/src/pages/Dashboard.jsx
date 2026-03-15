@@ -289,12 +289,11 @@ const cardsGrid = {
 
 const card = {
   background: "#fff",
-  border: "1px solid #e8d4d5",
-  borderLeft: "4px solid #C22129",
+  border: "1px solid #ddd",
   borderRadius: "10px",
   padding: "16px",
   textAlign: "center",
-  boxShadow: "0 2px 10px rgba(194,33,41,0.07)",
+  boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
   transition: "transform 0.2s ease",
 };
 

@@ -324,19 +324,24 @@ export default function MonthlyCasesReport() {
                                     <tr>
                                         <th>التاريخ</th>
                                         <th>الفرع</th>
-                                        <th>الجنس</th>
                                         <th>نوع الحالة</th>
+                                        <th>الجنس</th>
+                                        <th>الفئة العمرية</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filtered.map((c, i) => (
-                                        <tr key={i}>
-                                            <td>{c[1]}</td>
-                                            <td>{c[4]}</td>
-                                            <td>{c[5]}</td>
-                                            <td>{c[6]}</td>
-                                        </tr>
-                                    ))}
+                                    {filtered.flatMap((c, i) => {
+                                        const count = parseInt(c[6]) || 1;
+                                        return Array.from({ length: count }).map((_, idx) => (
+                                            <tr key={`${i}-${idx}`}>
+                                                <td>{c[1]}</td>
+                                                <td>{c[4]}</td>
+                                                <td>{c[5]}</td>
+                                                <td>{c[7 + (idx * 2)] || "-"}</td>
+                                                <td>{c[8 + (idx * 2)] || "-"}</td>
+                                            </tr>
+                                        ));
+                                    })}
                                 </tbody>
                             </table>
                         </div>

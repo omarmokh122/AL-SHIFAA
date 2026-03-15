@@ -242,16 +242,27 @@ export async function exportYearlyCasesTemplateExcel(year, branch, cases, filena
         return (c[4] || "").includes(branch);
     });
 
-    const getCount = (monthIdx, filterFn) => {
-        return yearlyCases.filter(c => {
+    const getCount = (monthIdx, filterFn, isPatientLevel = false) => {
+        let total = 0;
+        yearlyCases.forEach(c => {
             const d = parseSheetDate(c[1]);
             const rowMonth = d ? monthNamesDB[d.getMonth()] : "";
-            return rowMonth === monthNamesDB[monthIdx] && filterFn(c);
-        }).length;
+            if (rowMonth === monthNamesDB[monthIdx]) {
+                if (isPatientLevel) {
+                    const count = parseInt(c[6]) || 1;
+                    for (let i = 0; i < count; i++) {
+                        if (filterFn(c, i)) total++;
+                    }
+                } else {
+                    if (filterFn(c)) total++;
+                }
+            }
+        });
+        return total;
     };
 
-    const getMonthTotals = (filterFn) => {
-        return shortMonths.map((_, i) => getCount(i, filterFn));
+    const getMonthTotals = (filterFn, isPatientLevel = false) => {
+        return shortMonths.map((_, i) => getCount(i, filterFn, isPatientLevel));
     };
 
     const totalsByMonth = getMonthTotals(() => true);
@@ -376,14 +387,14 @@ export async function exportYearlyCasesTemplateExcel(year, branch, cases, filena
     const r9c1 = sheet.getCell('A9'); r9c1.value = "الجنس"; centerAlign(r9c1); boldFont(r9c1); setBorders(r9c1);
     sheet.getCell('A10').border = { bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
 
-    const maleTotals = getMonthTotals((c) => c[5] === "ذكر");
+    const maleTotals = getMonthTotals((c, i) => c[7 + (i * 2)] === "ذكر", true);
     const r9c2 = sheet.getCell('B9'); r9c2.value = "ذكر"; centerAlign(r9c2); boldFont(r9c2); setBorders(r9c2);
     maleTotals.forEach((val, idx) => {
         const cell = sheet.getCell(9, 3 + idx); cell.value = val; centerAlign(cell); boldFont(cell); setBorders(cell);
         if (highlightCols[idx]) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
     });
 
-    const femaleTotals = getMonthTotals((c) => c[5] === "أنثى" || c[5] === "انثى");
+    const femaleTotals = getMonthTotals((c, i) => { const g = c[7 + (i * 2)]; return g === "أنثى" || g === "انثى"; }, true);
     const r10c2 = sheet.getCell('B10'); r10c2.value = "انثى"; centerAlign(r10c2); boldFont(r10c2); setBorders(r10c2);
     femaleTotals.forEach((val, idx) => {
         const cell = sheet.getCell(10, 3 + idx); cell.value = val; centerAlign(cell); boldFont(cell); setBorders(cell);
@@ -420,7 +431,7 @@ export async function exportYearlyCasesTemplateExcel(year, branch, cases, filena
         const c2 = sheet.getCell(rIdx, 2);
         c2.value = type; centerAlign(c2); boldFont(c2); setBorders(c2);
 
-        const typeTotals = getMonthTotals((c) => c[6] === type);
+        const typeTotals = getMonthTotals((c) => c[5] === type, false);
         typeTotals.forEach((val, idx) => {
             const cell = sheet.getCell(rIdx, 3 + idx);
             cell.value = val; centerAlign(cell); boldFont(cell); setBorders(cell);
@@ -451,7 +462,7 @@ export async function exportYearlyCasesTemplateExcel(year, branch, cases, filena
         const c2 = sheet.getCell(rIdx, 2);
         c2.value = age; centerAlign(c2); boldFont(c2); setBorders(c2);
 
-        const ageTotals = getMonthTotals((c) => (c[10] || "غير محدد") === age);
+        const ageTotals = getMonthTotals((c, i) => (c[8 + (i * 2)] || "غير محدد") === age, true);
         ageTotals.forEach((val, idx) => {
             const cell = sheet.getCell(rIdx, 3 + idx);
             cell.value = val; centerAlign(cell); boldFont(cell); setBorders(cell);
@@ -486,7 +497,20 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         if (branch === "كل الفروع" || branch === "All") return true;
         return (c[4] || "").includes(branch);
     });
-    const getCount = (filterFn) => monthlyCases.filter(filterFn).length;
+    const getCount = (filterFn, isPatientLevel = false) => {
+        let total = 0;
+        monthlyCases.forEach(c => {
+            if (isPatientLevel) {
+                const count = parseInt(c[6]) || 1;
+                for (let i = 0; i < count; i++) {
+                    if (filterFn(c, i)) total++;
+                }
+            } else {
+                if (filterFn(c)) total++;
+            }
+        });
+        return total;
+    };
     const totalCases = monthlyCases.length;
 
     // Style helpers
@@ -596,12 +620,12 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     const r9c1 = sheet.getCell('A9'); r9c1.value = "الجنس"; centerAlign(r9c1); boldFont(r9c1); setBorders(r9c1);
     sheet.getCell('A10').border = { bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
 
-    const maleTotal = getCount((c) => c[5] === "ذكر");
+    const maleTotal = getCount((c, i) => c[7 + (i * 2)] === "ذكر", true);
     const r9c2 = sheet.getCell('B9'); r9c2.value = "ذكر"; centerAlign(r9c2); boldFont(r9c2); setBorders(r9c2);
     const cell9_3 = sheet.getCell('C9'); cell9_3.value = maleTotal; centerAlign(cell9_3); boldFont(cell9_3); setBorders(cell9_3);
     if (maleTotal > 0) cell9_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
 
-    const femaleTotal = getCount((c) => c[5] === "أنثى" || c[5] === "انثى");
+    const femaleTotal = getCount((c, i) => { const g = c[7 + (i * 2)]; return g === "أنثى" || g === "انثى"; }, true);
     const r10c2 = sheet.getCell('B10'); r10c2.value = "انثى"; centerAlign(r10c2); boldFont(r10c2); setBorders(r10c2);
     const cell10_3 = sheet.getCell('C10'); cell10_3.value = femaleTotal; centerAlign(cell10_3); boldFont(cell10_3); setBorders(cell10_3);
     if (femaleTotal > 0) cell10_3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
@@ -635,7 +659,7 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         const c2 = sheet.getCell(rIdx, 2);
         c2.value = type; centerAlign(c2); boldFont(c2); setBorders(c2);
 
-        const typeTotal = getCount((c) => c[6] === type);
+        const typeTotal = getCount((c) => c[5] === type, false);
         const cellType = sheet.getCell(rIdx, 3);
         cellType.value = typeTotal; centerAlign(cellType); boldFont(cellType); setBorders(cellType);
         if (typeTotal > 0) cellType.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
@@ -664,7 +688,7 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         const c2 = sheet.getCell(rIdx, 2);
         c2.value = age; centerAlign(c2); boldFont(c2); setBorders(c2);
 
-        const ageTotal = getCount((c) => (c[10] || "غير محدد") === age);
+        const ageTotal = getCount((c, i) => (c[8 + (i * 2)] || "غير محدد") === age, true);
         const cellAge = sheet.getCell(rIdx, 3);
         cellAge.value = ageTotal; centerAlign(cellAge); boldFont(cellAge); setBorders(cellAge);
         if (ageTotal > 0) cellAge.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };

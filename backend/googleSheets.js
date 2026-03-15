@@ -48,11 +48,11 @@ function parseSheetDate(str) {
 
 export async function getCases() {
     try {
-        // Fetch from Cases_Raw_Data
-        // Headers: [0: Timestamp, 1: التاريخ, 2: الشهر, 3: السنة, 4: الفرع, 5: الجنس, 6: نوع الحالة, 7: ملاحظات, 8: الفئة العمرية للحالة, 9: Status]
+        // Fetch from سجل الحالات
+        // Headers: [0: Timestamp, 1: التاريخ, 2: الفرع, 3: نوع الحالة, 4: عدد المصابين, 5: جنس 1, 6: فئة 1, 7: جنس 2, 8: فئة 2, 9: جنس 3, 10: فئة 3, 11: جنس 4, 12: فئة 4, 13: جنس 5, 14: فئة 5, 15: الإجراء المتخذ, 16: ملاحظات, 17: Status]
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: "Cases_Raw_Data!A2:J",
+            range: "سجل الحالات!A2:R",
         });
         const entries = res.data.values || [];
 
@@ -63,29 +63,35 @@ export async function getCases() {
                 "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
             ];
 
-            // Derive month/year from Date
             const derivedMonth = dateVal ? monthNames[dateVal.getMonth()] : "";
             const derivedYear = dateVal ? String(dateVal.getFullYear()) : "";
 
-            // New Index Mapping (Raw 0-7):
-            // r[0]: Timestamp, r[1]: التاريخ, r[2]: الفرع, r[3]: الجنس, r[4]: نوع الحالة, r[5]: ملاحظات, r[6]: الفئة العمرية, r[7]: Status
             return [
-                r[0],       // 0: ID (Timestamp)
-                r[1],       // 1: التاريخ
-                derivedMonth, // 2: الشهر (Derived)
-                derivedYear,  // 3: السنة (Derived)
-                r[2],       // 4: الفرع
-                r[3],       // 5: الجنس
-                r[4],       // 6: نوع الحالة
-                r[5] || "", // 7: ملاحظات
-                r[0],       // 8: CreatedAt
-                r[7] || "",  // 9: Status (Col H / Index 7)
-                r[6] || ""   // 10: Age Group (Col G / Index 6)
+                r[0],             // 0: ID (Timestamp)
+                r[1],             // 1: التاريخ
+                derivedMonth,     // 2: الشهر (Derived)
+                derivedYear,      // 3: السنة (Derived)
+                r[2] || "",       // 4: الفرع
+                r[3] || "",       // 5: نوع الحالة
+                r[4] || "1",      // 6: عدد المصابين
+                r[5] || "",       // 7: جنس 1
+                r[6] || "",       // 8: فئة 1
+                r[7] || "",       // 9: جنس 2
+                r[8] || "",       // 10: فئة 2
+                r[9] || "",       // 11: جنس 3
+                r[10] || "",      // 12: فئة 3
+                r[11] || "",      // 13: جنس 4
+                r[12] || "",      // 14: فئة 4
+                r[13] || "",      // 15: جنس 5
+                r[14] || "",      // 16: فئة 5
+                r[15] || "",      // 17: الإجراء المتخذ
+                r[16] || "",      // 18: ملاحظات
+                r[17] || "",      // 19: Status (Deleted)
             ];
         });
 
-        // Filter out soft-deleted records (index 9)
-        mapped = mapped.filter(r => r[9] !== "Deleted");
+        // Filter out soft-deleted records (index 19)
+        mapped = mapped.filter(r => r[19] !== "Deleted");
 
         // Sort by date (descending)
         return mapped.sort((a, b) => new Date(b[1]) - new Date(a[1]) || (b[0] > a[0] ? 1 : -1));
@@ -95,40 +101,20 @@ export async function getCases() {
     }
 }
 
-// Write to Cases_Raw_Data
-// Frontend provides: [Date.now(), التاريخ, الفرع, الجنس, نوع_الحالة, ملاحظات, CreatedAt, الفئة_العمرية]
 export async function addCase(row) {
-    const dateObj = parseSheetDate(row[1]);
-    const monthNames = [
-        "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
-        "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
-    ];
-    const month = !dateObj ? "" : monthNames[dateObj.getMonth()];
-    const year = !dateObj ? "" : dateObj.getFullYear();
-
-    const rawRow = [
-        row[0],     // Timestamp
-        row[1],     // التاريخ
-        row[2],     // الفرع
-        row[3],     // الجنس
-        row[4],     // نوع الحالة
-        row[5],     // ملاحظات
-        row[7] || "", // الفئة العمرية (index 6 in sheet / Col G)
-        ""          // Status (index 7 in sheet / Col H)
-    ];
-
+    // row comes from backend (already 18 columns). Just append directly.
     await sheets.spreadsheets.values.append({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Cases_Raw_Data!A:H",
+        range: "سجل الحالات!A:R",
         valueInputOption: "USER_ENTERED",
-        requestBody: { values: [rawRow] },
+        requestBody: { values: [row] },
     });
 }
 
 export async function updateCase(id, updatedRow) {
     const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Cases_Raw_Data!A:J",
+        range: "سجل الحالات!A:R",
     });
 
     const rows = res.data.values || [];
@@ -136,43 +122,23 @@ export async function updateCase(id, updatedRow) {
 
     if (rowIndex === -1) throw new Error("Case not found");
 
-    const dateObj = parseSheetDate(updatedRow[1]);
-    const monthNames = [
-        "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
-        "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
-    ];
-    const month = !dateObj ? "" : monthNames[dateObj.getMonth()];
-    const year = !dateObj ? "" : dateObj.getFullYear();
-
-    // New Raw Format: [Timestamp, التاريخ, الفرع, الجنس, نوع الحالة, ملاحظات, الفئة العمرية, Status]
-    const rawRow = [
-        updatedRow[0],     // Timestamp
-        updatedRow[1],     // التاريخ
-        updatedRow[2],     // الفرع
-        updatedRow[3],     // الجنس
-        updatedRow[4],     // نوع الحالة
-        updatedRow[5],     // ملاحظات
-        updatedRow[10] || "", // الفئة العمرية (mapped index 10)
-        updatedRow[9] || ""   // Status (mapped index 9)
-    ];
-
     const sheetRowNumber = rowIndex + 1;
 
     await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
-        range: `Cases_Raw_Data!A${sheetRowNumber}:H${sheetRowNumber}`,
+        range: `سجل الحالات!A${sheetRowNumber}:R${sheetRowNumber}`,
         valueInputOption: "USER_ENTERED",
         requestBody: {
-            values: [rawRow],
+            values: [updatedRow],
         },
     });
 }
 
 export async function deleteCase(id) {
-    // Soft delete: Find row and set Status (column H) to "Deleted"
+    // Soft delete: Find row and set Status (column R) to "Deleted"
     const res = await sheets.spreadsheets.values.get({
         spreadsheetId: SPREADSHEET_ID,
-        range: "Cases_Raw_Data!A:G",
+        range: "سجل الحالات!A:R",
     });
 
     const rows = res.data.values || [];
@@ -182,10 +148,10 @@ export async function deleteCase(id) {
 
     const sheetRowNumber = rowIndex + 1; // 1-indexed
 
-    // Only updating the Status column (H)
+    // Only updating the Status column (R)
     await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
-        range: `Cases_Raw_Data!H${sheetRowNumber}`,
+        range: `سجل الحالات!R${sheetRowNumber}`,
         valueInputOption: "USER_ENTERED",
         requestBody: {
             values: [["Deleted"]],

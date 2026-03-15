@@ -80,10 +80,11 @@ export default function Cases() {
     const [form, setForm] = useState({
         التاريخ: "",
         الفرع: user?.branch || "",
-        الجنس: "",
         نوع_الحالة: "",
+        عدد_المصابين: 1,
+        الإجراء_المتخذ: "",
         ملاحظات: "",
-        الفئة_العمرية: "غير محدد",
+        patients: [{ الجنس: "", الفئة_العمرية: "غير محدد" }],
     });
 
     /* ===== Fetch Cases ===== */
@@ -123,10 +124,11 @@ export default function Cases() {
             setForm({
                 التاريخ: "",
                 الفرع: user?.branch || "",
-                الجنس: "",
                 نوع_الحالة: "",
+                عدد_المصابين: 1,
+                الإجراء_المتخذ: "",
                 ملاحظات: "",
-                الفئة_العمرية: "غير محدد",
+                patients: [{ الجنس: "", الفئة_العمرية: "غير محدد" }],
             });
         } catch (err) {
             console.error(err);
@@ -136,15 +138,24 @@ export default function Cases() {
 
     function handleEdit(caseData) {
         setEditingCaseId(caseData[0]); // ID is at index 0
+        const count = parseInt(caseData[6]) || 1;
+        const pts = [];
+        for (let i = 0; i < count; i++) {
+            pts.push({
+                الجنس: caseData[7 + (i * 2)] || "",
+                الفئة_العمرية: caseData[8 + (i * 2)] || "غير محدد"
+            });
+        }
         setForm({
             ...form,
             التاريخ: caseData[1],
             الفرع: caseData[4],
-            الجنس: caseData[5],
-            نوع_الحالة: caseData[6],
-            ملاحظات: caseData[7] || "",
-            CreatedAt: caseData[8],
-            الفئة_العمرية: caseData[10] || "غير محدد"
+            نوع_الحالة: caseData[5],
+            عدد_المصابين: count,
+            الإجراء_المتخذ: caseData[17] || "",
+            ملاحظات: caseData[18] || "",
+            patients: pts.length > 0 ? pts : [{ الجنس: "", الفئة_العمرية: "غير محدد" }],
+            CreatedAt: caseData[20],
         });
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -178,7 +189,7 @@ export default function Cases() {
             matchBranch = (c[4] || "").includes(user.branch);
         }
 
-        const matchType = typeFilter ? c[6] === typeFilter : true;
+        const matchType = typeFilter ? c[5] === typeFilter : true;
 
         let matchDate = true;
         if (filterMonth || filterYear || filterDay) {
@@ -204,18 +215,26 @@ export default function Cases() {
             matchDate = dayMatch && m && y;
         }
 
-        const searchStr = `${c[7]} ${c[6]}`.toLowerCase();
+        const searchStr = `${c[18]} ${c[5]}`.toLowerCase();
         const matchSearch = searchStr.includes(searchTerm.toLowerCase());
         return matchBranch && matchType && matchSearch && matchDate;
     });
 
     /* ===== Stats ===== */
-    const male = visibleCases.filter((c) => c[5] === "ذكر").length;
-    const female = visibleCases.filter((c) => c[5] === "أنثى").length;
+    let male = 0;
+    let female = 0;
+    visibleCases.forEach((c) => {
+        const count = parseInt(c[6]) || 1;
+        for (let i = 0; i < count; i++) {
+            const gender = c[7 + (i * 2)];
+            if (gender === "ذكر") male++;
+            else if (gender === "أنثى") female++;
+        }
+    });
 
     const typeStats = {};
     visibleCases.forEach((c) => {
-        typeStats[c[6]] = (typeStats[c[6]] || 0) + 1;
+        typeStats[c[5]] = (typeStats[c[5]] || 0) + 1;
     });
 
     /* ===== UI ===== */
@@ -349,18 +368,6 @@ export default function Cases() {
                         )}
 
                         <select
-                            name="الجنس"
-                            value={form.الجنس}
-                            onChange={handleChange}
-                            required
-                            style={inputStyle}
-                        >
-                            <option value="">الجنس</option>
-                            <option value="ذكر">ذكر</option>
-                            <option value="أنثى">أنثى</option>
-                        </select>
-
-                        <select
                             name="نوع_الحالة"
                             value={form.نوع_الحالة}
                             onChange={handleChange}
@@ -374,17 +381,71 @@ export default function Cases() {
                         </select>
 
                         <select
-                            name="الفئة_العمرية"
-                            value={form.الفئة_العمرية}
-                            onChange={handleChange}
+                            name="عدد_المصابين"
+                            value={form.عدد_المصابين}
+                            onChange={(e) => {
+                                const newCount = parseInt(e.target.value) || 1;
+                                const newPts = [...form.patients];
+                                while (newPts.length < newCount) {
+                                    newPts.push({ الجنس: "", الفئة_العمرية: "غير محدد" });
+                                }
+                                setForm({ ...form, عدد_المصابين: newCount, patients: newPts.slice(0, newCount) });
+                            }}
                             required
                             style={inputStyle}
                         >
-                            <option value="">الفئة العمرية</option>
-                            {AGE_GROUPS.map((g) => (
-                                <option key={g} value={g}>{g}</option>
-                            ))}
+                            <option value="1">1 مصاب</option>
+                            <option value="2">2 مصابين</option>
+                            <option value="3">3 مصابين</option>
+                            <option value="4">4 مصابين</option>
+                            <option value="5">5 مصابين</option>
                         </select>
+
+                        <div style={{ gridColumn: "1 / -1", display: 'flex', flexDirection: 'column', gap: '10px', background: '#f5f5f5', padding: '10px', borderRadius: '8px' }}>
+                            <strong style={{ fontSize: '14px', color: '#555' }}>تفاصيل المصابين:</strong>
+                            {form.patients.map((p, pIdx) => (
+                                <div key={pIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <span style={{ width: '20px', fontWeight: 'bold' }}>{pIdx + 1}</span>
+                                    <select
+                                        value={p.الجنس}
+                                        onChange={(e) => {
+                                            const newPts = [...form.patients];
+                                            newPts[pIdx].الجنس = e.target.value;
+                                            setForm({ ...form, patients: newPts });
+                                        }}
+                                        required
+                                        style={inputStyle}
+                                    >
+                                        <option value="">الجنس</option>
+                                        <option value="ذكر">ذكر</option>
+                                        <option value="أنثى">أنثى</option>
+                                    </select>
+                                    <select
+                                        value={p.الفئة_العمرية}
+                                        onChange={(e) => {
+                                            const newPts = [...form.patients];
+                                            newPts[pIdx].الفئة_العمرية = e.target.value;
+                                            setForm({ ...form, patients: newPts });
+                                        }}
+                                        required
+                                        style={inputStyle}
+                                    >
+                                        <option value="">الفئة العمرية</option>
+                                        {AGE_GROUPS.map((g) => (
+                                            <option key={g} value={g}>{g}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ))}
+                        </div>
+
+                        <input
+                            name="الإجراء_المتخذ"
+                            placeholder="الإجراء المتخذ"
+                            value={form.الإجراء_المتخذ}
+                            onChange={handleChange}
+                            style={inputStyle}
+                        />
 
                         <input
                             name="ملاحظات"
@@ -406,10 +467,11 @@ export default function Cases() {
                                         setForm({
                                             التاريخ: "",
                                             الفرع: user?.branch || "",
-                                            الجنس: "",
                                             نوع_الحالة: "",
+                                            عدد_المصابين: 1,
+                                            الإجراء_المتخذ: "",
                                             ملاحظات: "",
-                                            الفئة_العمرية: "غير محدد",
+                                            patients: [{ الجنس: "", الفئة_العمرية: "غير محدد" }],
                                         });
                                     }}
                                     style={{ ...submitBtn, background: "#6c757d", width: "auto" }}
@@ -446,9 +508,10 @@ export default function Cases() {
                                     <th>الشهر</th>
                                     <th>السنة</th>
                                     <th>الفرع</th>
-                                    <th>الجنس</th>
-                                    <th>الفئة العمرية</th>
                                     <th>نوع الحالة</th>
+                                    <th>عدد المصابين</th>
+                                    <th>المصابون (الجنس / العمر)</th>
+                                    <th>الإجراء المتخذ</th>
                                     <th>ملاحظات</th>
                                     <th>إجراءات</th>
                                 </tr>
@@ -465,9 +528,18 @@ export default function Cases() {
                                             <td>{c[3]}</td>
                                             <td>{c[4]}</td>
                                             <td>{c[5]}</td>
-                                            <td>{c[10] || "غير محدد"}</td>
                                             <td>{c[6]}</td>
-                                            <td>{c[7]}</td>
+                                            <td>
+                                                <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
+                                                    {Array.from({ length: parseInt(c[6]) || 1 }).map((_, idx) => (
+                                                        <div key={idx}>
+                                                            {idx + 1}- {c[7 + (idx * 2)] || "-"} / {c[8 + (idx * 2)] || "-"}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </td>
+                                            <td>{c[17]}</td>
+                                            <td>{c[18]}</td>
                                             <td>
                                                 <div style={{ display: "flex", gap: "10px", justifyContent: 'center' }}>
                                                     <button

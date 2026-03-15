@@ -103,21 +103,28 @@ export default function MonthlyCasesReport() {
     };
 
     const applyTypeFilter = (data, type) => {
-        const result = type === "ALL" ? data : data.filter((c) => c[6] === type);
+        const result = type === "ALL" ? data : data.filter((c) => c[5] === type);
 
-        const maleCases = result.filter((c) => c[5] === "ذكر").length;
-        const femaleCases = result.filter((c) => c[5] === "أنثى").length;
-
+        let maleCases = 0;
+        let femaleCases = 0;
         const types = {};
         const ages = {};
 
         data.forEach((c) => {
-            types[c[6]] = (types[c[6]] || 0) + 1;
+            types[c[5]] = (types[c[5]] || 0) + 1;
         });
 
         result.forEach((c) => {
-            const ageKey = c[10] || "غير محدد";
-            ages[ageKey] = (ages[ageKey] || 0) + 1;
+            let count = parseInt(c[6]) || 1;
+            for (let i = 0; i < count; i++) {
+                const gender = c[7 + (i * 2)];
+                const ageKey = c[8 + (i * 2)] || "غير محدد";
+
+                if (gender === "ذكر") maleCases++;
+                else if (gender === "أنثى") femaleCases++;
+
+                ages[ageKey] = (ages[ageKey] || 0) + 1;
+            }
         });
 
         setFiltered(result);

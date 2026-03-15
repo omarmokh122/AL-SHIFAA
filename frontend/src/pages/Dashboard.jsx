@@ -207,10 +207,7 @@ export default function Dashboard() {
           style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
           title="إلغاء الفلاتر"
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C22129" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#C22129" xmlns="http://www.w3.org/2000/svg"><path d="M3 4a1 1 0 0 1 1-1h16a1 1 0 0 1 .77 1.64l-6.27 7.53V19a1 1 0 0 1-1.45.89l-4-2A1 1 0 0 1 9 17v-3.83L3.23 5.64A1 1 0 0 1 3 5V4z"/></svg>
         </button>
       </div>
 

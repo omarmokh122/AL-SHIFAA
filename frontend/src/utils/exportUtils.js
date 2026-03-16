@@ -1430,10 +1430,16 @@ export async function exportProfilePDF(member, filename) {
 
     console.log("Saving PDF...");
     try {
-        doc.save(filename);
-        console.log("PDF Saved successfully!");
+        const safeFilename = filename.replace(/[^\x00-\x7F]/g, "_") || "profile.pdf";
+        doc.save(safeFilename);
+        console.log("PDF Saved successfully with name:", safeFilename);
     } catch (e) {
         console.error("doc.save Error:", e);
-        throw new Error(`تعذر حفظ الملف على جهازك: ${e.message}`);
+        // Fallback save with safe name
+        try {
+            doc.save("medical_profile.pdf");
+        } catch (e2) {
+            throw new Error(`تعذر حفظ الملف: ${e.message}`);
+        }
     }
 }

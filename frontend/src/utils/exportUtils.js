@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import logoPng from "../assets/main_logo.png"; // We'll convert this to Base64 to embed it
@@ -53,7 +53,7 @@ export async function exportStyledPDF(title, subtitle, medicName, headers, rows,
     doc.text(`إعداد المسعف: ${medicName}`, 200, 36, { align: 'right' });
 
     // 3. Add Table
-    doc.autoTable({
+    autoTable(doc, {
         head: headers,
         body: rows,
         startY: 45,
@@ -66,7 +66,7 @@ export async function exportStyledPDF(title, subtitle, medicName, headers, rows,
         const finalY = doc.lastAutoTable.finalY + 10;
 
         // Use autoTable for the summary to guarantee Arabic text rendering support
-        doc.autoTable({
+        autoTable(doc, {
             body: summaryData.map(item => [item.label, item.value]),
             startY: finalY,
             styles: { font: "Amiri", direction: 'rtl', halign: 'right', fontSize: 12, fontStyle: 'bold' },
@@ -1391,7 +1391,7 @@ export async function exportProfilePDF(member, filename) {
     ];
 
     try {
-        doc.autoTable({
+        autoTable(doc, {
             body: details,
             startY: currentY,
             styles: {

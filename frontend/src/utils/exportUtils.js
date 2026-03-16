@@ -1433,14 +1433,16 @@ export async function exportProfilePDF(member, filename) {
 
     console.log("Saving PDF...");
     try {
-        const safeFilename = filename.replace(/[^\x00-\x7F]/g, "_") || "profile.pdf";
-        doc.save(safeFilename);
-        console.log("PDF Saved successfully with name:", safeFilename);
+        // We try to keep the Arabic name for browsers that support it
+        // but also provide a fallback 'profile.pdf' if things go wrong.
+        doc.save(filename);
+        console.log("PDF Saved successfully with name:", filename);
     } catch (e) {
         console.error("doc.save Error:", e);
-        // Fallback save with safe name
+        // Fallback save with safe name if the original filename caused a crash
         try {
-            doc.save("medical_profile.pdf");
+            const safeName = "medical_profile.pdf";
+            doc.save(safeName);
         } catch (e2) {
             throw new Error(`تعذر حفظ الملف: ${e.message}`);
         }

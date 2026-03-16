@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api";
-
 import { compressAndResizeImage } from "../utils/image";
+import { exportProfilePDF } from "../utils/exportUtils";
 
 const ROLES = ["مسؤول فريق البقاع", "مسؤول منطقة البقاع", "مسعف + سايق", "مسعف", "ممرض", "طبيب", "سائق إسعاف", "إداري", "متطوع"];
 
@@ -18,6 +18,7 @@ export default function MedicalProfile() {
     const [isEditing, setIsEditing] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
     const [formData, setFormData] = useState({
         الاسم_الثلاثي: m ? m[1] : "",
         الفرع: m ? m[2] : "",
@@ -75,6 +76,19 @@ export default function MedicalProfile() {
         }
     }
 
+    async function handleDownloadPDF() {
+        if (isDownloading) return;
+        setIsDownloading(true);
+        try {
+            await exportProfilePDF(formData, `ملف_${formData.الاسم_الثلاثي}.pdf`);
+        } catch (err) {
+            console.error("PDF Export Error:", err);
+            alert("❌ فشل تحميل الملف");
+        } finally {
+            setIsDownloading(false);
+        }
+    }
+
     return (
         <div dir="rtl" style={page}>
             {/* ===== HEADER ===== */}
@@ -100,6 +114,20 @@ export default function MedicalProfile() {
                 {isEditing && (
                     <button onClick={() => setIsEditing(false)} style={{ ...backBtn, background: "#777", marginRight: "10px" }}>
                         إلغاء
+                    </button>
+                )}
+                {!isEditing && (
+                    <button
+                        onClick={handleDownloadPDF}
+                        disabled={isDownloading}
+                        style={{
+                            ...backBtn,
+                            background: "#424443",
+                            marginRight: "10px",
+                            opacity: isDownloading ? 0.7 : 1
+                        }}
+                    >
+                        {isDownloading ? "⏳ جاري التحميل..." : "📥 تحميل الملف PDF"}
                     </button>
                 )}
             </div>

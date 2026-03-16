@@ -7,7 +7,7 @@ import logoPng from "../assets/main_logo.png"; // We'll convert this to Base64 t
 /**
  * Helper to convert an image URL or import into a Base64 string for PDF/Excel.
  */
-async function getBase64ImageFromUrl(imageUrl) {
+export async function getBase64ImageFromUrl(imageUrl) {
     const res = await fetch(imageUrl);
     const blob = await res.blob();
     return new Promise((resolve, reject) => {
@@ -1272,4 +1272,130 @@ export async function exportAnnualFinancialExcel(year, branch, rows, filename) {
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     saveAs(blob, filename);
+}
+
+/**
+ * Export a professional branded Profile for a Medical Team Member
+ * @param {Object} member Data from MedicalProfile formData
+ * @param {string} filename Output file name
+ */
+export async function exportProfilePDF(member, filename) {
+    const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+    });
+
+    // 1. Load Font (Amiri for Arabic support)
+    try {
+        const fontRes = await fetch("/fonts/Amiri-Regular.ttf");
+        const fontBlob = await fontRes.blob();
+        const fontBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(fontBlob);
+        });
+        doc.addFileToVFS("Amiri-Regular.ttf", fontBase64);
+        doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+        doc.setFont("Amiri");
+    } catch (e) {
+        console.warn("Could not load Amiri font for profile PDF", e);
+    }
+
+    // 2. Add Branding (Logo + Name)
+    const redColor = [194, 33, 41]; // #C22129
+
+    try {
+        const logoBase64 = await getBase64ImageFromUrl(logoPng);
+        doc.addImage(logoBase64, "PNG", 170, 10, 25, 25); // Top right (Arabic layout)
+    } catch (e) {
+        console.warn("Could not load logo", e);
+    }
+
+    doc.setTextColor(redColor[0], redColor[1], redColor[2]);
+    doc.setFontSize(22);
+    doc.text("AL SHIFAA", 10, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Medical & Humanitarian Services", 10, 26);
+
+    doc.setDrawColor(redColor[0], redColor[1], redColor[2]);
+    doc.setLineWidth(0.5);
+    doc.line(10, 38, 200, 38); // Header Separator
+
+    // 3. Title
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(18);
+    doc.text("ملف عضو طبي", 105, 50, { align: "center" });
+
+    // 4. Member Photo & Name
+    let currentY = 65;
+
+    if (member.image_url) {
+        try {
+            // Check if it's already base64 or a URL
+            let imgData = member.image_url;
+            if (!imgData.startsWith('data:')) {
+                imgData = await getBase64ImageFromUrl(imgData);
+            }
+            // Draw a rounded rectangle for photo
+            doc.setFillColor(245, 245, 245);
+            doc.roundedRect(145, currentY, 40, 45, 3, 3, 'F');
+            doc.addImage(imgData, "JPEG", 147, currentY + 2, 36, 41);
+        } catch (e) {
+            console.warn("Could not add member photo", e);
+        }
+    }
+
+    doc.setFontSize(16);
+    doc.setTextColor(redColor[0], redColor[1], redColor[2]);
+    doc.text(member.الاسم_الثلاثي || "-", 135, currentY + 10, { align: "right" });
+
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(member.الفرع || "-", 135, currentY + 18, { align: "right" });
+    doc.text(member.الصفة || "-", 135, currentY + 26, { align: "right" });
+
+    currentY += 60;
+
+    // 5. Details Table
+    const details = [
+        ["فئة الدم", member.فئة_الدم || "-"],
+        ["تاريخ الميلاد", member.تاريخ_الميلاد || "-"],
+        ["الوضع الاجتماعي", member.الوضع_الاجتماعي || "-"],
+        ["عدد الأولاد", member.عدد_الأولاد || "-"],
+        ["رقم الهاتف", member.رقم_الهاتف || "-"],
+        ["المستوى التعليمي", member.المستوى_التعليمي || "-"],
+        ["رقم البطاقة", member.رقم_البطاقة || "-"],
+    ];
+
+    doc.autoTable({
+        body: details,
+        startY: currentY,
+        styles: {
+            font: "Amiri",
+            fontSize: 12,
+            halign: "right",
+            cellPadding: 6,
+        },
+        columnStyles: {
+            0: { fillColor: [245, 245, 245], fontStyle: "bold", textColor: redColor, width: 50 },
+            1: { halign: "right" }
+        },
+        theme: "grid",
+        margin: { left: 20, right: 20 },
+    });
+
+    // 6. Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        const footerY = 285;
+        doc.line(10, footerY - 5, 200, footerY - 5);
+        doc.text("هذا المستند تم إنشاؤه بواسطة نظام الشفاء للخدمات الطبية", 105, footerY, { align: "center" });
+    }
+
+    doc.save(filename);
 }

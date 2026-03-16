@@ -1336,6 +1336,7 @@ export async function exportProfilePDF(member, filename) {
         doc.line(10, 38, 200, 38);
 
         // 3. Title
+        doc.setFont("Amiri");
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(18);
         doc.text("ملف عضو طبي", 105, 50, { align: "center" });
@@ -1399,9 +1400,10 @@ export async function exportProfilePDF(member, filename) {
                 fontSize: 12,
                 halign: "right",
                 cellPadding: 6,
+                direction: 'rtl', // Essential for Arabic
             },
             columnStyles: {
-                0: { fillColor: [245, 245, 245], fontStyle: "bold", textColor: [194, 33, 41], width: 50 },
+                0: { fillColor: [245, 245, 245], textColor: [194, 33, 41], width: 50 },
                 1: { halign: "right" }
             },
             theme: "grid",
@@ -1418,6 +1420,7 @@ export async function exportProfilePDF(member, filename) {
         const pageCount = doc.internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
+            doc.setFont("Amiri");
             doc.setFontSize(9);
             doc.setTextColor(150, 150, 150);
             const footerY = 285;

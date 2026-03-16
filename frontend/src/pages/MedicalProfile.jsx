@@ -83,7 +83,7 @@ export default function MedicalProfile() {
             await exportProfilePDF(formData, `ملف_${formData.الاسم_الثلاثي}.pdf`);
         } catch (err) {
             console.error("PDF Export Error:", err);
-            alert("❌ فشل تحميل الملف");
+            alert(`❌ فشل تحميل الملف: ${err.message || 'خطأ غير معروف'}`);
         } finally {
             setIsDownloading(false);
         }

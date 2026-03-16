@@ -1280,6 +1280,7 @@ export async function exportAnnualFinancialExcel(year, branch, rows, filename) {
  * @param {string} filename Output file name
  */
 export async function exportProfilePDF(member, filename) {
+    console.log("Starting exportProfilePDF for:", member?.الاسم_الثلاثي);
     const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -1288,77 +1289,97 @@ export async function exportProfilePDF(member, filename) {
 
     // 1. Load Font (Amiri for Arabic support)
     try {
+        console.log("Fetching font from: /fonts/Amiri-Regular.ttf");
         const fontRes = await fetch("/fonts/Amiri-Regular.ttf");
-        const fontBlob = await fontRes.blob();
-        const fontBase64 = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.readAsDataURL(fontBlob);
-        });
-        doc.addFileToVFS("Amiri-Regular.ttf", fontBase64);
-        doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-        doc.setFont("Amiri");
+        if (!fontRes.ok) {
+            console.error("Font fetch failed:", fontRes.status, fontRes.statusText);
+        } else {
+            const fontBlob = await fontRes.blob();
+            const fontBase64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = (e) => reject(new Error("FileReader error during font loading"));
+                reader.readAsDataURL(fontBlob);
+            });
+
+            doc.addFileToVFS("Amiri-Regular.ttf", fontBase64);
+            doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+            doc.setFont("Amiri");
+            console.log("Font 'Amiri' loaded and set");
+        }
     } catch (e) {
-        console.warn("Could not load Amiri font for profile PDF", e);
+        console.warn("Non-critical Font Load Error:", e);
     }
 
     // 2. Add Branding (Logo + Name)
     const redColor = [194, 33, 41]; // #C22129
 
     try {
+        console.log("Loading logo...");
         const logoBase64 = await getBase64ImageFromUrl(logoPng);
-        doc.addImage(logoBase64, "PNG", 170, 10, 25, 25); // Top right (Arabic layout)
+        doc.addImage(logoBase64, "PNG", 170, 10, 25, 25);
+        console.log("Logo added");
     } catch (e) {
         console.warn("Could not load logo", e);
     }
 
-    doc.setTextColor(redColor[0], redColor[1], redColor[2]);
-    doc.setFontSize(22);
-    doc.text("AL SHIFAA", 10, 20);
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Medical & Humanitarian Services", 10, 26);
+    try {
+        doc.setTextColor(redColor[0], redColor[1], redColor[2]);
+        doc.setFontSize(22);
+        doc.text("AL SHIFAA", 10, 20);
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text("Medical & Humanitarian Services", 10, 26);
 
-    doc.setDrawColor(redColor[0], redColor[1], redColor[2]);
-    doc.setLineWidth(0.5);
-    doc.line(10, 38, 200, 38); // Header Separator
+        doc.setDrawColor(redColor[0], redColor[1], redColor[2]);
+        doc.setLineWidth(0.5);
+        doc.line(10, 38, 200, 38);
 
-    // 3. Title
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(18);
-    doc.text("ملف عضو طبي", 105, 50, { align: "center" });
+        // 3. Title
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(18);
+        doc.text("ملف عضو طبي", 105, 50, { align: "center" });
+    } catch (e) {
+        console.error("Header Rendering Error:", e);
+    }
 
     // 4. Member Photo & Name
     let currentY = 65;
 
     if (member.image_url) {
         try {
-            // Check if it's already base64 or a URL
+            console.log("Handling member image...");
             let imgData = member.image_url;
             if (!imgData.startsWith('data:')) {
                 imgData = await getBase64ImageFromUrl(imgData);
             }
-            // Draw a rounded rectangle for photo
+            // Draw photo area
             doc.setFillColor(245, 245, 245);
             doc.roundedRect(145, currentY, 40, 45, 3, 3, 'F');
             doc.addImage(imgData, "JPEG", 147, currentY + 2, 36, 41);
+            console.log("Member image added");
         } catch (e) {
-            console.warn("Could not add member photo", e);
+            console.warn("Could not add member photo:", e);
         }
     }
 
-    doc.setFontSize(16);
-    doc.setTextColor(redColor[0], redColor[1], redColor[2]);
-    doc.text(member.الاسم_الثلاثي || "-", 135, currentY + 10, { align: "right" });
+    try {
+        doc.setFontSize(16);
+        doc.setTextColor(redColor[0], redColor[1], redColor[2]);
+        doc.text(member.الاسم_الثلاثي || "-", 135, currentY + 10, { align: "right" });
 
-    doc.setFontSize(12);
-    doc.setTextColor(100, 100, 100);
-    doc.text(member.الفرع || "-", 135, currentY + 18, { align: "right" });
-    doc.text(member.الصفة || "-", 135, currentY + 26, { align: "right" });
+        doc.setFontSize(12);
+        doc.setTextColor(100, 100, 100);
+        doc.text(member.الفرع || "-", 135, currentY + 18, { align: "right" });
+        doc.text(member.الصفة || "-", 135, currentY + 26, { align: "right" });
+    } catch (e) {
+        console.error("Member info rendering error:", e);
+    }
 
     currentY += 60;
 
     // 5. Details Table
+    console.log("Starting autoTable...");
     const details = [
         ["فئة الدم", member.فئة_الدم || "-"],
         ["تاريخ الميلاد", member.تاريخ_الميلاد || "-"],
@@ -1369,33 +1390,50 @@ export async function exportProfilePDF(member, filename) {
         ["رقم البطاقة", member.رقم_البطاقة || "-"],
     ];
 
-    doc.autoTable({
-        body: details,
-        startY: currentY,
-        styles: {
-            font: "Amiri",
-            fontSize: 12,
-            halign: "right",
-            cellPadding: 6,
-        },
-        columnStyles: {
-            0: { fillColor: [245, 245, 245], fontStyle: "bold", textColor: redColor, width: 50 },
-            1: { halign: "right" }
-        },
-        theme: "grid",
-        margin: { left: 20, right: 20 },
-    });
-
-    // 6. Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(9);
-        doc.setTextColor(150, 150, 150);
-        const footerY = 285;
-        doc.line(10, footerY - 5, 200, footerY - 5);
-        doc.text("هذا المستند تم إنشاؤه بواسطة نظام الشفاء للخدمات الطبية", 105, footerY, { align: "center" });
+    try {
+        doc.autoTable({
+            body: details,
+            startY: currentY,
+            styles: {
+                font: "Amiri",
+                fontSize: 12,
+                halign: "right",
+                cellPadding: 6,
+            },
+            columnStyles: {
+                0: { fillColor: [245, 245, 245], fontStyle: "bold", textColor: [194, 33, 41], width: 50 },
+                1: { halign: "right" }
+            },
+            theme: "grid",
+            margin: { left: 20, right: 20 },
+        });
+        console.log("autoTable finished");
+    } catch (e) {
+        console.error("autoTable Error:", e);
+        throw new Error(`خطأ في إنشاء الجدول: ${e.message}`);
     }
 
-    doc.save(filename);
+    // 6. Footer
+    try {
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(9);
+            doc.setTextColor(150, 150, 150);
+            const footerY = 285;
+            doc.line(10, footerY - 5, 200, footerY - 5);
+            doc.text("هذا المستند تم إنشاؤه بواسطة نظام الشفاء للخدمات الطبية", 105, footerY, { align: "center" });
+        }
+    } catch (e) {
+        console.error("Footer rendering error:", e);
+    }
+
+    console.log("Saving PDF...");
+    try {
+        doc.save(filename);
+        console.log("PDF Saved successfully!");
+    } catch (e) {
+        console.error("doc.save Error:", e);
+        throw new Error(`تعذر حفظ الملف على جهازك: ${e.message}`);
+    }
 }

@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const backendURL = "https://al-shifaa-backend.onrender.com";
+console.log("Using API BaseURL:", backendURL);
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || "https://al-shifaa-backend.onrender.com",
+    baseURL: backendURL,
 });
 
 export default api;

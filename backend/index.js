@@ -220,7 +220,7 @@ app.get("/donations", async (req, res) => {
     console.error("GET /donations error:", error.message);
     res.status(500).json({
       success: false,
-      error: `Error fetching data. Check backend logs: ${error.message}`,
+      error: `خطأ في جلب التبرعات: ${error.message}`,
     });
   }
 });
@@ -348,7 +348,7 @@ app.get("/cases", async (req, res) => {
     console.error("GET /cases error:", error.message);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: `خطأ في جلب الحالات: ${error.message}`,
     });
   }
 });
@@ -484,7 +484,7 @@ app.get("/financial", async (req, res) => {
     console.error("GET /financial error:", error.message);
     res.status(500).json({
       success: false,
-      error: error.message,
+      error: `خطأ في جلب البيانات المالية: ${error.message}`,
     });
   }
 });

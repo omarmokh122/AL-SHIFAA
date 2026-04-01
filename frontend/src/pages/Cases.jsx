@@ -95,7 +95,8 @@ export default function Cases() {
             setCases(res.data.data || []);
         } catch (err) {
             console.error(err);
-            alert("خطأ في جلب الحالات");
+            const errMsg = err.response?.data?.error || err.message;
+            alert("خطأ في جلب الحالات: " + errMsg);
         } finally {
             setLoading(false);
         }

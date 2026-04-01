@@ -1,4 +1,9 @@
 import { google } from "googleapis";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // =====================
 // Google Auth
@@ -8,7 +13,7 @@ const creds = process.env.GOOGLE_SHEETS_CREDENTIALS
     : null;
 
 const auth = new google.auth.GoogleAuth({
-    keyFile: creds ? undefined : "credentials.json",
+    keyFile: creds ? undefined : path.join(__dirname, "credentials.json"),
     credentials: creds || undefined,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
@@ -97,7 +102,7 @@ export async function getCases() {
         return mapped.sort((a, b) => new Date(b[1]) - new Date(a[1]) || (b[0] > a[0] ? 1 : -1));
     } catch (error) {
         console.error("Error in getCases:", error.message);
-        return [];
+        throw error; // Rethrow to allow proper error handling in the API response
     }
 }
 

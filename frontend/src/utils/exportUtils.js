@@ -475,9 +475,10 @@ export async function exportYearlyCasesTemplateExcel(year, branch, cases, filena
     saveAs(blob, filename);
 }
 
-export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases, filename) {
+export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases, filename, range = null) {
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet(`تقرير ${month} ${year}`, { views: [{ rightToLeft: true }] });
+    const sheetTitle = range ? `تقرير من ${range.start} إلى ${range.end}` : `تقرير ${month} ${year}`;
+    const sheet = workbook.addWorksheet(sheetTitle, { views: [{ rightToLeft: true }] });
 
     // 1. Columns Setup (Narrower for monthly)
     sheet.columns = [
@@ -486,17 +487,30 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         { width: 15 }  // C: Month Count
     ];
 
-    // Filter cases for the given year and month, and validate branch
+    // Filter cases for the given year and month (or range), and validate branch
     const monthlyCases = cases.filter(c => {
         const d = parseSheetDate(c[1]);
-        const monthNames = ["كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران", "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"];
-        const rowMonth = d ? monthNames[d.getMonth()] : "";
-        const rowYear = d ? String(d.getFullYear()) : "";
+        if (!d) return false;
 
-        if (rowYear !== String(year) || rowMonth !== month) return false;
-        if (branch === "كل الفروع" || branch === "All") return true;
-        return (c[4] || "").includes(branch);
+        const branchMatch = (branch === "كل الفروع" || branch === "All") ? true : (c[4] || "").includes(branch);
+        if (!branchMatch) return false;
+
+        if (range && range.start && range.end) {
+            const start = new Date(range.start);
+            const end = new Date(range.end);
+            // Set times to midnight for accurate comparison
+            const rowDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+            const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+            return rowDate >= startDate && rowDate <= endDate;
+        } else {
+            const monthNames = ["كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران", "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"];
+            const rowMonth = monthNames[d.getMonth()];
+            const rowYear = String(d.getFullYear());
+            return rowYear === String(year) && rowMonth === month;
+        }
     });
+
     const getCount = (filterFn, isPatientLevel = false) => {
         let total = 0;
         monthlyCases.forEach(c => {
@@ -558,7 +572,7 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     // Center Title 
     sheet.mergeCells('A3:C3');
     const mainTitle = sheet.getCell('A3');
-    mainTitle.value = `الحالات الاسعافية خلال شهر ${month} ${year}`;
+    mainTitle.value = range ? `الحالات الاسعافية من ${range.start} إلى ${range.end}` : `الحالات الاسعافية خلال شهر ${month} ${year}`;
     mainTitle.font = { size: 14, bold: true };
     centerAlign(mainTitle);
 
@@ -590,13 +604,13 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     const r5c1 = sheet.getCell('A5'); r5c1.value = "المكان"; centerAlign(r5c1); boldFont(r5c1); setBorders(r5c1);
     const r5c2 = sheet.getCell('C5'); r5c2.value = locationText; centerAlign(r5c2); setBorders(r5c2);
 
-    // Row 6: Month Header
+    // Row 6: Month/Period Header
     sheet.mergeCells('A6:B6');
-    const r6c1 = sheet.getCell('A6'); r6c1.value = "الشهر"; centerAlign(r6c1); boldFont(r6c1); setBorders(r6c1);
+    const r6c1 = sheet.getCell('A6'); r6c1.value = range ? "الفترة" : "الشهر"; centerAlign(r6c1); boldFont(r6c1); setBorders(r6c1);
     r6c1.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
     r6c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
 
-    const r6c3 = sheet.getCell('C6'); r6c3.value = month; centerAlign(r6c3); boldFont(r6c3); setBorders(r6c3);
+    const r6c3 = sheet.getCell('C6'); r6c3.value = range ? `${range.start} - ${range.end}` : month; centerAlign(r6c3); boldFont(r6c3); setBorders(r6c3);
     r6c3.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
     r6c3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC22129' } };
 

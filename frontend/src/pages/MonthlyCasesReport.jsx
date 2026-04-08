@@ -23,6 +23,8 @@ export default function MonthlyCasesReport() {
 
     const [month, setMonth] = useState("");
     const [year, setYear] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
     const [selectedType, setSelectedType] = useState("ALL");
     const [selectedBranch, setSelectedBranch] = useState("All");
     const [isExpanded, setIsExpanded] = useState(false);
@@ -90,28 +92,37 @@ export default function MonthlyCasesReport() {
 
     /* ================= GENERATE REPORT ================= */
     const generateReport = () => {
-        if (!month || !year) {
-            alert("يرجى اختيار الشهر والسنة");
+        if ((!month || !year) && (!startDate || !endDate)) {
+            alert("يرجى اختيار الشهر والسنة، أو تحديد فترة زمنية (من - إلى)");
             return;
         }
 
         const base = cases.filter((c) => {
             const d = parseSheetDate(c[1]);
-            const monthNames = [
-                "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
-                "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
-            ];
-
-            const rowMonth = d ? monthNames[d.getMonth()] : "";
-            const rowYear = d ? String(d.getFullYear()) : "";
-
-            const matchMonth = rowMonth === month;
-            const matchYear = rowYear === String(year);
             const matchBranch = user.role === "super"
                 ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
                 : (c[4] || "").includes(user.branch);
 
-            return matchMonth && matchYear && matchBranch;
+            if (!matchBranch) return false;
+
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                if (!d) return false;
+                // Normalize dates to midnight for comparison
+                const rowDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                const sDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+                const eDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+                return rowDate >= sDate && rowDate <= eDate;
+            } else {
+                const monthNames = [
+                    "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+                    "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+                ];
+                const rowMonth = d ? monthNames[d.getMonth()] : "";
+                const rowYear = d ? String(d.getFullYear()) : "";
+                return rowMonth === month && rowYear === String(year);
+            }
         });
 
         applyTypeFilter(base, selectedType);
@@ -157,27 +168,35 @@ export default function MonthlyCasesReport() {
         setSelectedType(v);
         const base = cases.filter((c) => {
             const d = parseSheetDate(c[1]);
-            const monthNames = [
-                "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
-                "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
-            ];
-
-            const rowMonth = d ? monthNames[d.getMonth()] : "";
-            const rowYear = d ? String(d.getFullYear()) : "";
-
-            const matchMonth = rowMonth === month;
-            const matchYear = rowYear === String(year);
             const matchBranch = user.role === "super"
                 ? (selectedBranch === "All" ? true : (c[4] || "").includes(selectedBranch))
                 : (c[4] || "").includes(user.branch);
 
-            return matchMonth && matchYear && matchBranch;
+            if (!matchBranch) return false;
+
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                if (!d) return false;
+                const rowDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                const sDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+                const eDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+                return rowDate >= sDate && rowDate <= eDate;
+            } else {
+                const monthNames = [
+                    "كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران",
+                    "تموز", "آب", "أيلول", "تشرين الأول", "تشرين الثاني", "كانون الأول"
+                ];
+                const rowMonth = d ? monthNames[d.getMonth()] : "";
+                const rowYear = d ? String(d.getFullYear()) : "";
+                return rowMonth === month && rowYear === String(year);
+            }
         });
         applyTypeFilter(base, v);
     };
 
     const exportExcel = async () => {
-        if (!month || !year) {
+        if (!generated) {
             alert("يرجى إنشاء التقرير أولاً");
             return;
         }
@@ -185,7 +204,12 @@ export default function MonthlyCasesReport() {
             ? (selectedBranch === "All" ? "كل الفروع" : selectedBranch)
             : user.branch;
 
-        await exportMonthlyCasesTemplateExcel(year, month, branchName, cases, `تقرير_الحالات_${month}_${year}.xlsx`);
+        const range = (startDate && endDate) ? { start: startDate, end: endDate } : null;
+        const fileName = range 
+            ? `تقرير_الحالات_من_${startDate}_إلى_${endDate}.xlsx` 
+            : `تقرير_الحالات_${month}_${year}.xlsx`;
+
+        await exportMonthlyCasesTemplateExcel(year, month, branchName, cases, fileName, range);
     };
 
     const exportYearlyExcel = async () => {
@@ -235,10 +259,22 @@ export default function MonthlyCasesReport() {
                     )
                 }
 
+                <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                    <label style={{ fontSize: "12px", whiteSpace: "nowrap" }}>من:</label>
+                    <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setMonth(""); setYear(""); }} style={selectMini} />
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                    <label style={{ fontSize: "12px", whiteSpace: "nowrap" }}>إلى:</label>
+                    <input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setMonth(""); setYear(""); }} style={selectMini} />
+                </div>
+
                 <button
                     onClick={() => {
                         setMonth("");
                         setYear("");
+                        setStartDate("");
+                        setEndDate("");
                         if (user.role === "super") setSelectedBranch("All");
                         setGenerated(false);
                     }}
@@ -279,10 +315,13 @@ export default function MonthlyCasesReport() {
                     <div style={summary}>
                         <h4>ملخص تنفيذي</h4>
                         <p>
-                            يعرض هذا التقرير الحالات الطبية المسجّلة خلال شهر{" "}
-                            <strong>{month}</strong> من سنة{" "}
-                            <strong>{year}</strong> في{" "}
-                            <strong>{user.role === "super" ? (selectedBranch === "All" ? "جميع الفروع" : selectedBranch) : user.branch}</strong>.
+                            يعرض هذا التقرير الحالات الطبية المسجّلة 
+                            {startDate && endDate ? (
+                                <> من تاريخ <strong>{startDate}</strong> إلى <strong>{endDate}</strong> </>
+                            ) : (
+                                <> خلال شهر <strong>{month}</strong> من سنة <strong>{year}</strong> </>
+                            )}
+                            في <strong>{user.role === "super" ? (selectedBranch === "All" ? "جميع الفروع" : selectedBranch) : user.branch}</strong>.
                         </p>
                         <div style={{ display: 'flex', gap: '15px', marginTop: '15px', flexWrap: 'wrap' }}>
                             <div style={statPill}><strong>إجمالي الحالات:</strong> {stats.total}</div>

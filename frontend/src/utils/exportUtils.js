@@ -662,11 +662,15 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         "انتخابات – نقل ناخبين من ذوي الاحتياجات الخاصة", "متابعة منزلية للمرضى"
     ];
 
-    sheet.mergeCells(`A12:A${11 + CASE_TYPES.length}`);
+    // Catch-all for unmatched types so sum equals totalPatients
+    const otherInjuries = monthlyCases.filter(c => !CASE_TYPES.includes(c[5])).reduce((sum, c) => sum + (parseInt(c[6]) || 1), 0);
+    const totalTypeRows = CASE_TYPES.length + (otherInjuries > 0 ? 1 : 0);
+
+    sheet.mergeCells(`A12:A${11 + totalTypeRows}`);
     const r12c1 = sheet.getCell('A12'); r12c1.value = "الاصابات"; centerAlign(r12c1); boldFont(r12c1); setBorders(r12c1);
 
-    for (let i = 12; i <= 11 + CASE_TYPES.length; i++) {
-        sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i === 12 ? { style: 'thin' } : undefined), bottom: (i === 11 + CASE_TYPES.length ? { style: 'thin' } : undefined) };
+    for (let i = 12; i <= 11 + totalTypeRows; i++) {
+        sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i === 12 ? { style: 'thin' } : undefined), bottom: (i === 11 + totalTypeRows ? { style: 'thin' } : undefined) };
     }
 
     CASE_TYPES.forEach((type, tIdx) => {
@@ -674,19 +678,28 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         const c2 = sheet.getCell(rIdx, 2);
         c2.value = type; centerAlign(c2); boldFont(c2); setBorders(c2);
 
-        // Count injuries (patients) per case type — sum of c[6] for matching cases
         const typeTotal = monthlyCases.filter(c => c[5] === type).reduce((sum, c) => sum + (parseInt(c[6]) || 1), 0);
         const cellType = sheet.getCell(rIdx, 3);
         cellType.value = typeTotal; centerAlign(cellType); boldFont(cellType); setBorders(cellType);
         if (typeTotal > 0) cellType.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
     });
 
-    // Age Groups section — matching the short labels from the form/sheet
+    // "أخرى" row for case types not in the defined list
+    if (otherInjuries > 0) {
+        const otherRow = 12 + CASE_TYPES.length;
+        const otherC2 = sheet.getCell(otherRow, 2);
+        otherC2.value = "أخرى"; centerAlign(otherC2); boldFont(otherC2); setBorders(otherC2);
+        const otherC3 = sheet.getCell(otherRow, 3);
+        otherC3.value = otherInjuries; centerAlign(otherC3); boldFont(otherC3); setBorders(otherC3);
+        otherC3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+    }
+
+    // Age Groups section
     const AGE_GROUPS = [
         "أقل من سنة", "1 – 5", "6 – 12", "13 – 17", "18 – 35", "36 – 60", "أكثر من 60"
     ];
 
-    const startAgeRow = 13 + CASE_TYPES.length;
+    const startAgeRow = 13 + totalTypeRows;
     sheet.getRow(startAgeRow).height = 10;
     for (let c = 1; c <= 3; c++) {
         const cell = sheet.getCell(startAgeRow, c);

@@ -493,3 +493,32 @@ export async function updateBranchInventory(branch, inventoryObj) {
         });
     }
 }
+
+// =======================================================
+// ATTENDANCE
+// Sheet: Attendance
+// Columns: [Timestamp, Date, Branch, Shift, MedicName, Status, RecordedBy, RecordedAt]
+// =======================================================
+
+export async function getAttendance() {
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Attendance!A2:H",
+        });
+        return res.data.values || [];
+    } catch (e) {
+        console.error("Error fetching attendance:", e.message);
+        return [];
+    }
+}
+
+export async function addAttendanceRecord(row) {
+    await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Attendance!A:H",
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [row] },
+    });
+}
+

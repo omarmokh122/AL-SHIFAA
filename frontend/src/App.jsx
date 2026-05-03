@@ -14,6 +14,9 @@ import MonthlyFinancialReport from "./pages/MonthlyFinancialReport";
 import MedicalProfile from "./pages/MedicalProfile";
 import BorrowedAssets from "./pages/BorrowedAssets";
 import BorrowedAssetsReport from "./pages/BorrowedAssetsReport";
+import MedicSchedules from "./pages/MedicSchedules";
+import AttendanceTracker from "./pages/AttendanceTracker";
+import AttendanceForm from "./pages/AttendanceForm";
 
 
 /* ===== Layout & Guards ===== */
@@ -27,6 +30,9 @@ function App() {
 
         {/* ===== Login ===== */}
         <Route path="/login" element={<LoginPage />} />
+
+        {/* ===== Public Attendance Form (QR Code Access) ===== */}
+        <Route path="/attendance" element={<AttendanceForm />} />
 
         <Route
           path="/"
@@ -61,6 +67,8 @@ function App() {
           <Route path="medical-team" element={<MedicalTeam />} />
           <Route path="medical-profile" element={<MedicalProfile />} />
           <Route path="donations" element={<Donations />} />
+          <Route path="medic-schedules" element={<MedicSchedules />} />
+          <Route path="attendance-tracker" element={<AttendanceTracker />} />
         </Route>
 
         {/* ===== Fallback ===== */}
@@ -71,3 +79,4 @@ function App() {
 }
 
 export default App;
+

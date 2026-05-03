@@ -73,6 +73,17 @@ export default function Sidebar({ isOpen, onClose, isMobile }) {
 
         <NavLink to="/medical-team" style={linkStyle}>الفرق الطبية</NavLink>
         <NavLink to="/donations" style={linkStyle}>التبرعات</NavLink>
+
+        {(user.role === "admin" || user.role === "super") && (
+          <>
+            {/* ===== NEW SECTION: Shift Management ===== */}
+            <div style={sectionDivider}>
+              <span style={sectionLabel}>إدارة الدوامات</span>
+            </div>
+            <NavLink to="/medic-schedules" style={linkStyle}>دوامات المسعفين</NavLink>
+            <NavLink to="/attendance-tracker" style={linkStyle}>حضور المسعفين</NavLink>
+          </>
+        )}
       </div>
 
       {/* ===== LOGOUT ===== */}
@@ -116,4 +127,20 @@ const logoutBtn = {
   cursor: "pointer",
   borderRadius: "8px",
   fontSize: "14px",
+};
+
+const sectionDivider = {
+  borderTop: "1px solid rgba(255,255,255,0.2)",
+  margin: "10px 10px 4px",
+  paddingTop: "10px",
+};
+
+const sectionLabel = {
+  fontSize: "11px",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+  opacity: 0.7,
+  padding: "0 10px",
+  display: "block",
+  marginBottom: "2px",
 };

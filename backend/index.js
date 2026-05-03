@@ -25,7 +25,9 @@ import {
   getInventory,
   updateBranchInventory,
   deleteDonation,
-  updateDonation
+  updateDonation,
+  getAttendance,
+  addAttendanceRecord
 } from "./googleSheets.js";
 
 console.log("✅ index.js loaded");
@@ -646,6 +648,61 @@ app.post("/inventory", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("POST /inventory error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// =====================
+// ATTENDANCE ROUTES
+// =====================
+
+// 🔹 GET all attendance records
+app.get("/attendance", async (req, res) => {
+  try {
+    const data = await getAttendance();
+    res.json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error("GET /attendance error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// 🔹 POST attendance records (batch)
+app.post("/attendance", async (req, res) => {
+  try {
+    const { records } = req.body;
+
+    if (!Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({ success: false, error: "No records provided" });
+    }
+
+    for (const record of records) {
+      const row = [
+        Date.now(),                    // 0: Timestamp
+        record.date,                   // 1: Date
+        record.branch,                 // 2: Branch
+        record.shift,                  // 3: Shift
+        record.medicName,              // 4: MedicName
+        record.status,                 // 5: Status (حاضر/غائب)
+        record.recordedBy,             // 6: RecordedBy
+        new Date().toISOString(),      // 7: RecordedAt
+      ];
+      await addAttendanceRecord(row);
+    }
+
+    res.json({ success: true, count: records.length });
+  } catch (error) {
+    console.error("POST /attendance error:", error.message);
     res.status(500).json({
       success: false,
       error: error.message,

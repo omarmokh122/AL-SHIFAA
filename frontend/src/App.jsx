@@ -17,6 +17,7 @@ import BorrowedAssetsReport from "./pages/BorrowedAssetsReport";
 import MedicSchedules from "./pages/MedicSchedules";
 import AttendanceTracker from "./pages/AttendanceTracker";
 import AttendanceForm from "./pages/AttendanceForm";
+import MonthlyAttendanceReport from "./pages/MonthlyAttendanceReport";
 
 
 /* ===== Layout & Guards ===== */
@@ -69,6 +70,7 @@ function App() {
           <Route path="donations" element={<Donations />} />
           <Route path="medic-schedules" element={<MedicSchedules />} />
           <Route path="attendance-tracker" element={<AttendanceTracker />} />
+          <Route path="reports/monthly-attendance" element={<MonthlyAttendanceReport />} />
         </Route>
 
         {/* ===== Fallback ===== */}

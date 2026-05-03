@@ -1476,3 +1476,137 @@ export async function exportProfilePDF(member, filename) {
         }
     }
 }
+
+/* ================================================================
+ *  MONTHLY ATTENDANCE EXCEL EXPORT
+ * ================================================================ */
+export async function exportMonthlyAttendanceExcel(records, branch, year, monthLabel, fileName, range) {
+    const wb = new ExcelJS.Workbook();
+    const sheet = wb.addWorksheet("تقرير الحضور");
+
+    sheet.views = [{ rightToLeft: true }];
+    sheet.properties.defaultColWidth = 14;
+
+    const centerAlign = (c) => { c.alignment = { horizontal: "center", vertical: "middle", wrapText: true }; };
+    const boldFont = (c) => { c.font = { bold: true, size: 11 }; };
+    const setBorders = (c) => { c.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }; };
+
+    // ===== Logo =====
+    try {
+        const b64 = await getBase64ImageFromUrl(logoPng);
+        const imageId = wb.addImage({ base64: b64.split(",")[1], extension: "png" });
+        sheet.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: 80, height: 80 } });
+    } catch (e) { /* skip logo */ }
+
+    // Row 1–3: Title
+    sheet.mergeCells("A1:F1");
+    const r1 = sheet.getCell("A1");
+    r1.value = "جمعية الشفاء للخدمات الطبية والإنسانية";
+    r1.font = { bold: true, size: 16, color: { argb: "FFC22129" } };
+    centerAlign(r1);
+
+    sheet.mergeCells("A2:F2");
+    const r2 = sheet.getCell("A2");
+    r2.value = "Al-Shifaa Medical & Humanitarian Services Association";
+    r2.font = { bold: true, size: 11, color: { argb: "FF555555" } };
+    centerAlign(r2);
+
+    sheet.mergeCells("A3:F3");
+    const r3 = sheet.getCell("A3");
+    r3.value = "التقرير الشهري للحضور";
+    r3.font = { bold: true, size: 14, color: { argb: "FFC22129" } };
+    centerAlign(r3);
+
+    // Row 4: Empty
+    sheet.getRow(4).height = 6;
+
+    // Row 5: Branch & Period
+    sheet.mergeCells("A5:C5");
+    const r5a = sheet.getCell("A5");
+    r5a.value = `الفرع: ${branch}`;
+    r5a.font = { bold: true, size: 12 };
+    centerAlign(r5a); setBorders(r5a);
+
+    sheet.mergeCells("D5:F5");
+    const r5b = sheet.getCell("D5");
+    r5b.value = range ? `الفترة: ${range.start} - ${range.end}` : `الفترة: ${monthLabel} ${year}`;
+    r5b.font = { bold: true, size: 12 };
+    centerAlign(r5b); setBorders(r5b);
+
+    // Row 6: Red separator
+    const r6sep = sheet.getRow(6);
+    r6sep.height = 8;
+    for (let c = 1; c <= 6; c++) {
+        const cell = sheet.getCell(6, c);
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC22129" } };
+        setBorders(cell);
+    }
+
+    // ===== STATS SECTION =====
+    const presentCount = records.filter((r) => r[5] === "حاضر").length;
+    const absentCount = records.filter((r) => r[5] === "غائب").length;
+    const uniqueMedics = new Set(records.map((r) => r[4])).size;
+    const uniqueDates = new Set(records.map((r) => r[1])).size;
+    const rate = records.length > 0 ? Math.round((presentCount / records.length) * 100) : 0;
+
+    const statsData = [
+        ["إجمالي السجلات", records.length, "عدد المسعفين", uniqueMedics],
+        ["حاضر", presentCount, "غائب", absentCount],
+        ["عدد الأيام المسجلة", uniqueDates, "نسبة الحضور", `${rate}%`],
+    ];
+
+    let row = 7;
+    statsData.forEach(([labelA, valA, labelB, valB]) => {
+        const cA1 = sheet.getCell(row, 1); cA1.value = labelA; centerAlign(cA1); boldFont(cA1); setBorders(cA1);
+        cA1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4F6F8" } };
+        const cA2 = sheet.getCell(row, 2); cA2.value = valA; centerAlign(cA2); boldFont(cA2); setBorders(cA2);
+        const cA3 = sheet.getCell(row, 3); cA3.value = ""; setBorders(cA3);
+        const cB1 = sheet.getCell(row, 4); cB1.value = labelB; centerAlign(cB1); boldFont(cB1); setBorders(cB1);
+        cB1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4F6F8" } };
+        const cB2 = sheet.getCell(row, 5); cB2.value = valB; centerAlign(cB2); boldFont(cB2); setBorders(cB2);
+        const cB3 = sheet.getCell(row, 6); cB3.value = ""; setBorders(cB3);
+        row++;
+    });
+
+    // Red separator
+    row++;
+    const sepRow = sheet.getRow(row - 1);
+    sepRow.height = 8;
+    for (let c = 1; c <= 6; c++) {
+        const cell = sheet.getCell(row - 1, c);
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC22129" } };
+        setBorders(cell);
+    }
+
+    // ===== DETAILS TABLE =====
+    const headers = ["التاريخ", "الفرع", "الدوام", "المسعف", "الحالة", "المسجِّل"];
+    headers.forEach((h, i) => {
+        const cell = sheet.getCell(row, i + 1);
+        cell.value = h;
+        cell.font = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC22129" } };
+        centerAlign(cell); setBorders(cell);
+    });
+    row++;
+
+    records.forEach((r) => {
+        const vals = [r[1], r[2], r[3], r[4], r[5], r[6]];
+        vals.forEach((v, i) => {
+            const cell = sheet.getCell(row, i + 1);
+            cell.value = v || "";
+            centerAlign(cell); setBorders(cell);
+            cell.font = { size: 11 };
+            if (i === 4) {
+                cell.font = { bold: true, size: 11, color: { argb: v === "حاضر" ? "FF2E7D32" : "FFC62828" } };
+            }
+        });
+        row++;
+    });
+
+    // Auto-fit columns
+    sheet.columns.forEach((col) => { col.width = 18; });
+
+    const buffer = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), fileName);
+}
+

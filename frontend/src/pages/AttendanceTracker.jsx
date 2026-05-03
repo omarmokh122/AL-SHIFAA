@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../api";
+import { useNavigate } from "react-router-dom";
 
 export default function AttendanceTracker() {
     const user = JSON.parse(localStorage.getItem("user"));
+    const navigate = useNavigate();
     const [records, setRecords] = useState([]);
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const d = new Date();
@@ -67,9 +69,14 @@ export default function AttendanceTracker() {
         <div dir="rtl" style={page}>
             <div style={headerRow}>
                 <h2 style={{ margin: 0 }}>حضور المسعفين</h2>
-                <button onClick={() => setShowLinks(!showLinks)} style={actionBtn}>
-                    {showLinks ? "إخفاء الروابط" : "🔗 روابط تسجيل الحضور"}
-                </button>
+                <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => navigate("/reports/monthly-attendance")} style={{ ...actionBtn, background: "#424443" }}>
+                        📊 تقرير شهري
+                    </button>
+                    <button onClick={() => setShowLinks(!showLinks)} style={actionBtn}>
+                        {showLinks ? "إخفاء الروابط" : "🔗 روابط تسجيل الحضور"}
+                    </button>
+                </div>
             </div>
 
             <p style={descStyle}>

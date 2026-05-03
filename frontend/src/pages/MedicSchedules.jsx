@@ -163,9 +163,13 @@ export default function MedicSchedules() {
         if (!printRef.current) return;
         setIsExporting(true);
 
+        // Temporarily make the print container visible for html2canvas
+        const container = printRef.current.parentElement;
+        const origStyle = container.style.cssText;
+        container.style.cssText = "position:fixed;left:0;top:0;z-index:-1;opacity:0.01;pointer-events:none;";
+
         try {
-            // Wait for state to render the print layout
-            await new Promise((r) => setTimeout(r, 100));
+            await new Promise((r) => setTimeout(r, 150));
 
             const canvas = await html2canvas(printRef.current, {
                 scale: 2,
@@ -194,6 +198,7 @@ export default function MedicSchedules() {
             console.error("PDF export error:", err);
             alert("خطأ في تصدير PDF");
         } finally {
+            container.style.cssText = origStyle;
             setIsExporting(false);
         }
     }
@@ -356,7 +361,7 @@ export default function MedicSchedules() {
             </div>
 
             {/* ===== HIDDEN PRINTABLE TABLE (for PDF export with Arabic) ===== */}
-            <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
+            <div style={{ position: "fixed", left: "-9999px", top: "-9999px", zIndex: -1, pointerEvents: "none" }}>
                 <div ref={printRef} dir="rtl" style={{ width: "1100px", padding: "20px", background: "#fff", fontFamily: "'Segoe UI', Tahoma, Arial, sans-serif" }}>
                     <div style={{ textAlign: "center", marginBottom: "16px" }}>
                         <h2 style={{ color: "#C22129", margin: "0 0 4px" }}>جمعية الشفاء للخدمات الطبية والإنسانية</h2>

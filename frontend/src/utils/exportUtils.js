@@ -663,7 +663,7 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     ];
 
     sheet.mergeCells(`A12:A${11 + CASE_TYPES.length}`);
-    const r12c1 = sheet.getCell('A12'); r12c1.value = "نوع الحالات"; centerAlign(r12c1); boldFont(r12c1); setBorders(r12c1);
+    const r12c1 = sheet.getCell('A12'); r12c1.value = "الاصابات"; centerAlign(r12c1); boldFont(r12c1); setBorders(r12c1);
 
     for (let i = 12; i <= 11 + CASE_TYPES.length; i++) {
         sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i === 12 ? { style: 'thin' } : undefined), bottom: (i === 11 + CASE_TYPES.length ? { style: 'thin' } : undefined) };
@@ -674,7 +674,8 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
         const c2 = sheet.getCell(rIdx, 2);
         c2.value = type; centerAlign(c2); boldFont(c2); setBorders(c2);
 
-        const typeTotal = getCount((c) => c[5] === type, false);
+        // Count injuries (patients) per case type — sum of c[6] for matching cases
+        const typeTotal = monthlyCases.filter(c => c[5] === type).reduce((sum, c) => sum + (parseInt(c[6]) || 1), 0);
         const cellType = sheet.getCell(rIdx, 3);
         cellType.value = typeTotal; centerAlign(cellType); boldFont(cellType); setBorders(cellType);
         if (typeTotal > 0) cellType.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };

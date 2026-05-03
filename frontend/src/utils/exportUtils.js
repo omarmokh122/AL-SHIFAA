@@ -663,7 +663,7 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     ];
 
     sheet.mergeCells(`A12:A${11 + CASE_TYPES.length}`);
-    const r12c1 = sheet.getCell('A12'); r12c1.value = "نوع الاصابات"; centerAlign(r13c1); boldFont(r13c1); setBorders(r13c1);
+    const r12c1 = sheet.getCell('A12'); r12c1.value = "نوع الاصابات"; centerAlign(r12c1); boldFont(r12c1); setBorders(r12c1);
 
     for (let i = 12; i <= 11 + CASE_TYPES.length; i++) {
         sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i === 12 ? { style: 'thin' } : undefined), bottom: (i === 11 + CASE_TYPES.length ? { style: 'thin' } : undefined) };
@@ -694,7 +694,7 @@ export async function exportMonthlyCasesTemplateExcel(year, month, branch, cases
     if (otherInjuries > 0) {
         sheet.unMergeCells(`A12:A${11 + CASE_TYPES.length}`);
         sheet.mergeCells(`A12:A${11 + totalTypeRows}`);
-        const r12fix = sheet.getCell('A12'); r12fix.value = "نوع الاصابات"; centerAlign(r13fix); boldFont(r13fix); setBorders(r13fix);
+        const r12fix = sheet.getCell('A12'); r12fix.value = "نوع الاصابات"; centerAlign(r12fix); boldFont(r12fix); setBorders(r12fix);
         for (let i = 12; i <= 11 + totalTypeRows; i++) {
             sheet.getCell(`A${i}`).border = { left: { style: 'thin' }, right: { style: 'thin' }, top: (i === 12 ? { style: 'thin' } : undefined), bottom: (i === 11 + totalTypeRows ? { style: 'thin' } : undefined) };
         }

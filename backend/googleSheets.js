@@ -532,7 +532,7 @@ export async function getSchedule(branch) {
     try {
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: "Schedules!A2:C",
+            range: "Schedules!A2:D",
         });
         const rows = res.data.values || [];
         const rowIndex = rows.findIndex((r) => r[0] === branch);
@@ -540,22 +540,23 @@ export async function getSchedule(branch) {
             const row = rows[rowIndex];
             return {
                 schedule: JSON.parse(row[1] || "{}"),
-                supervisors: JSON.parse(row[2] || "{}")
+                supervisors: JSON.parse(row[2] || "{}"),
+                shifts: row[3] ? JSON.parse(row[3]) : null
             };
         }
-        return { schedule: {}, supervisors: {} };
+        return { schedule: {}, supervisors: {}, shifts: null };
     } catch (e) {
         console.error("Error fetching schedule:", e.message);
-        return { schedule: {}, supervisors: {} };
+        return { schedule: {}, supervisors: {}, shifts: null };
     }
 }
 
-export async function updateSchedule(branch, scheduleObj, supervisorsObj) {
+export async function updateSchedule(branch, scheduleObj, supervisorsObj, shiftsArr) {
     let rows = [];
     try {
         const res = await sheets.spreadsheets.values.get({
             spreadsheetId: SPREADSHEET_ID,
-            range: "Schedules!A:C",
+            range: "Schedules!A:D",
         });
         rows = res.data.values || [];
     } catch (e) {
@@ -567,14 +568,15 @@ export async function updateSchedule(branch, scheduleObj, supervisorsObj) {
     const rowToSave = [
         branch,
         JSON.stringify(scheduleObj),
-        JSON.stringify(supervisorsObj)
+        JSON.stringify(supervisorsObj),
+        shiftsArr ? JSON.stringify(shiftsArr) : ""
     ];
 
     if (rowIndex === -1) {
         // Appending new branch schedule
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: "Schedules!A:C",
+            range: "Schedules!A:D",
             valueInputOption: "USER_ENTERED",
             requestBody: { values: [rowToSave] },
         });
@@ -583,7 +585,7 @@ export async function updateSchedule(branch, scheduleObj, supervisorsObj) {
         const sheetRowNumber = rowIndex + 1;
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: `Schedules!A${sheetRowNumber}:C${sheetRowNumber}`,
+            range: `Schedules!A${sheetRowNumber}:D${sheetRowNumber}`,
             valueInputOption: "USER_ENTERED",
             requestBody: { values: [rowToSave] },
         });

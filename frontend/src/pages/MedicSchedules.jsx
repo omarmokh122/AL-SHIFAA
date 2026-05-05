@@ -90,6 +90,9 @@ export default function MedicSchedules() {
                 if (res.data.success) {
                     setSchedule(res.data.schedule || {});
                     setSupervisors(res.data.supervisors || {});
+                    if (res.data.shifts && res.data.shifts.length > 0) {
+                        setShifts(res.data.shifts);
+                    }
                 } else {
                     setSchedule({});
                     setSupervisors({});
@@ -102,28 +105,33 @@ export default function MedicSchedules() {
             });
     }, [branchFilter]);
 
-    function saveToBackend(newSched, newSups) {
+    function saveToBackend(newSched, newSups, newShifts) {
         if (!branchFilter) return;
         api.post("/schedules", {
             branch: branchFilter,
             schedule: newSched,
-            supervisors: newSups
+            supervisors: newSups,
+            shifts: newShifts || shifts
         }).catch(err => console.error("Error saving schedule:", err));
     }
 
     function updateSchedule(newSched) {
         setSchedule(newSched);
-        saveToBackend(newSched, supervisors);
+        saveToBackend(newSched, supervisors, shifts);
     }
 
     function updateSupervisors(newSups) {
         setSupervisors(newSups);
-        saveToBackend(schedule, newSups);
+        saveToBackend(schedule, newSups, shifts);
     }
 
-    // Save shifts config
+    // Save shifts config to backend and local storage when it changes
     useEffect(() => {
         localStorage.setItem("shifaa_shifts_config", JSON.stringify(shifts));
+        // Also save to backend (if branchFilter is valid and schedule is initialized)
+        if (branchFilter && Object.keys(schedule).length >= 0) {
+            saveToBackend(schedule, supervisors, shifts);
+        }
     }, [shifts]);
 
     const filteredTeam = team.filter((m) => {

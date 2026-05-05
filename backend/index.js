@@ -732,11 +732,11 @@ app.get("/schedules", async (req, res) => {
 
 app.post("/schedules", async (req, res) => {
   try {
-    const { branch, schedule, supervisors } = req.body;
+    const { branch, schedule, supervisors, shifts } = req.body;
     if (!branch) {
       return res.status(400).json({ success: false, error: "Branch is required" });
     }
-    await updateSchedule(branch, schedule || {}, supervisors || {});
+    await updateSchedule(branch, schedule || {}, supervisors || {}, shifts || null);
     res.json({ success: true });
   } catch (error) {
     console.error("POST /schedules error:", error.message);

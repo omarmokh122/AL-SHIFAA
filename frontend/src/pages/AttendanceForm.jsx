@@ -62,12 +62,14 @@ export default function AttendanceForm() {
     const [scheduledMedics, setScheduledMedics] = useState([]);
     const [supervisorsList, setSupervisorsList] = useState([]);
 
-    const shifts = JSON.parse(localStorage.getItem("shifaa_shifts_config") || "null") || [
-        { id: 1, label: "الفترة الأولى", start: "10:00", end: "12:30" },
-        { id: 2, label: "الفترة الثانية", start: "12:30", end: "15:00" },
-        { id: 3, label: "الفترة الثالثة", start: "15:00", end: "18:00" },
-        { id: 4, label: "الفترة الرابعة", start: "18:00", end: "06:00" },
-    ];
+    const [shifts, setShifts] = useState(() => {
+        return JSON.parse(localStorage.getItem("shifaa_shifts_config") || "null") || [
+            { id: 1, label: "الفترة الأولى", start: "10:00", end: "12:30" },
+            { id: 2, label: "الفترة الثانية", start: "12:30", end: "15:00" },
+            { id: 3, label: "الفترة الثالثة", start: "15:00", end: "18:00" },
+            { id: 4, label: "الفترة الرابعة", start: "18:00", end: "06:00" },
+        ];
+    });
 
     // Load team
     useEffect(() => {
@@ -84,6 +86,9 @@ export default function AttendanceForm() {
                 if (res.data.success) {
                     setFullSchedule(res.data.schedule || {});
                     setFullSupervisors(res.data.supervisors || {});
+                    if (res.data.shifts && res.data.shifts.length > 0) {
+                        setShifts(res.data.shifts);
+                    }
                 }
             })
             .catch(err => {

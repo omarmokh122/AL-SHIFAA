@@ -598,9 +598,11 @@ export async function updateSchedule(branch, scheduleObj, supervisorsObj, shifts
 export async function getLogs() {
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: "Logs!A2:G",
+    range: "Logs!A:G",
   });
-  return res.data.values || [];
+  // Filter out any rows that don't have a valid ISO timestamp in the first column
+  const rows = res.data.values || [];
+  return rows.filter(row => row[0] && !isNaN(Date.parse(row[0])));
 }
 
 export async function addLog(row) {

@@ -40,6 +40,21 @@ function getWeekDates(weekStart) {
     return dates;
 }
 
+function getRotationIndex(dateStr) {
+    // Epoch: Jan 5, 2026 (Monday)
+    const epoch = new Date("2026-01-05").getTime();
+    const current = new Date(dateStr).getTime();
+    // Calculate full weeks passed since epoch
+    const diffWeeks = Math.floor((current - epoch) / (7 * 24 * 60 * 60 * 1000));
+    
+    // 5-week cycle index (0 to 4)
+    const cycle = ((diffWeeks % 5) + 5) % 5;
+    
+    // Map cycle to day index: Monday=0, Tuesday=1, Wednesday=2, Thursday=3, Saturday=5
+    const rotationMap = [0, 1, 2, 3, 5];
+    return rotationMap[cycle];
+}
+
 export default function MedicSchedules() {
     const user = JSON.parse(localStorage.getItem("user"));
     const [team, setTeam] = useState([]);
@@ -66,29 +81,29 @@ export default function MedicSchedules() {
             .catch(() => alert("خطأ في جلب بيانات الفريق الطبي"));
     }, []);
 
-    // Load schedule + supervisors from localStorage
+    // Load schedule + supervisors from localStorage (Base Schedule)
     useEffect(() => {
-        const savedSchedule = localStorage.getItem(`shifaa_schedule_${weekStart}`);
+        const savedSchedule = localStorage.getItem(`shifaa_base_schedule`);
         if (savedSchedule) setSchedule(JSON.parse(savedSchedule));
         else setSchedule({});
 
-        const savedSupervisors = localStorage.getItem(`shifaa_supervisors_${weekStart}`);
+        const savedSupervisors = localStorage.getItem(`shifaa_base_supervisors`);
         if (savedSupervisors) setSupervisors(JSON.parse(savedSupervisors));
         else setSupervisors({});
-    }, [weekStart]);
+    }, []);
 
-    // Save schedule + supervisors
+    // Save schedule + supervisors (Base Schedule)
     useEffect(() => {
         if (Object.keys(schedule).length > 0) {
-            localStorage.setItem(`shifaa_schedule_${weekStart}`, JSON.stringify(schedule));
+            localStorage.setItem(`shifaa_base_schedule`, JSON.stringify(schedule));
         }
-    }, [schedule, weekStart]);
+    }, [schedule]);
 
     useEffect(() => {
         if (Object.keys(supervisors).length > 0) {
-            localStorage.setItem(`shifaa_supervisors_${weekStart}`, JSON.stringify(supervisors));
+            localStorage.setItem(`shifaa_base_supervisors`, JSON.stringify(supervisors));
         }
-    }, [supervisors, weekStart]);
+    }, [supervisors]);
 
     // Save shifts config
     useEffect(() => {
@@ -130,11 +145,11 @@ export default function MedicSchedules() {
     }
 
     function clearSchedule() {
-        if (confirm("هل تريد مسح جدول الدوام بالكامل؟")) {
+        if (confirm("هل تريد مسح جدول الدوام الأساسي بالكامل؟")) {
             setSchedule({});
             setSupervisors({});
-            localStorage.removeItem(`shifaa_schedule_${weekStart}`);
-            localStorage.removeItem(`shifaa_supervisors_${weekStart}`);
+            localStorage.removeItem(`shifaa_base_schedule`);
+            localStorage.removeItem(`shifaa_base_supervisors`);
         }
     }
 
@@ -324,31 +339,67 @@ export default function MedicSchedules() {
                                             </div>
                                         </td>
                                         {DAYS_AR.map((_, dayIdx) => {
-                                            const key = `${dayIdx}-${shift.id}`;
-                                            const names = schedule[key] || [];
-                                            const supervisor = supervisors[key] || "";
+                                            let baseDayIdx = dayIdx;
+                                            let isFrozen = false;
+
+                                            // Friday logic: completely empty and uneditable
+                                            if (dayIdx === 4) {
+                                                isFrozen = true;
+                                            } 
+                                            // Sunday Night Shift logic: dynamically mapped from Mon/Tue/Wed/Thu/Sat
+                                            else if (dayIdx === 6 && shift.start === "18:00" && shift.end === "06:00") {
+                                                baseDayIdx = getRotationIndex(weekDates[0]);
+                                                isFrozen = true;
+                                            }
+
+                                            const key = `${baseDayIdx}-${shift.id}`;
+                                            let names = [];
+                                            let supervisor = "";
+
+                                            if (dayIdx === 4) {
+                                                names = [];
+                                                supervisor = "";
+                                            } else {
+                                                names = schedule[key] || [];
+                                                supervisor = supervisors[key] || "";
+                                            }
+
                                             return (
-                                                <td key={dayIdx} style={dropCell} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, dayIdx, shift.id)}>
+                                                <td 
+                                                    key={dayIdx} 
+                                                    style={{...dropCell, opacity: isFrozen ? 0.7 : 1}} 
+                                                    onDragOver={isFrozen ? null : handleDragOver} 
+                                                    onDrop={(e) => isFrozen ? e.preventDefault() : handleDrop(e, baseDayIdx, shift.id)}
+                                                >
+                                                    {isFrozen && dayIdx === 4 && <div style={{...emptySlot, color: "#e57373", fontSize: "12px", fontWeight: "bold"}}>فارغ</div>}
+                                                    {isFrozen && dayIdx === 6 && <div style={{fontSize: "10px", color: "#666", textAlign: "center", marginBottom: "4px"}}>مجدول تلقائياً (دوري)</div>}
+                                                    
                                                     {/* Supervisor Selector */}
-                                                    <select
-                                                        value={supervisor}
-                                                        onChange={(e) => setSupervisor(dayIdx, shift.id, e.target.value)}
-                                                        style={supervisorSelect}
-                                                        title="مسؤول الدوام"
-                                                    >
-                                                        <option value="">مسؤول الدوام</option>
-                                                        {names.map((n) => (
-                                                            <option key={n} value={n}>{n}</option>
-                                                        ))}
-                                                    </select>
+                                                    {!isFrozen && names.length > 0 && (
+                                                        <select
+                                                            value={supervisor}
+                                                            onChange={(e) => setSupervisor(baseDayIdx, shift.id, e.target.value)}
+                                                            style={supervisorSelect}
+                                                            title="مسؤول الدوام"
+                                                        >
+                                                            <option value="">مسؤول الدوام</option>
+                                                            {names.map((n) => (
+                                                                <option key={n} value={n}>{n}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
+                                                    {isFrozen && supervisor && (
+                                                        <div style={{fontSize: "11px", color: "#C22129", textAlign: "center", fontWeight: "bold", marginBottom: "4px"}}>⭐ {supervisor}</div>
+                                                    )}
+
                                                     {names.map((name, ni) => (
                                                         <div key={ni} style={nameChip}>
                                                             <span>{name}</span>
-                                                            {supervisor === name && <span style={{ fontSize: "10px" }}>⭐</span>}
-                                                            <button onClick={() => removeMedicFromSlot(dayIdx, shift.id, name)} style={chipRemoveBtn}>×</button>
+                                                            {!isFrozen && supervisor === name && <span style={{ fontSize: "10px" }}>⭐</span>}
+                                                            {!isFrozen && <button onClick={() => removeMedicFromSlot(baseDayIdx, shift.id, name)} style={chipRemoveBtn}>×</button>}
                                                         </div>
                                                     ))}
-                                                    {names.length === 0 && <div style={emptySlot}>أفلت هنا</div>}
+                                                    {!isFrozen && names.length === 0 && <div style={emptySlot}>أفلت هنا</div>}
                                                 </td>
                                             );
                                         })}
@@ -385,14 +436,28 @@ export default function MedicSchedules() {
                                         <span style={{ color: "#C22129" }}>{formatTime(shift.start)} - {formatTime(shift.end)}</span>
                                     </td>
                                     {DAYS_AR.map((_, dayIdx) => {
-                                        const key = `${dayIdx}-${shift.id}`;
-                                        const names = schedule[key] || [];
-                                        const supervisor = supervisors[key] || "";
+                                        let baseDayIdx = dayIdx;
+                                        if (dayIdx === 6 && shift.start === "18:00" && shift.end === "06:00") {
+                                            baseDayIdx = getRotationIndex(weekDates[0]);
+                                        }
+
+                                        const key = `${baseDayIdx}-${shift.id}`;
+                                        let names = [];
+                                        let supervisor = "";
+
+                                        if (dayIdx === 4) {
+                                            names = [];
+                                            supervisor = "";
+                                        } else {
+                                            names = schedule[key] || [];
+                                            supervisor = supervisors[key] || "";
+                                        }
+                                        
                                         return (
                                             <td key={dayIdx} style={printTd}>
-                                                {supervisor && <div style={{ fontSize: "10px", color: "#C22129", fontWeight: "bold", marginBottom: "2px" }}>⭐ {supervisor}</div>}
+                                                {supervisor && <div style={{ fontSize: "10px", color: "#C22129", fontWeight: "bold", marginBottom: "2px", wordWrap: "break-word" }}>⭐ {supervisor}</div>}
                                                 {names.filter(n => n !== supervisor).map((n, i) => (
-                                                    <div key={i}>{n}</div>
+                                                    <div key={i} style={{ wordWrap: "break-word", marginBottom: "2px" }}>{n}</div>
                                                 ))}
                                                 {names.length === 0 && <span style={{ color: "#ccc" }}>—</span>}
                                             </td>
@@ -428,9 +493,9 @@ const scheduleTable = { width: "100%", borderCollapse: "collapse", background: "
 const thStyle = { background: "#C22129", color: "#fff", padding: "10px 6px", fontSize: "13px", fontWeight: "bold", textAlign: "center", border: "1px solid #a81c22", minWidth: "90px" };
 const shiftLabelCell = { padding: "10px 8px", textAlign: "center", background: "#fdf5f5", border: "1px solid #eee", minWidth: "100px", verticalAlign: "middle" };
 const dropCell = { padding: "6px", border: "1px solid #eee", verticalAlign: "top", minHeight: "60px", background: "#fafbfc", transition: "background 0.2s" };
-const nameChip = { display: "inline-flex", alignItems: "center", gap: "4px", background: "#e8f5e9", color: "#2e7d32", borderRadius: "14px", padding: "3px 8px 3px 4px", fontSize: "11px", fontWeight: "bold", margin: "2px", border: "1px solid #c8e6c9" };
-const chipRemoveBtn = { background: "transparent", border: "none", color: "#c62828", cursor: "pointer", fontSize: "14px", fontWeight: "bold", lineHeight: 1, padding: "0 2px" };
-const emptySlot = { color: "#ccc", fontSize: "11px", textAlign: "center", padding: "15px 4px", fontStyle: "italic" };
+const nameChip = { display: "inline-flex", alignItems: "center", gap: "2px", background: "#e8f5e9", color: "#2e7d32", borderRadius: "10px", padding: "2px 4px 2px 2px", fontSize: "10px", fontWeight: "bold", margin: "2px", border: "1px solid #c8e6c9", maxWidth: "100%", whiteSpace: "normal", wordBreak: "break-word" };
+const chipRemoveBtn = { background: "transparent", border: "none", color: "#c62828", cursor: "pointer", fontSize: "12px", fontWeight: "bold", lineHeight: 1, padding: "0 2px" };
+const emptySlot = { color: "#ccc", fontSize: "10px", textAlign: "center", padding: "10px 2px", fontStyle: "italic" };
 const configPanel = { background: "#fff", border: "1px solid #eee", borderRadius: "10px", padding: "16px", marginBottom: "16px" };
 const shiftRow = { display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", flexWrap: "wrap" };
 const shiftInput = { padding: "8px", border: "1px solid #ddd", borderRadius: "6px", outline: "none", fontSize: "13px", width: "120px" };
@@ -440,6 +505,6 @@ const addShiftBtn = { background: "#4caf50", color: "#fff", border: "none", padd
 const supervisorSelect = { width: "100%", padding: "3px", fontSize: "10px", border: "1px dashed #C22129", borderRadius: "4px", marginBottom: "4px", background: "#fff8f8", color: "#C22129", outline: "none" };
 
 // Print styles
-const printTh = { background: "#C22129", color: "#fff", padding: "8px 4px", border: "1px solid #a81c22", textAlign: "center", fontSize: "12px" };
-const printTdLabel = { padding: "8px", textAlign: "center", background: "#fdf5f5", border: "1px solid #ddd", fontSize: "11px" };
-const printTd = { padding: "6px 4px", border: "1px solid #ddd", textAlign: "center", fontSize: "11px", verticalAlign: "top" };
+const printTh = { background: "#C22129", color: "#fff", padding: "4px 2px", border: "1px solid #a81c22", textAlign: "center", fontSize: "10px", wordBreak: "break-word" };
+const printTdLabel = { padding: "4px 2px", textAlign: "center", background: "#fdf5f5", border: "1px solid #ddd", fontSize: "9px", wordBreak: "break-word" };
+const printTd = { padding: "2px 2px", border: "1px solid #ddd", textAlign: "center", fontSize: "9px", verticalAlign: "top", wordBreak: "break-word", whiteSpace: "normal" };

@@ -25,6 +25,16 @@ function getDayIndex(dateStr) {
     return day === 0 ? 6 : day - 1;
 }
 
+function getRotationIndex(dateStr) {
+    // Epoch: Jan 5, 2026 (Monday)
+    const epoch = new Date("2026-01-05").getTime();
+    const current = new Date(dateStr).getTime();
+    const diffWeeks = Math.floor((current - epoch) / (7 * 24 * 60 * 60 * 1000));
+    const cycle = ((diffWeeks % 5) + 5) % 5;
+    const rotationMap = [0, 1, 2, 3, 5];
+    return rotationMap[cycle];
+}
+
 export default function AttendanceForm() {
     const [searchParams] = useSearchParams();
     const branchParam = searchParams.get("branch") || "";
@@ -74,20 +84,36 @@ export default function AttendanceForm() {
             return;
         }
 
-        // Load schedule from localStorage
-        const savedSchedule = localStorage.getItem(`shifaa_schedule_${weekKey}`);
-        const savedSupervisors = localStorage.getItem(`shifaa_supervisors_${weekKey}`);
+        // Friday logic
+        if (dayIdx === 4) {
+            setScheduledMedics([]);
+            setSupervisorsList([]);
+            return;
+        }
+
+        // Load base schedule from localStorage
+        const savedSchedule = localStorage.getItem(`shifaa_base_schedule`);
+        const savedSupervisors = localStorage.getItem(`shifaa_base_supervisors`);
         const schedule = savedSchedule ? JSON.parse(savedSchedule) : {};
         const supervisorsMap = savedSupervisors ? JSON.parse(savedSupervisors) : {};
 
-        const key = `${dayIdx}-${selectedShift.id}`;
+        let baseDayIdx = dayIdx;
+        if (dayIdx === 6 && selectedShift.start === "18:00" && selectedShift.end === "06:00") {
+            baseDayIdx = getRotationIndex(weekKey);
+        }
+
+        const key = `${baseDayIdx}-${selectedShift.id}`;
         const medicsInSlot = schedule[key] || [];
         setScheduledMedics(medicsInSlot);
 
         // Build list of supervisors for this day across all shifts
         const supers = [];
         shifts.forEach((s) => {
-            const supKey = `${dayIdx}-${s.id}`;
+            let sBaseDayIdx = dayIdx;
+            if (dayIdx === 6 && s.start === "18:00" && s.end === "06:00") {
+                sBaseDayIdx = getRotationIndex(weekKey);
+            }
+            const supKey = `${sBaseDayIdx}-${s.id}`;
             if (supervisorsMap[supKey]) {
                 supers.push(supervisorsMap[supKey]);
             }

@@ -27,6 +27,7 @@ export default function MonthlyAttendanceReport() {
         absentCount: 0,
         attendanceRate: 0,
         shifts: {},
+        medicStats: [],
     });
 
     /* ================= LOAD DATA ================= */
@@ -75,10 +76,27 @@ export default function MonthlyAttendanceReport() {
         const absentCount = base.filter((r) => r[5] === "غائب").length;
         const uniqueMedics = new Set(base.map((r) => r[4])).size;
         const shifts = {};
+        const medicDetails = {};
+
         base.forEach((r) => {
             const shift = r[3] || "غير محدد";
             shifts[shift] = (shifts[shift] || 0) + 1;
+
+            const medicName = r[4];
+            const status = r[5];
+            if (!medicDetails[medicName]) {
+                medicDetails[medicName] = { present: 0, absent: 0, total: 0 };
+            }
+            medicDetails[medicName].total += 1;
+            if (status === "حاضر") medicDetails[medicName].present += 1;
+            if (status === "غائب") medicDetails[medicName].absent += 1;
         });
+
+        const medicStatsArray = Object.entries(medicDetails).map(([name, data]) => ({
+            name,
+            ...data,
+            rate: data.total > 0 ? Math.round((data.present / data.total) * 100) : 0
+        })).sort((a, b) => b.rate - a.rate);
 
         setFiltered(base);
         setStats({
@@ -88,6 +106,7 @@ export default function MonthlyAttendanceReport() {
             absentCount,
             attendanceRate: base.length > 0 ? Math.round((presentCount / base.length) * 100) : 0,
             shifts,
+            medicStats: medicStatsArray,
         });
         setGenerated(true);
     };
@@ -215,6 +234,41 @@ export default function MonthlyAttendanceReport() {
                             </div>
                         )}
                     </div>
+
+                    {/* Medic Attendance Summary Table */}
+                    {stats.medicStats && stats.medicStats.length > 0 && (
+                        <div style={tableBox}>
+                            <h4 style={{ margin: "0 0 10px 0" }}>ملخص حضور المسعفين</h4>
+                            <table style={table}>
+                                <thead>
+                                    <tr>
+                                        <th style={th}>المسعف</th>
+                                        <th style={th}>أيام الحضور</th>
+                                        <th style={th}>أيام الغياب</th>
+                                        <th style={th}>إجمالي الأيام المجدولة</th>
+                                        <th style={th}>نسبة الحضور</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {stats.medicStats.map((m, i) => (
+                                        <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#f9f9f9" }}>
+                                            <td style={td}><strong>{m.name}</strong></td>
+                                            <td style={{...td, color: "#2e7d32", fontWeight: "bold"}}>{m.present}</td>
+                                            <td style={{...td, color: "#c62828", fontWeight: "bold"}}>{m.absent}</td>
+                                            <td style={td}>{m.total}</td>
+                                            <td style={{
+                                                ...td,
+                                                fontWeight: "bold",
+                                                color: m.rate >= 80 ? "#2e7d32" : m.rate >= 50 ? "#e65100" : "#c62828"
+                                            }}>
+                                                {m.rate}%
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
 
                     {/* Details Toggle */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "20px", marginBottom: "10px" }}>

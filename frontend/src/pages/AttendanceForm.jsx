@@ -56,7 +56,9 @@ export default function AttendanceForm() {
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // Schedule & supervisor data from localStorage
+    // Schedule & supervisor data from backend
+    const [fullSchedule, setFullSchedule] = useState({});
+    const [fullSupervisors, setFullSupervisors] = useState({});
     const [scheduledMedics, setScheduledMedics] = useState([]);
     const [supervisorsList, setSupervisorsList] = useState([]);
 
@@ -74,18 +76,44 @@ export default function AttendanceForm() {
             .catch(() => {});
     }, []);
 
-    // When date or shift changes, load scheduled medics for that day/shift from localStorage
+    // Load base schedule ONCE when component mounts or branch changes
     useEffect(() => {
-        if (!date || !shift) {
+        if (!branchParam) return;
+        api.get(`/schedules?branch=${encodeURIComponent(branchParam)}`)
+            .then(res => {
+                if (res.data.success) {
+                    setFullSchedule(res.data.schedule || {});
+                    setFullSupervisors(res.data.supervisors || {});
+                }
+            })
+            .catch(err => {
+                console.error("Error loading schedule:", err);
+            });
+    }, [branchParam]);
+
+    const weekKey = getWeekKey(date);
+    const dayIdx = getDayIndex(date);
+
+    // Filter available shifts dynamically based on the schedule for the selected date
+    const availableShifts = shifts.filter(s => {
+        let baseDayIdx = dayIdx;
+        if (dayIdx === 6 && s.start === "18:00" && s.end === "06:00") {
+            baseDayIdx = getRotationIndex(weekKey);
+        }
+        const key = `${baseDayIdx}-${s.id}`;
+        const hasMedics = fullSchedule[key] && fullSchedule[key].length > 0;
+        const hasSupervisor = !!fullSupervisors[key];
+        return hasMedics || hasSupervisor;
+    });
+
+    // When date or shift changes, populate the medics list from the locally cached full schedule
+    useEffect(() => {
+        if (!date || !shift || dayIdx === 4) {
             setScheduledMedics([]);
             setSupervisorsList([]);
             return;
         }
 
-        const weekKey = getWeekKey(date);
-        const dayIdx = getDayIndex(date);
-
-        // Find the shift ID matching the selected shift label
         const selectedShift = shifts.find((s) => s.label === shift);
         if (!selectedShift) {
             setScheduledMedics([]);
@@ -93,55 +121,35 @@ export default function AttendanceForm() {
             return;
         }
 
-        // Friday logic
-        if (dayIdx === 4) {
-            setScheduledMedics([]);
-            setSupervisorsList([]);
-            return;
+        let baseDayIdx = dayIdx;
+        if (dayIdx === 6 && selectedShift.start === "18:00" && selectedShift.end === "06:00") {
+            baseDayIdx = getRotationIndex(weekKey);
         }
 
-        // Load base schedule from backend
-        api.get(`/schedules?branch=${encodeURIComponent(branchParam)}`)
-            .then(res => {
-                if (res.data.success) {
-                    const schedule = res.data.schedule || {};
-                    const supervisorsMap = res.data.supervisors || {};
+        const key = `${baseDayIdx}-${selectedShift.id}`;
+        const medicsInSlot = fullSchedule[key] || [];
+        setScheduledMedics(medicsInSlot);
 
-                    let baseDayIdx = dayIdx;
-                    if (dayIdx === 6 && selectedShift.start === "18:00" && selectedShift.end === "06:00") {
-                        baseDayIdx = getRotationIndex(weekKey);
-                    }
+        // Build list of supervisors for this day across all shifts
+        const supers = [];
+        shifts.forEach((s) => {
+            let sBaseDayIdx = dayIdx;
+            if (dayIdx === 6 && s.start === "18:00" && s.end === "06:00") {
+                sBaseDayIdx = getRotationIndex(weekKey);
+            }
+            const supKey = `${sBaseDayIdx}-${s.id}`;
+            if (fullSupervisors[supKey]) {
+                supers.push(fullSupervisors[supKey]);
+            }
+        });
+        setSupervisorsList([...new Set(supers)]);
 
-                    const key = `${baseDayIdx}-${selectedShift.id}`;
-                    const medicsInSlot = schedule[key] || [];
-                    setScheduledMedics(medicsInSlot);
+        // Default all scheduled medics to "حاضر"
+        const defaultAtt = {};
+        medicsInSlot.forEach((name) => { defaultAtt[name] = "حاضر"; });
+        setAttendance(defaultAtt);
 
-                    // Build list of supervisors for this day across all shifts
-                    const supers = [];
-                    shifts.forEach((s) => {
-                        let sBaseDayIdx = dayIdx;
-                        if (dayIdx === 6 && s.start === "18:00" && s.end === "06:00") {
-                            sBaseDayIdx = getRotationIndex(weekKey);
-                        }
-                        const supKey = `${sBaseDayIdx}-${s.id}`;
-                        if (supervisorsMap[supKey]) {
-                            supers.push(supervisorsMap[supKey]);
-                        }
-                    });
-                    setSupervisorsList([...new Set(supers)]);
-
-                    // Default all scheduled medics to "حاضر"
-                    const defaultAtt = {};
-                    medicsInSlot.forEach((name) => { defaultAtt[name] = "حاضر"; });
-                    setAttendance(defaultAtt);
-                }
-            })
-            .catch(err => {
-                console.error("Error loading schedule:", err);
-                setScheduledMedics([]);
-                setSupervisorsList([]);
-            });
-    }, [date, shift]);
+    }, [date, shift, fullSchedule, fullSupervisors, dayIdx, weekKey, shifts]);
 
     function toggleAttendance(name) {
         setAttendance({
@@ -222,12 +230,17 @@ export default function AttendanceForm() {
                 <label style={labelStyle}>الفترة</label>
                 <select value={shift} onChange={(e) => setShift(e.target.value)} style={inputField}>
                     <option value="">اختر الفترة</option>
-                    {shifts.map((s) => (
+                    {availableShifts.map((s) => (
                         <option key={s.id} value={s.label}>
                             {s.label} ({formatTime(s.start)} - {formatTime(s.end)})
                         </option>
                     ))}
                 </select>
+                {availableShifts.length === 0 && (
+                    <div style={{ fontSize: "11px", color: "#666", marginTop: "4px" }}>
+                        لا يوجد فترات مجدولة في هذا اليوم
+                    </div>
+                )}
             </div>
 
             {/* مسؤول الدوام dropdown */}

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import api from "../api";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import subLogo from "../assets/sub-logo.png";
 
 /* ===== CONSTANTS ===== */
 const DAYS_AR = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"];
@@ -411,9 +412,10 @@ export default function MedicSchedules() {
             {/* ===== HIDDEN PRINTABLE TABLE (for PDF export with Arabic) ===== */}
             <div style={{ position: "fixed", left: "-9999px", top: "-9999px", zIndex: -1, pointerEvents: "none" }}>
                 <div ref={printRef} dir="rtl" style={{ width: "1100px", padding: "20px", background: "#fff", fontFamily: "'Segoe UI', Tahoma, Arial, sans-serif" }}>
-                    <div style={{ textAlign: "center", marginBottom: "16px" }}>
+                    <div style={{ textAlign: "center", marginBottom: "16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        <img src={subLogo} alt="Al Shifaa Logo" style={{ width: "80px", marginBottom: "8px" }} />
                         <h2 style={{ color: "#C22129", margin: "0 0 4px" }}>جمعية الشفاء للخدمات الطبية والإنسانية</h2>
-                        <h3 style={{ margin: "0 0 4px" }}>جدول دوامات المسعفين</h3>
+                        <h3 style={{ margin: "0 0 4px" }}>جدول دوامات المسعفين - {branchFilter}</h3>
                         <p style={{ margin: 0, fontSize: "13px", color: "#555" }}>الأسبوع: {weekDates[0]} — {weekDates[6]}</p>
                     </div>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>

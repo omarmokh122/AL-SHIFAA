@@ -88,8 +88,28 @@ export default function MedicSchedules() {
         api.get(`/schedules?branch=${encodeURIComponent(branchFilter)}`)
             .then((res) => {
                 if (res.data.success) {
-                    setSchedule(res.data.schedule || {});
-                    setSupervisors(res.data.supervisors || {});
+                    let backendSchedule = res.data.schedule || {};
+                    let backendSupervisors = res.data.supervisors || {};
+                    
+                    // Restore from local storage if backend is empty
+                    if (Object.keys(backendSchedule).length === 0) {
+                        const localSched = localStorage.getItem(`shifaa_base_schedule_${branchFilter}`);
+                        const localSups = localStorage.getItem(`shifaa_base_supervisors_${branchFilter}`);
+                        if (localSched) {
+                            backendSchedule = JSON.parse(localSched);
+                            backendSupervisors = localSups ? JSON.parse(localSups) : {};
+                            // Save restored data back to backend
+                            api.post("/schedules", {
+                                branch: branchFilter,
+                                schedule: backendSchedule,
+                                supervisors: backendSupervisors,
+                                shifts: res.data.shifts || shifts
+                            });
+                        }
+                    }
+
+                    setSchedule(backendSchedule);
+                    setSupervisors(backendSupervisors);
                     if (res.data.shifts && res.data.shifts.length > 0) {
                         setShifts(res.data.shifts);
                     }
@@ -125,13 +145,9 @@ export default function MedicSchedules() {
         saveToBackend(schedule, newSups, shifts);
     }
 
-    // Save shifts config to backend and local storage when it changes
+    // Save shifts config to local storage when it changes
     useEffect(() => {
         localStorage.setItem("shifaa_shifts_config", JSON.stringify(shifts));
-        // Also save to backend (if branchFilter is valid and schedule is initialized)
-        if (branchFilter && Object.keys(schedule).length >= 0) {
-            saveToBackend(schedule, supervisors, shifts);
-        }
     }, [shifts]);
 
     const filteredTeam = team.filter((m) => {

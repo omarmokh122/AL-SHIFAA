@@ -11,7 +11,7 @@ export default function LoginPage() {
   function login() {
     const users = {
       omar: { role: "super", branch: null, name: "Omar Mokhtar", password: "omar_shifaa_2026" },
-      bekaa: { role: "admin", branch: "البقاع الأوسط", name: "Bekaa Admin", password: "bekaa_shifaa_2026" },
+      "NurDine@26": { role: "admin", branch: "البقاع الأوسط", name: "Bekaa Admin", password: "Shifaa_12@@" },
       baalback: { role: "admin", branch: "بعلبك", name: "Baalback Admin", password: "baalback_shifaa_2026" },
     };
 

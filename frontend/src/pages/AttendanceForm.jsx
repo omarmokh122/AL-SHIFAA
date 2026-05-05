@@ -10,6 +10,15 @@ import { useSearchParams } from "react-router-dom";
 
 const DAYS_AR = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"];
 
+function formatTime(t) {
+    if (!t) return "";
+    const [h, m] = t.split(":");
+    const hour = parseInt(h);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${h12}:${m} ${ampm}`;
+}
+
 function getWeekKey(dateStr) {
     const d = new Date(dateStr);
     const day = d.getDay();
@@ -214,7 +223,9 @@ export default function AttendanceForm() {
                 <select value={shift} onChange={(e) => setShift(e.target.value)} style={inputField}>
                     <option value="">اختر الفترة</option>
                     {shifts.map((s) => (
-                        <option key={s.id} value={s.label}>{s.label}</option>
+                        <option key={s.id} value={s.label}>
+                            {s.label} ({formatTime(s.start)} - {formatTime(s.end)})
+                        </option>
                     ))}
                 </select>
             </div>

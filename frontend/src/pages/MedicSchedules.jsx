@@ -58,6 +58,7 @@ function getRotationIndex(dateStr) {
 
 export default function MedicSchedules() {
     const user = JSON.parse(localStorage.getItem("user"));
+    const [isUnlocked, setIsUnlocked] = useState(() => sessionStorage.getItem("schedule_unlocked") === "true");
     const [team, setTeam] = useState([]);
     const [shifts, setShifts] = useState(() => {
         const saved = localStorage.getItem("shifaa_shifts_config");
@@ -185,9 +186,15 @@ export default function MedicSchedules() {
     }
 
     function clearSchedule() {
-        if (confirm("هل تريد مسح جدول الدوام الأساسي بالكامل لهذا الفرع؟")) {
-            updateSchedule({});
-            updateSupervisors({});
+        if (!isUnlocked) return;
+        const code = prompt("لأسباب أمنية، الرجاء إدخال رمز المرور (Passcode) لمسح الجدول بالكامل:");
+        if (code === "2026") {
+            if (confirm("تحذير أخير: هل أنت متأكد أنك تريد مسح جميع البيانات؟")) {
+                updateSchedule({});
+                updateSupervisors({});
+            }
+        } else if (code !== null) {
+            alert("رمز المرور غير صحيح! لن يتم مسح الجدول.");
         }
     }
 
@@ -267,6 +274,29 @@ export default function MedicSchedules() {
         const d = new Date(weekStart);
         d.setDate(d.getDate() + 7);
         setWeekStart(d.toISOString().split("T")[0]);
+    }
+
+    /* ===== UNLOCK Logic ===== */
+    function handleUnlock() {
+        const code = prompt("الرجاء إدخال رمز المرور (Passcode) للوصول إلى جدول الدوامات وتعديله:");
+        if (code === "2026") {
+            sessionStorage.setItem("schedule_unlocked", "true");
+            setIsUnlocked(true);
+        } else if (code !== null) {
+            alert("رمز المرور غير صحيح!");
+        }
+    }
+
+    if (!isUnlocked) {
+        return (
+            <div dir="rtl" style={{ ...page, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh" }}>
+                <h2 style={{ marginBottom: "20px" }}>هذه الصفحة محمية برمز مرور</h2>
+                <p style={{ color: "#666", marginBottom: "30px" }}>لا يمكنك الوصول إلى أو تعديل جدول الدوامات بدون رمز المرور</p>
+                <button onClick={handleUnlock} style={{ ...actionBtn, fontSize: "16px", padding: "12px 24px" }}>
+                    🔒 إدخال رمز المرور للوصول
+                </button>
+            </div>
+        );
     }
 
     /* ===== RENDER ===== */

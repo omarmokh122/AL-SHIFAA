@@ -29,7 +29,9 @@ import {
   getAttendance,
   addAttendanceRecord,
   getSchedule,
-  updateSchedule
+  updateSchedule,
+  getLogs,
+  addLog
 } from "./googleSheets.js";
 
 console.log("✅ index.js loaded");
@@ -740,6 +742,47 @@ app.post("/schedules", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("POST /schedules error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// =====================
+// LOGS ROUTES
+// =====================
+app.get("/logs", async (req, res) => {
+  try {
+    const data = await getLogs();
+    res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    console.error("GET /logs error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post("/logs", async (req, res) => {
+  try {
+    const { adminName, branch, action, details, device } = req.body;
+    
+    // Capture IP
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || "";
+    
+    // Fallback device from User-Agent if not provided
+    const userAgent = device || req.headers['user-agent'] || "Unknown";
+
+    const row = [
+      new Date().toISOString(), // Timestamp
+      adminName || "Unknown",   // Admin Name
+      action || "Unknown",      // Action
+      branch || "All",          // Branch
+      details || "",            // Details
+      userAgent,                // Device / UserAgent
+      ip                        // IP Address
+    ];
+
+    await addLog(row);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("POST /logs error:", error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });

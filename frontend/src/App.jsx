@@ -18,6 +18,7 @@ import MedicSchedules from "./pages/MedicSchedules";
 import AttendanceTracker from "./pages/AttendanceTracker";
 import AttendanceForm from "./pages/AttendanceForm";
 import MonthlyAttendanceReport from "./pages/MonthlyAttendanceReport";
+import ActivityLogs from "./pages/ActivityLogs";
 
 
 /* ===== Layout & Guards ===== */
@@ -71,6 +72,7 @@ function App() {
           <Route path="medic-schedules" element={<MedicSchedules />} />
           <Route path="attendance-tracker" element={<AttendanceTracker />} />
           <Route path="reports/monthly-attendance" element={<MonthlyAttendanceReport />} />
+          <Route path="activity-logs" element={<ActivityLogs />} />
         </Route>
 
         {/* ===== Fallback ===== */}

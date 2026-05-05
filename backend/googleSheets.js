@@ -592,3 +592,23 @@ export async function updateSchedule(branch, scheduleObj, supervisorsObj, shifts
     }
 }
 
+// =====================
+// LOGS
+// =====================
+export async function getLogs() {
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "Logs!A2:G",
+  });
+  return res.data.values || [];
+}
+
+export async function addLog(row) {
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SPREADSHEET_ID,
+    range: "Logs!A:G",
+    valueInputOption: "USER_ENTERED",
+    requestBody: { values: [row] },
+  });
+}
+

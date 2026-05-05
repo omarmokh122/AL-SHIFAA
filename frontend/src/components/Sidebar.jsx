@@ -84,6 +84,15 @@ export default function Sidebar({ isOpen, onClose, isMobile }) {
             <NavLink to="/attendance-tracker" style={linkStyle}>حضور المسعفين</NavLink>
           </>
         )}
+
+        {user.role === "super" && (
+          <>
+            <div style={sectionDivider}>
+              <span style={sectionLabel}>إدارة النظام</span>
+            </div>
+            <NavLink to="/activity-logs" style={linkStyle}>سجل النشاطات</NavLink>
+          </>
+        )}
       </div>
 
       {/* ===== LOGOUT ===== */}

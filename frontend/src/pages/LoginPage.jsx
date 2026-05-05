@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import mainLogo from "../assets/main_logo.png";
+import { logAction } from "../utils/logger";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -24,6 +25,10 @@ export default function LoginPage() {
         branch: foundUser.branch,
         name: foundUser.name
       }));
+      
+      // Track login
+      logAction("تسجيل دخول", `تم تسجيل الدخول كـ ${foundUser.role}`);
+
       navigate("/dashboard");
     } else {
       setError("اسم المستخدم أو كلمة المرور غير صحيحة");

@@ -92,8 +92,8 @@ export default function AttendanceForm() {
         }
 
         // Load base schedule from localStorage
-        const savedSchedule = localStorage.getItem(`shifaa_base_schedule`);
-        const savedSupervisors = localStorage.getItem(`shifaa_base_supervisors`);
+        const savedSchedule = localStorage.getItem(`shifaa_base_schedule_${branchParam}`);
+        const savedSupervisors = localStorage.getItem(`shifaa_base_supervisors_${branchParam}`);
         const schedule = savedSchedule ? JSON.parse(savedSchedule) : {};
         const supervisorsMap = savedSupervisors ? JSON.parse(savedSupervisors) : {};
 

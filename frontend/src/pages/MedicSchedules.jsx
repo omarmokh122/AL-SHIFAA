@@ -68,7 +68,7 @@ export default function MedicSchedules() {
     const [draggedMedic, setDraggedMedic] = useState(null);
     const [showShiftConfig, setShowShiftConfig] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [branchFilter, setBranchFilter] = useState(user.role === "super" ? "" : user.branch);
+    const [branchFilter, setBranchFilter] = useState(user.role === "super" ? "البقاع الأوسط" : user.branch);
     const [isExporting, setIsExporting] = useState(false);
     const printRef = useRef(null);
 
@@ -81,29 +81,27 @@ export default function MedicSchedules() {
             .catch(() => alert("خطأ في جلب بيانات الفريق الطبي"));
     }, []);
 
-    // Load schedule + supervisors from localStorage (Base Schedule)
+    // Load schedule + supervisors from localStorage (Base Schedule) based on branch
     useEffect(() => {
-        const savedSchedule = localStorage.getItem(`shifaa_base_schedule`);
+        if (!branchFilter) return;
+        const savedSchedule = localStorage.getItem(`shifaa_base_schedule_${branchFilter}`);
         if (savedSchedule) setSchedule(JSON.parse(savedSchedule));
         else setSchedule({});
 
-        const savedSupervisors = localStorage.getItem(`shifaa_base_supervisors`);
+        const savedSupervisors = localStorage.getItem(`shifaa_base_supervisors_${branchFilter}`);
         if (savedSupervisors) setSupervisors(JSON.parse(savedSupervisors));
         else setSupervisors({});
-    }, []);
+    }, [branchFilter]);
 
-    // Save schedule + supervisors (Base Schedule)
-    useEffect(() => {
-        if (Object.keys(schedule).length > 0) {
-            localStorage.setItem(`shifaa_base_schedule`, JSON.stringify(schedule));
-        }
-    }, [schedule]);
+    function updateSchedule(newSched) {
+        setSchedule(newSched);
+        if (branchFilter) localStorage.setItem(`shifaa_base_schedule_${branchFilter}`, JSON.stringify(newSched));
+    }
 
-    useEffect(() => {
-        if (Object.keys(supervisors).length > 0) {
-            localStorage.setItem(`shifaa_base_supervisors`, JSON.stringify(supervisors));
-        }
-    }, [supervisors]);
+    function updateSupervisors(newSups) {
+        setSupervisors(newSups);
+        if (branchFilter) localStorage.setItem(`shifaa_base_supervisors_${branchFilter}`, JSON.stringify(newSups));
+    }
 
     // Save shifts config
     useEffect(() => {
@@ -133,7 +131,7 @@ export default function MedicSchedules() {
         const key = `${dayIdx}-${shiftId}`;
         const current = schedule[key] || [];
         if (!current.includes(draggedMedic)) {
-            setSchedule({ ...schedule, [key]: [...current, draggedMedic] });
+            updateSchedule({ ...schedule, [key]: [...current, draggedMedic] });
         }
         setDraggedMedic(null);
     }
@@ -141,22 +139,22 @@ export default function MedicSchedules() {
     function removeMedicFromSlot(dayIdx, shiftId, medicName) {
         const key = `${dayIdx}-${shiftId}`;
         const current = schedule[key] || [];
-        setSchedule({ ...schedule, [key]: current.filter((n) => n !== medicName) });
+        updateSchedule({ ...schedule, [key]: current.filter((n) => n !== medicName) });
     }
 
     function clearSchedule() {
-        if (confirm("هل تريد مسح جدول الدوام الأساسي بالكامل؟")) {
-            setSchedule({});
-            setSupervisors({});
-            localStorage.removeItem(`shifaa_base_schedule`);
-            localStorage.removeItem(`shifaa_base_supervisors`);
+        if (confirm("هل تريد مسح جدول الدوام الأساسي بالكامل لهذا الفرع؟")) {
+            updateSchedule({});
+            updateSupervisors({});
+            localStorage.removeItem(`shifaa_base_schedule_${branchFilter}`);
+            localStorage.removeItem(`shifaa_base_supervisors_${branchFilter}`);
         }
     }
 
     /* ===== SUPERVISOR MANAGEMENT ===== */
     function setSupervisor(dayIdx, shiftId, name) {
         const key = `${dayIdx}-${shiftId}`;
-        setSupervisors({ ...supervisors, [key]: name });
+        updateSupervisors({ ...supervisors, [key]: name });
     }
 
     /* ===== SHIFT CONFIG ===== */
@@ -293,7 +291,6 @@ export default function MedicSchedules() {
                     <input type="text" placeholder="بحث..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={searchInput} />
                     {user.role === "super" && (
                         <select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} style={{ ...searchInput, marginTop: "6px" }}>
-                            <option value="">كل الفروع</option>
                             <option value="البقاع الأوسط">البقاع الأوسط</option>
                             <option value="بعلبك">بعلبك</option>
                         </select>

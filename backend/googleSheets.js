@@ -522,3 +522,71 @@ export async function addAttendanceRecord(row) {
     });
 }
 
+// =======================================================
+// SCHEDULES
+// Sheet: Schedules
+// Columns: [Branch, Schedule JSON, Supervisors JSON]
+// =======================================================
+
+export async function getSchedule(branch) {
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Schedules!A2:C",
+        });
+        const rows = res.data.values || [];
+        const rowIndex = rows.findIndex((r) => r[0] === branch);
+        if (rowIndex !== -1) {
+            const row = rows[rowIndex];
+            return {
+                schedule: JSON.parse(row[1] || "{}"),
+                supervisors: JSON.parse(row[2] || "{}")
+            };
+        }
+        return { schedule: {}, supervisors: {} };
+    } catch (e) {
+        console.error("Error fetching schedule:", e.message);
+        return { schedule: {}, supervisors: {} };
+    }
+}
+
+export async function updateSchedule(branch, scheduleObj, supervisorsObj) {
+    let rows = [];
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Schedules!A:C",
+        });
+        rows = res.data.values || [];
+    } catch (e) {
+        console.error("Schedule check error:", e.message);
+    }
+
+    const rowIndex = rows.findIndex(r => r[0] === branch);
+
+    const rowToSave = [
+        branch,
+        JSON.stringify(scheduleObj),
+        JSON.stringify(supervisorsObj)
+    ];
+
+    if (rowIndex === -1) {
+        // Appending new branch schedule
+        await sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: "Schedules!A:C",
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [rowToSave] },
+        });
+    } else {
+        // Updating existing branch schedule
+        const sheetRowNumber = rowIndex + 1;
+        await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `Schedules!A${sheetRowNumber}:C${sheetRowNumber}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: { values: [rowToSave] },
+        });
+    }
+}
+

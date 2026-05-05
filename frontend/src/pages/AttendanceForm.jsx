@@ -91,39 +91,47 @@ export default function AttendanceForm() {
             return;
         }
 
-        // Load base schedule from localStorage
-        const savedSchedule = localStorage.getItem(`shifaa_base_schedule_${branchParam}`);
-        const savedSupervisors = localStorage.getItem(`shifaa_base_supervisors_${branchParam}`);
-        const schedule = savedSchedule ? JSON.parse(savedSchedule) : {};
-        const supervisorsMap = savedSupervisors ? JSON.parse(savedSupervisors) : {};
+        // Load base schedule from backend
+        api.get(`/schedules?branch=${encodeURIComponent(branchParam)}`)
+            .then(res => {
+                if (res.data.success) {
+                    const schedule = res.data.schedule || {};
+                    const supervisorsMap = res.data.supervisors || {};
 
-        let baseDayIdx = dayIdx;
-        if (dayIdx === 6 && selectedShift.start === "18:00" && selectedShift.end === "06:00") {
-            baseDayIdx = getRotationIndex(weekKey);
-        }
+                    let baseDayIdx = dayIdx;
+                    if (dayIdx === 6 && selectedShift.start === "18:00" && selectedShift.end === "06:00") {
+                        baseDayIdx = getRotationIndex(weekKey);
+                    }
 
-        const key = `${baseDayIdx}-${selectedShift.id}`;
-        const medicsInSlot = schedule[key] || [];
-        setScheduledMedics(medicsInSlot);
+                    const key = `${baseDayIdx}-${selectedShift.id}`;
+                    const medicsInSlot = schedule[key] || [];
+                    setScheduledMedics(medicsInSlot);
 
-        // Build list of supervisors for this day across all shifts
-        const supers = [];
-        shifts.forEach((s) => {
-            let sBaseDayIdx = dayIdx;
-            if (dayIdx === 6 && s.start === "18:00" && s.end === "06:00") {
-                sBaseDayIdx = getRotationIndex(weekKey);
-            }
-            const supKey = `${sBaseDayIdx}-${s.id}`;
-            if (supervisorsMap[supKey]) {
-                supers.push(supervisorsMap[supKey]);
-            }
-        });
-        setSupervisorsList([...new Set(supers)]);
+                    // Build list of supervisors for this day across all shifts
+                    const supers = [];
+                    shifts.forEach((s) => {
+                        let sBaseDayIdx = dayIdx;
+                        if (dayIdx === 6 && s.start === "18:00" && s.end === "06:00") {
+                            sBaseDayIdx = getRotationIndex(weekKey);
+                        }
+                        const supKey = `${sBaseDayIdx}-${s.id}`;
+                        if (supervisorsMap[supKey]) {
+                            supers.push(supervisorsMap[supKey]);
+                        }
+                    });
+                    setSupervisorsList([...new Set(supers)]);
 
-        // Default all scheduled medics to "حاضر"
-        const defaultAtt = {};
-        medicsInSlot.forEach((name) => { defaultAtt[name] = "حاضر"; });
-        setAttendance(defaultAtt);
+                    // Default all scheduled medics to "حاضر"
+                    const defaultAtt = {};
+                    medicsInSlot.forEach((name) => { defaultAtt[name] = "حاضر"; });
+                    setAttendance(defaultAtt);
+                }
+            })
+            .catch(err => {
+                console.error("Error loading schedule:", err);
+                setScheduledMedics([]);
+                setSupervisorsList([]);
+            });
     }, [date, shift]);
 
     function toggleAttendance(name) {

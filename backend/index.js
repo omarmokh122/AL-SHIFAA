@@ -27,7 +27,9 @@ import {
   deleteDonation,
   updateDonation,
   getAttendance,
-  addAttendanceRecord
+  addAttendanceRecord,
+  getSchedule,
+  updateSchedule
 } from "./googleSheets.js";
 
 console.log("✅ index.js loaded");
@@ -707,6 +709,38 @@ app.post("/attendance", async (req, res) => {
       success: false,
       error: error.message,
     });
+  }
+});
+
+// =====================
+// SCHEDULES ROUTES
+// =====================
+
+app.get("/schedules", async (req, res) => {
+  try {
+    const { branch } = req.query;
+    if (!branch) {
+      return res.status(400).json({ success: false, error: "Branch is required" });
+    }
+    const data = await getSchedule(branch);
+    res.json({ success: true, ...data });
+  } catch (error) {
+    console.error("GET /schedules error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post("/schedules", async (req, res) => {
+  try {
+    const { branch, schedule, supervisors } = req.body;
+    if (!branch) {
+      return res.status(400).json({ success: false, error: "Branch is required" });
+    }
+    await updateSchedule(branch, schedule || {}, supervisors || {});
+    res.json({ success: true });
+  } catch (error) {
+    console.error("POST /schedules error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

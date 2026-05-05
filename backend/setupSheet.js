@@ -47,6 +47,35 @@ async function run() {
         } else {
             console.log("Sheet 'Inventory' already exists.");
         }
+
+        const existingSchedulesSheet = meta.data.sheets.find((s) => s.properties.title === "Schedules");
+        if (!existingSchedulesSheet) {
+            console.log("Sheet 'Schedules' not found. Creating...");
+            await sheets.spreadsheets.batchUpdate({
+                spreadsheetId: SPREADSHEET_ID,
+                requestBody: {
+                    requests: [{
+                        addSheet: {
+                            properties: { title: "Schedules" }
+                        }
+                    }]
+                }
+            });
+            console.log("Sheet 'Schedules' created.");
+
+            console.log("Setting headers for 'Schedules'...");
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: "Schedules!A1:C1",
+                valueInputOption: "USER_ENTERED",
+                requestBody: {
+                    values: [["الفرع", "جدول_الدوام", "المسؤولين"]]
+                }
+            });
+            console.log("Headers for 'Schedules' set successfully.");
+        } else {
+            console.log("Sheet 'Schedules' already exists.");
+        }
     } catch (e) {
         console.error("Error:", e.message);
     }

@@ -82,26 +82,47 @@ export default function MedicSchedules() {
             .catch(() => alert("خطأ في جلب بيانات الفريق الطبي"));
     }, []);
 
-    // Load schedule + supervisors from localStorage (Base Schedule) based on branch
+    // Load schedule + supervisors from backend based on branch
     useEffect(() => {
         if (!branchFilter) return;
-        const savedSchedule = localStorage.getItem(`shifaa_base_schedule_${branchFilter}`);
-        if (savedSchedule) setSchedule(JSON.parse(savedSchedule));
-        else setSchedule({});
-
-        const savedSupervisors = localStorage.getItem(`shifaa_base_supervisors_${branchFilter}`);
-        if (savedSupervisors) setSupervisors(JSON.parse(savedSupervisors));
-        else setSupervisors({});
+        setScheduleLoaded(false);
+        api.get(`/schedules?branch=${encodeURIComponent(branchFilter)}`)
+            .then((res) => {
+                if (res.data.success) {
+                    setSchedule(res.data.schedule || {});
+                    setSupervisors(res.data.supervisors || {});
+                } else {
+                    setSchedule({});
+                    setSupervisors({});
+                }
+            })
+            .catch((err) => {
+                console.error("Error loading schedule:", err);
+                setSchedule({});
+                setSupervisors({});
+            })
+            .finally(() => {
+                setScheduleLoaded(true);
+            });
     }, [branchFilter]);
+
+    function saveToBackend(newSched, newSups) {
+        if (!branchFilter) return;
+        api.post("/schedules", {
+            branch: branchFilter,
+            schedule: newSched,
+            supervisors: newSups
+        }).catch(err => console.error("Error saving schedule:", err));
+    }
 
     function updateSchedule(newSched) {
         setSchedule(newSched);
-        if (branchFilter) localStorage.setItem(`shifaa_base_schedule_${branchFilter}`, JSON.stringify(newSched));
+        saveToBackend(newSched, supervisors);
     }
 
     function updateSupervisors(newSups) {
         setSupervisors(newSups);
-        if (branchFilter) localStorage.setItem(`shifaa_base_supervisors_${branchFilter}`, JSON.stringify(newSups));
+        saveToBackend(schedule, newSups);
     }
 
     // Save shifts config
@@ -147,8 +168,6 @@ export default function MedicSchedules() {
         if (confirm("هل تريد مسح جدول الدوام الأساسي بالكامل لهذا الفرع؟")) {
             updateSchedule({});
             updateSupervisors({});
-            localStorage.removeItem(`shifaa_base_schedule_${branchFilter}`);
-            localStorage.removeItem(`shifaa_base_supervisors_${branchFilter}`);
         }
     }
 

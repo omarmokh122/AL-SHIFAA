@@ -85,7 +85,6 @@ export default function MedicSchedules() {
     // Load schedule + supervisors from backend based on branch
     useEffect(() => {
         if (!branchFilter) return;
-        setScheduleLoaded(false);
         api.get(`/schedules?branch=${encodeURIComponent(branchFilter)}`)
             .then((res) => {
                 if (res.data.success) {
@@ -100,9 +99,6 @@ export default function MedicSchedules() {
                 console.error("Error loading schedule:", err);
                 setSchedule({});
                 setSupervisors({});
-            })
-            .finally(() => {
-                setScheduleLoaded(true);
             });
     }, [branchFilter]);
 

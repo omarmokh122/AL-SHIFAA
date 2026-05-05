@@ -23,6 +23,10 @@ export default function Header({ onMenuClick, isMobile }) {
     "monthly-financial": "التقرير المالي الشهري",
     "monthly-donations": "تقرير التبرعات الشهري",
     "medical-profile": "ملف عضو طبي",
+    "medic-schedules": "جدول الدوامات",
+    "attendance-tracker": "سجل الحضور",
+    "monthly-attendance": "تقرير الحضور الشهري",
+    "borrowed-assets": "الأصول المعارة",
   };
 
   const pathSegments = location.pathname.split("/").filter(Boolean);

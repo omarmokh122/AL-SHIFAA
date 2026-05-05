@@ -26,8 +26,8 @@ function getDayIndex(dateStr) {
 }
 
 function getRotationIndex(dateStr) {
-    // Epoch: Jan 5, 2026 (Monday)
-    const epoch = new Date("2026-01-05").getTime();
+    // Epoch: May 4, 2026 (Monday)
+    const epoch = new Date("2026-05-04").getTime();
     const current = new Date(dateStr).getTime();
     const diffWeeks = Math.floor((current - epoch) / (7 * 24 * 60 * 60 * 1000));
     const cycle = ((diffWeeks % 5) + 5) % 5;

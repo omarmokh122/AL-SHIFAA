@@ -4,7 +4,7 @@ import api from "../api";
 import { compressAndResizeImage } from "../utils/image";
 import { exportProfilePDF } from "../utils/exportUtils";
 
-const ROLES = ["مسؤول فريق البقاع", "مسؤول منطقة البقاع", "مسعف + سايق", "مسعف", "ممرض", "طبيب", "سائق إسعاف", "إداري", "متطوع"];
+const ROLES = ["مسؤول فريق البقاع", "مسؤول منطقة البقاع", "مسعف + سايق", "مسعف", "ممرض", "طبيب", "سائق إسعاف", "إداري", "متطوع", "دفاع مدني"];
 
 const DEFAULT_IMG =
     "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import multer from "multer";
 
 dotenv.config();
 
@@ -32,13 +33,16 @@ import {
   getSchedule,
   updateSchedule,
   getLogs,
-  addLog
+  addLog,
+  uploadToDrive,
+  deleteFromDrive
 } from "./googleSheets.js";
 
 console.log("✅ index.js loaded");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const upload = multer({ storage: multer.memoryStorage() });
 
 // =====================
 // Middleware
@@ -517,6 +521,33 @@ app.put("/financial/:id", async (req, res) => {
       success: false,
       error: error.message,
     });
+  }
+});
+
+// 🔹 UPLOAD file to drive
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: "No file uploaded" });
+    }
+
+    const { oldFileLink } = req.body;
+    
+    // Attempt to delete old file if provided
+    if (oldFileLink) {
+      // Extract ID from link like https://drive.google.com/file/d/FILE_ID/view...
+      const match = oldFileLink.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        await deleteFromDrive(match[1]);
+      }
+    }
+
+    const result = await uploadToDrive(req.file.buffer, req.file.mimetype, req.file.originalname);
+    
+    res.json({ success: true, link: result.link, id: result.id });
+  } catch (error) {
+    console.error("POST /upload error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

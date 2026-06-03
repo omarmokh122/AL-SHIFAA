@@ -35,6 +35,7 @@ export default function MonthlyFinancialReport() {
     // Edit State
     const [editRow, setEditRow] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [uploadFile, setUploadFile] = useState(null);
 
     // Helper to parse date strictly as MM/DD/YYYY if it matches that format
     const parseSheetDate = (str) => {
@@ -161,13 +162,35 @@ export default function MonthlyFinancialReport() {
 
     const handleSaveEdit = async () => {
         if (!editRow || !editRow[0]) return;
+        let finalRow = [...editRow];
+
         try {
-            await api.put(`/financial/${editRow[0]}`, { row: editRow });
+            if (uploadFile) {
+                const formData = new FormData();
+                formData.append("file", uploadFile);
+                if (finalRow[16]) {
+                    formData.append("oldFileLink", finalRow[16]);
+                }
+                
+                const uploadRes = await api.post("/upload", formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
+                
+                if (uploadRes.data.success) {
+                    finalRow[16] = uploadRes.data.link;
+                } else {
+                    alert("خطأ أثناء رفع الفاتورة");
+                    return;
+                }
+            }
+
+            await api.put(`/financial/${finalRow[0]}`, { row: finalRow });
             alert("تم تعديل السجل بنجاح");
-            setData(prev => prev.map(r => r[0] === editRow[0] ? editRow : r));
-            setFiltered(prev => prev.map(r => r[0] === editRow[0] ? editRow : r));
+            setData(prev => prev.map(r => r[0] === finalRow[0] ? finalRow : r));
+            setFiltered(prev => prev.map(r => r[0] === finalRow[0] ? finalRow : r));
             setIsEditing(false);
             setEditRow(null);
+            setUploadFile(null);
         } catch (error) {
             console.error(error);
             alert("خطأ في حفظ التعديلات");
@@ -355,7 +378,7 @@ export default function MonthlyFinancialReport() {
             {isEditing && editRow && (
                 <div style={modalOverlay}>
                     <div style={{ ...modalContent, padding: "24px", width: "90%", maxWidth: "500px", height: "auto", maxHeight: "90vh", overflowY: "auto" }}>
-                        <button onClick={() => { setIsEditing(false); setEditRow(null); }} style={closeBtn}>✕</button>
+                        <button onClick={() => { setIsEditing(false); setEditRow(null); setUploadFile(null); }} style={closeBtn}>✕</button>
                         <h3 style={{ marginTop: 0, marginBottom: "20px" }}>تعديل السجل المالي</h3>
                         
                         <div style={formGroup}>
@@ -386,8 +409,16 @@ export default function MonthlyFinancialReport() {
                             <input type="text" value={editRow[17] || ""} onChange={(e) => updateEditField(17, e.target.value)} style={inputStyle} />
                         </div>
                         <div style={formGroup}>
-                            <label style={labelStyle}>رابط الفاتورة (Google Drive):</label>
-                            <input type="text" value={editRow[16] || ""} onChange={(e) => updateEditField(16, e.target.value)} style={inputStyle} dir="ltr" placeholder="https://drive.google.com/file/d/..." />
+                            <label style={labelStyle}>تحديث الفاتورة (اختياري):</label>
+                            <input 
+                                type="file" 
+                                onChange={(e) => setUploadFile(e.target.files[0])} 
+                                style={inputStyle} 
+                                accept="image/*,.pdf"
+                            />
+                            {editRow[16] && !uploadFile && (
+                                <small style={{ color: "#777", marginTop: "4px" }}>يوجد فاتورة مرفقة مسبقاً. رفع ملف جديد سيقوم باستبدالها.</small>
+                            )}
                         </div>
 
                         <button onClick={handleSaveEdit} style={{ ...btnPrimary, width: "100%", marginTop: "16px", padding: "12px", fontSize: "16px" }}>حفظ التعديلات</button>

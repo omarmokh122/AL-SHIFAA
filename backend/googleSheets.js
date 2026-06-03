@@ -1,6 +1,7 @@
 import { google } from "googleapis";
 import path from "path";
 import { fileURLToPath } from "url";
+import { Readable } from "stream";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,10 +16,14 @@ const creds = process.env.GOOGLE_SHEETS_CREDENTIALS
 const auth = new google.auth.GoogleAuth({
     keyFile: creds ? undefined : path.join(__dirname, "credentials.json"),
     credentials: creds || undefined,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    scopes: [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ],
 });
 
 const sheets = google.sheets({ version: "v4", auth });
+const drive = google.drive({ version: "v3", auth });
 
 // =====================
 // Spreadsheet ID
@@ -192,6 +197,62 @@ export async function updateFinancialRecord(id, updatedRow) {
         valueInputOption: "USER_ENTERED",
         requestBody: { values: [updatedRow] },
     });
+}
+
+// =====================
+// DRIVE FILES
+// =====================
+export async function uploadToDrive(fileBuffer, mimeType, originalName) {
+    const stream = new Readable();
+    stream.push(fileBuffer);
+    stream.push(null);
+
+    const fileMetadata = {
+        name: originalName,
+    };
+
+    const media = {
+        mimeType: mimeType,
+        body: stream,
+    };
+
+    try {
+        const file = await drive.files.create({
+            resource: fileMetadata,
+            media: media,
+            fields: "id, webViewLink",
+        });
+
+        // Make it readable to anyone with the link
+        await drive.permissions.create({
+            fileId: file.data.id,
+            requestBody: {
+                role: "reader",
+                type: "anyone",
+            },
+        });
+
+        return {
+            id: file.data.id,
+            link: file.data.webViewLink,
+        };
+    } catch (error) {
+        console.error("Error uploading to drive:", error.message);
+        throw error;
+    }
+}
+
+export async function deleteFromDrive(fileId) {
+    if (!fileId) return;
+    try {
+        await drive.files.delete({
+            fileId: fileId,
+        });
+        console.log(`Deleted file ${fileId} from Drive`);
+    } catch (error) {
+        // Log but don't throw, as the file might already be deleted or not owned by the service account
+        console.error(`Error deleting file ${fileId} from Drive:`, error.message);
+    }
 }
 
 // =====================

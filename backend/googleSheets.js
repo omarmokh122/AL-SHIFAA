@@ -175,6 +175,25 @@ export async function getFinancialData() {
     return res.data.values || [];
 }
 
+export async function updateFinancialRecord(id, updatedRow) {
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: "Financial_Raw_Data!A:R",
+    });
+    const rows = res.data.values || [];
+    const rowIndex = rows.findIndex((r) => String(r[0]) === String(id));
+    
+    if (rowIndex === -1) throw new Error("Financial record not found");
+    const sheetRowNumber = rowIndex + 1;
+
+    await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `Financial_Raw_Data!A${sheetRowNumber}:R${sheetRowNumber}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [updatedRow] },
+    });
+}
+
 // =====================
 // DONATIONS (RECEIVED)
 // =====================

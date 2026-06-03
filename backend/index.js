@@ -15,6 +15,7 @@ import {
   updateCase,
   deleteCase,
   getFinancialData,
+  updateFinancialRecord,
   getAssets,
   addAsset,
   updateAsset,
@@ -491,6 +492,30 @@ app.get("/financial", async (req, res) => {
     res.status(500).json({
       success: false,
       error: `خطأ في جلب البيانات المالية: ${error.message}`,
+    });
+  }
+});
+
+// 🔹 UPDATE financial record
+app.put("/financial/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedRow = req.body.row;
+    
+    if (!updatedRow || !Array.isArray(updatedRow)) {
+      return res.status(400).json({ success: false, error: "Invalid row data" });
+    }
+    
+    // Ensure the ID is properly set at index 0
+    updatedRow[0] = id;
+    
+    await updateFinancialRecord(id, updatedRow);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("PUT /financial error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
     });
   }
 });

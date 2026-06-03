@@ -32,6 +32,10 @@ export default function MonthlyFinancialReport() {
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [fullscreen, setFullscreen] = useState(false);
 
+    // Edit State
+    const [editRow, setEditRow] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+
     // Helper to parse date strictly as MM/DD/YYYY if it matches that format
     const parseSheetDate = (str) => {
         if (!str) return null;
@@ -148,6 +152,28 @@ export default function MonthlyFinancialReport() {
         return url;
     }
 
+    /* ================= EDIT FUNCTIONALITY ================= */
+    const updateEditField = (index, value) => {
+        const newRow = [...editRow];
+        newRow[index] = value;
+        setEditRow(newRow);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editRow || !editRow[0]) return;
+        try {
+            await api.put(`/financial/${editRow[0]}`, { row: editRow });
+            alert("تم تعديل السجل بنجاح");
+            setData(prev => prev.map(r => r[0] === editRow[0] ? editRow : r));
+            setFiltered(prev => prev.map(r => r[0] === editRow[0] ? editRow : r));
+            setIsEditing(false);
+            setEditRow(null);
+        } catch (error) {
+            console.error(error);
+            alert("خطأ في حفظ التعديلات");
+        }
+    };
+
     /* ================= UI ================= */
     return (
         <div dir="rtl" style={{ padding: "24px", width: "100%" }}>
@@ -251,7 +277,7 @@ export default function MonthlyFinancialReport() {
                                         <th>المبلغ</th>
                                         <th>العملة</th>
                                         <th>الفرع</th>
-                                        <th>الفاتورة</th>
+                                        <th>الفاتورة / الإجراءات</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -275,8 +301,21 @@ export default function MonthlyFinancialReport() {
                                             </td>
                                             <td>{r[14]}</td>
                                             <td>{r[17]}</td>
-                                            <td style={{ color: "#C22129", fontWeight: "bold" }}>
-                                                {r[16] ? "معاينة" : "-"}
+                                            <td>
+                                                {r[16] ? (
+                                                    <span
+                                                        onClick={(e) => { e.stopPropagation(); setSelectedInvoice(r[16]); }}
+                                                        style={{ color: "#C22129", fontWeight: "bold", cursor: "pointer", marginLeft: "10px" }}
+                                                    >
+                                                        معاينة
+                                                    </span>
+                                                ) : <span style={{ marginLeft: "10px" }}>-</span>}
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setEditRow(r); setIsEditing(true); }}
+                                                    style={{ background: "#424443", color: "#fff", border: "none", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", fontSize: "12px" }}
+                                                >
+                                                    تعديل
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -311,6 +350,50 @@ export default function MonthlyFinancialReport() {
                     </div>
                 </div>
             )}
+
+            {/* ===== EDIT MODAL ===== */}
+            {isEditing && editRow && (
+                <div style={modalOverlay}>
+                    <div style={{ ...modalContent, padding: "24px", width: "90%", maxWidth: "500px", height: "auto", maxHeight: "90vh", overflowY: "auto" }}>
+                        <button onClick={() => { setIsEditing(false); setEditRow(null); }} style={closeBtn}>✕</button>
+                        <h3 style={{ marginTop: 0, marginBottom: "20px" }}>تعديل السجل المالي</h3>
+                        
+                        <div style={formGroup}>
+                            <label style={labelStyle}>التاريخ:</label>
+                            <input type="text" value={editRow[1] || ""} onChange={(e) => updateEditField(1, e.target.value)} style={inputStyle} dir="ltr" />
+                        </div>
+                        <div style={formGroup}>
+                            <label style={labelStyle}>الفئة:</label>
+                            <input type="text" value={editRow[2] || ""} onChange={(e) => updateEditField(2, e.target.value)} style={inputStyle} />
+                        </div>
+                        <div style={formGroup}>
+                            <label style={labelStyle}>نوع المصروف:</label>
+                            <input type="text" value={editRow[3] || ""} onChange={(e) => updateEditField(3, e.target.value)} style={inputStyle} />
+                        </div>
+                        <div style={formGroup}>
+                            <label style={labelStyle}>المبلغ:</label>
+                            <input type="number" value={editRow[15] || ""} onChange={(e) => updateEditField(15, e.target.value)} style={inputStyle} dir="ltr" />
+                        </div>
+                        <div style={formGroup}>
+                            <label style={labelStyle}>العملة:</label>
+                            <select value={editRow[14] || ""} onChange={(e) => updateEditField(14, e.target.value)} style={inputStyle}>
+                                <option value="دولار أمريكي">دولار أمريكي</option>
+                                <option value="ليرة لبنانية">ليرة لبنانية</option>
+                            </select>
+                        </div>
+                        <div style={formGroup}>
+                            <label style={labelStyle}>الفرع:</label>
+                            <input type="text" value={editRow[17] || ""} onChange={(e) => updateEditField(17, e.target.value)} style={inputStyle} />
+                        </div>
+                        <div style={formGroup}>
+                            <label style={labelStyle}>رابط الفاتورة (Google Drive):</label>
+                            <input type="text" value={editRow[16] || ""} onChange={(e) => updateEditField(16, e.target.value)} style={inputStyle} dir="ltr" placeholder="https://drive.google.com/file/d/..." />
+                        </div>
+
+                        <button onClick={handleSaveEdit} style={{ ...btnPrimary, width: "100%", marginTop: "16px", padding: "12px", fontSize: "16px" }}>حفظ التعديلات</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -333,3 +416,6 @@ const modalContent = { width: "90%", height: "90%", background: "#fff", borderRa
 const closeBtn = { position: "absolute", top: "10px", right: "10px", background: "#C22129", color: "#fff", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer" };
 const headerStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" };
 const backBtn = { background: "#C22129", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "6px", cursor: "pointer" };
+const formGroup = { marginBottom: "12px", display: "flex", flexDirection: "column" };
+const labelStyle = { marginBottom: "4px", fontSize: "14px", fontWeight: "bold" };
+const inputStyle = { padding: "8px", border: "1px solid #ddd", borderRadius: "6px", fontSize: "14px", outline: "none" };

@@ -10,8 +10,8 @@ export default function ActivityLogs() {
     const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
-        // Double check super admin
-        if (user.role !== "super") {
+        // Double check super admin and logs permission
+        if (!user || user.role !== "super" || user.canViewLogs === false) {
             navigate("/dashboard");
             return;
         }
@@ -25,14 +25,14 @@ export default function ActivityLogs() {
             })
             .catch(err => console.error("Error fetching logs:", err))
             .finally(() => setLoading(false));
-    }, [user.role, navigate]);
+    }, [user, navigate]);
 
     const filteredLogs = logs.filter(log => {
         const text = log.join(" ").toLowerCase();
         return text.includes(searchTerm.toLowerCase());
     });
 
-    if (user.role !== "super") return null;
+    if (!user || user.role !== "super" || user.canViewLogs === false) return null;
 
     return (
         <div dir="rtl" style={page}>

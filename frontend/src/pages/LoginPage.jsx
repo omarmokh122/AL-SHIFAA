@@ -11,23 +11,29 @@ export default function LoginPage() {
 
   function login() {
     const users = {
-      omar: { role: "super", branch: null, name: "Omar Mokhtar", password: "omar_shifaa_2026" },
-      "NurDine@26": { role: "admin", branch: "البقاع الأوسط", name: "Bekaa Admin", password: "Shifaa_12@@" },
-      baalback: { role: "admin", branch: "بعلبك", name: "Baalback Admin", password: "baalback_shifaa_2026" },
+      omar: { role: "super", branch: null, name: "Omar Mokhtar", password: "omar_shifaa_2026", canViewLogs: true },
+      roaa: { role: "super", branch: null, name: "Roaa", password: "roaa_shifaa_2026", canViewLogs: false },
+      "NurDine@26": { role: "admin", branch: "البقاع الأوسط", name: "Bekaa Admin", password: "Shifaa_12@@", canViewLogs: false },
+      baalback: { role: "admin", branch: "بعلبك", name: "Baalback Admin", password: "baalback_shifaa_2026", canViewLogs: false },
     };
 
-    const foundUser = users[username];
+    const cleanUsername = username.trim();
+    const foundKey = Object.keys(users).find(
+      (k) => k.toLowerCase() === cleanUsername.toLowerCase()
+    );
+    const foundUser = foundKey ? users[foundKey] : null;
 
     if (foundUser && password === foundUser.password) {
       localStorage.setItem("user", JSON.stringify({
-        username,
+        username: foundKey,
         role: foundUser.role,
         branch: foundUser.branch,
-        name: foundUser.name
+        name: foundUser.name,
+        canViewLogs: foundUser.canViewLogs !== false
       }));
       
       // Track login
-      logAction("تسجيل دخول", `تم تسجيل الدخول كـ ${foundUser.role}`);
+      logAction("تسجيل دخول", `تم تسجيل الدخول كـ ${foundUser.role} (${foundUser.name})`);
 
       navigate("/dashboard");
     } else {

@@ -85,7 +85,7 @@ export default function Sidebar({ isOpen, onClose, isMobile }) {
           </>
         )}
 
-        {user.role === "super" && (
+        {user.role === "super" && user.canViewLogs !== false && (
           <>
             <div style={sectionDivider}>
               <span style={sectionLabel}>إدارة النظام</span>

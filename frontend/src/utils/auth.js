@@ -17,3 +17,7 @@ export function isAdmin(user) {
 export function isViewer(user) {
     return user?.role === "viewer";
 }
+
+export function canAccessLogs(user) {
+    return user?.role === "super" && user?.canViewLogs !== false;
+}

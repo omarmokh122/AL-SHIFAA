@@ -409,27 +409,15 @@ export default function MedicSchedules() {
                                             let baseDayIdx = dayIdx;
                                             let isFrozen = false;
 
-                                            // Friday logic: completely empty and uneditable
-                                            if (dayIdx === 4) {
-                                                isFrozen = true;
-                                            } 
                                             // Sunday Night Shift logic: dynamically mapped from Mon/Tue/Wed/Thu/Sat
-                                            else if (dayIdx === 6 && shift.start === "18:00" && shift.end === "06:00") {
+                                            if (dayIdx === 6 && shift.start === "18:00" && shift.end === "06:00") {
                                                 baseDayIdx = getRotationIndex(weekDates[0]);
                                                 isFrozen = true;
                                             }
 
                                             const key = `${baseDayIdx}-${shift.id}`;
-                                            let names = [];
-                                            let supervisor = "";
-
-                                            if (dayIdx === 4) {
-                                                names = [];
-                                                supervisor = "";
-                                            } else {
-                                                names = schedule[key] || [];
-                                                supervisor = supervisors[key] || "";
-                                            }
+                                            const names = schedule[key] || [];
+                                            const supervisor = supervisors[key] || "";
 
                                             return (
                                                 <td 
@@ -438,7 +426,6 @@ export default function MedicSchedules() {
                                                     onDragOver={isFrozen ? null : handleDragOver} 
                                                     onDrop={(e) => isFrozen ? e.preventDefault() : handleDrop(e, baseDayIdx, shift.id)}
                                                 >
-                                                    {isFrozen && dayIdx === 4 && <div style={{...emptySlot, color: "#e57373", fontSize: "12px", fontWeight: "bold"}}>فارغ</div>}
                                                     {isFrozen && dayIdx === 6 && <div style={{fontSize: "10px", color: "#666", textAlign: "center", marginBottom: "4px"}}>مجدول تلقائياً (دوري)</div>}
                                                     
                                                     {/* Supervisor Selector */}
@@ -510,16 +497,8 @@ export default function MedicSchedules() {
                                         }
 
                                         const key = `${baseDayIdx}-${shift.id}`;
-                                        let names = [];
-                                        let supervisor = "";
-
-                                        if (dayIdx === 4) {
-                                            names = [];
-                                            supervisor = "";
-                                        } else {
-                                            names = schedule[key] || [];
-                                            supervisor = supervisors[key] || "";
-                                        }
+                                        const names = schedule[key] || [];
+                                        const supervisor = supervisors[key] || "";
                                         
                                         return (
                                             <td key={dayIdx} style={printTd}>

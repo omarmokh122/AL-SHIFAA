@@ -113,7 +113,7 @@ export default function AttendanceForm() {
 
     // When date or shift changes, populate the medics list from the locally cached full schedule
     useEffect(() => {
-        if (!date || !shift || dayIdx === 4) {
+        if (!date || !shift) {
             setScheduledMedics([]);
             setSupervisorsList([]);
             return;
